@@ -42,6 +42,11 @@ const getSpawnPosition = (room) => {
         x: 100 + Math.random() * 50,
         y: 250 + Math.random() * 50
       }
+    case 'library':
+      return {
+        x: 100 + Math.random() * 50,
+        y: 200 + Math.random() * 50
+      }
     default: // main game
       return {
         x: 143 + Math.random() * 50,

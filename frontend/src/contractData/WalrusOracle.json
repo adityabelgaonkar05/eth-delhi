@@ -1,0 +1,727 @@
+{
+  "address": "0x8f5A61Ab5ef1F5AfF2943f74634436a5b89da698",
+  "abi": [
+    {
+      "type": "constructor",
+      "stateMutability": "undefined",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_publisherEndpoint"
+        },
+        {
+          "type": "string",
+          "name": "_aggregatorEndpoint"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "ConfigUpdated",
+      "inputs": [
+        {
+          "type": "string",
+          "name": "publisherEndpoint",
+          "indexed": false
+        },
+        {
+          "type": "string",
+          "name": "aggregatorEndpoint",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "NodeAuthorized",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "node",
+          "indexed": true
+        },
+        {
+          "type": "bool",
+          "name": "authorized",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "QuiltProcessed",
+      "inputs": [
+        {
+          "type": "string",
+          "name": "requestId",
+          "indexed": true
+        },
+        {
+          "type": "string",
+          "name": "quiltId",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "QuiltRequestSubmitted",
+      "inputs": [
+        {
+          "type": "string",
+          "name": "requestId",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "requester",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "patchCount",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "RequestProcessed",
+      "inputs": [
+        {
+          "type": "string",
+          "name": "requestId",
+          "indexed": true
+        },
+        {
+          "type": "string",
+          "name": "blobId",
+          "indexed": true
+        },
+        {
+          "type": "string",
+          "name": "objectId",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "RequestSubmitted",
+      "inputs": [
+        {
+          "type": "string",
+          "name": "requestId",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "requester",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "contentSize",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "aggregatorEndpoint",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "string",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "authorizedNodes",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "checkBlobStatus",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_blobId"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": "exists"
+        },
+        {
+          "type": "bool",
+          "name": "available"
+        },
+        {
+          "type": "uint256",
+          "name": "startEpoch"
+        },
+        {
+          "type": "uint256",
+          "name": "endEpoch"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "deleteBlob",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_blobId"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": "success"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "emergencyWithdraw",
+      "constant": false,
+      "payable": false,
+      "inputs": [],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "extendBlob",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_objectId"
+        },
+        {
+          "type": "uint256",
+          "name": "_additionalEpochs"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": "success"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getBlobAttribute",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_objectId"
+        },
+        {
+          "type": "string",
+          "name": "_key"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "string",
+          "name": "value"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getNetworkInfo",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": "currentEpoch"
+        },
+        {
+          "type": "uint256",
+          "name": "storageNodes"
+        },
+        {
+          "type": "uint256",
+          "name": "maxBlobSize"
+        },
+        {
+          "type": "uint256",
+          "name": "pricePerUnit"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getPendingQuilt",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_requestId"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "address",
+          "name": "requester"
+        },
+        {
+          "type": "string[]",
+          "name": "identifiers"
+        },
+        {
+          "type": "uint256",
+          "name": "epochs"
+        },
+        {
+          "type": "uint256",
+          "name": "timestamp"
+        },
+        {
+          "type": "bool",
+          "name": "processed"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getPendingRequest",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_requestId"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "address",
+          "name": "requester"
+        },
+        {
+          "type": "uint256",
+          "name": "contentSize"
+        },
+        {
+          "type": "uint256",
+          "name": "epochs"
+        },
+        {
+          "type": "bool",
+          "name": "permanent"
+        },
+        {
+          "type": "uint256",
+          "name": "timestamp"
+        },
+        {
+          "type": "bool",
+          "name": "processed"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "owner",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "pendingQuilts",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "address",
+          "name": "requester"
+        },
+        {
+          "type": "uint256",
+          "name": "epochs"
+        },
+        {
+          "type": "uint256",
+          "name": "timestamp"
+        },
+        {
+          "type": "bool",
+          "name": "processed"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "pendingRequests",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "address",
+          "name": "requester"
+        },
+        {
+          "type": "bytes",
+          "name": "content"
+        },
+        {
+          "type": "uint256",
+          "name": "epochs"
+        },
+        {
+          "type": "bool",
+          "name": "permanent"
+        },
+        {
+          "type": "uint256",
+          "name": "timestamp"
+        },
+        {
+          "type": "bool",
+          "name": "processed"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "processQuiltResult",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_requestId"
+        },
+        {
+          "type": "string",
+          "name": "_quiltId"
+        },
+        {
+          "type": "string[]",
+          "name": "_patchIds"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "processStoreResult",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_requestId"
+        },
+        {
+          "type": "string",
+          "name": "_blobId"
+        },
+        {
+          "type": "string",
+          "name": "_objectId"
+        },
+        {
+          "type": "uint256",
+          "name": "_size"
+        },
+        {
+          "type": "uint256",
+          "name": "_certifiedEpoch"
+        },
+        {
+          "type": "uint256",
+          "name": "_endEpoch"
+        },
+        {
+          "type": "uint256",
+          "name": "_cost"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "publisherEndpoint",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "string",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "retrieveBlob",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_blobId"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bytes",
+          "name": "content"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "setBlobAttribute",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_objectId"
+        },
+        {
+          "type": "string",
+          "name": "_key"
+        },
+        {
+          "type": "string",
+          "name": "_value"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": "success"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "setNodeAuthorization",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "_node"
+        },
+        {
+          "type": "bool",
+          "name": "_authorized"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "setWalrusStorageContract",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "_walrusStorage"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "shareBlob",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_objectId"
+        },
+        {
+          "type": "uint256",
+          "name": "_amount"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": "success"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "submitQuiltRequest",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_requestId"
+        },
+        {
+          "type": "address",
+          "name": "_requester"
+        },
+        {
+          "type": "string[]",
+          "name": "_identifiers"
+        },
+        {
+          "type": "uint256",
+          "name": "_epochs"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "submitStoreRequest",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_requestId"
+        },
+        {
+          "type": "address",
+          "name": "_requester"
+        },
+        {
+          "type": "bytes",
+          "name": "_content"
+        },
+        {
+          "type": "uint256",
+          "name": "_epochs"
+        },
+        {
+          "type": "bool",
+          "name": "_permanent"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "transferOwnership",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "_newOwner"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "updateConfig",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_publisherEndpoint"
+        },
+        {
+          "type": "string",
+          "name": "_aggregatorEndpoint"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "walrusStorage",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "receive",
+      "stateMutability": "payable"
+    }
+  ]
+}

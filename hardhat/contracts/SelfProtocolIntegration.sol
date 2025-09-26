@@ -355,6 +355,15 @@ contract SelfProtocolIntegration is AccessControl, Pausable, ReentrancyGuard {
     }
 
     /**
+     * @notice Check if user is verified (alias for compatibility)
+     * @param user User address
+     * @return verified True if user is verified
+     */
+    function isVerifiedHuman(address user) external view returns (bool) {
+        return userVerifications[user].isVerified;
+    }
+
+    /**
      * @notice Get user verification details
      * @param user User address
      * @return verification Complete verification data

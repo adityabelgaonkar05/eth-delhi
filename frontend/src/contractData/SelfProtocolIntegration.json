@@ -1,0 +1,1059 @@
+{
+  "address": "0xd8ccE5e598D817DD0F499Beb6EAc20a6804b7310",
+  "abi": [
+    {
+      "type": "constructor",
+      "stateMutability": "undefined",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_appScope"
+        },
+        {
+          "type": "string",
+          "name": "_selfProtocolEndpoint"
+        },
+        {
+          "type": "tuple",
+          "name": "_config",
+          "components": [
+            {
+              "type": "uint256",
+              "name": "minimumAge"
+            },
+            {
+              "type": "bool",
+              "name": "ofacRequired"
+            },
+            {
+              "type": "string[]",
+              "name": "excludedCountries"
+            },
+            {
+              "type": "bool",
+              "name": "requireNationality"
+            },
+            {
+              "type": "bool",
+              "name": "requireGender"
+            },
+            {
+              "type": "bool",
+              "name": "requireName"
+            },
+            {
+              "type": "bool",
+              "name": "requireDateOfBirth"
+            },
+            {
+              "type": "bool",
+              "name": "requirePassportNumber"
+            },
+            {
+              "type": "bool",
+              "name": "requireExpiryDate"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "AccessControlBadConfirmation",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "AccessControlUnauthorizedAccount",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "account"
+        },
+        {
+          "type": "bytes32",
+          "name": "neededRole"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "ConfigurationMismatch",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "CountryExcluded",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "EnforcedPause",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "ExpectedPause",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InvalidAge",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InvalidDisclosures",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InvalidJWT",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InvalidProof",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "OFACCheckFailed",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "ReentrancyGuardReentrantCall",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "UnsupportedAttestationType",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "UserAlreadyVerified",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "UserNotVerified",
+      "inputs": []
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "ConfigurationUpdated",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "updatedBy",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "JWTValidated",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "user",
+          "indexed": true
+        },
+        {
+          "type": "string",
+          "name": "jwtHash",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "Paused",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "account",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "ProofSubmitted",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "user",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "attestationId",
+          "indexed": false
+        },
+        {
+          "type": "string",
+          "name": "attestationHash",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "RoleAdminChanged",
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role",
+          "indexed": true
+        },
+        {
+          "type": "bytes32",
+          "name": "previousAdminRole",
+          "indexed": true
+        },
+        {
+          "type": "bytes32",
+          "name": "newAdminRole",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "RoleGranted",
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "account",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "sender",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "RoleRevoked",
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "account",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "sender",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "Unpaused",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "account",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "UserVerified",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "user",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "attestationId",
+          "indexed": false
+        },
+        {
+          "type": "string",
+          "name": "attestationHash",
+          "indexed": false
+        },
+        {
+          "type": "uint256",
+          "name": "timestamp",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "VerificationRevoked",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "user",
+          "indexed": true
+        },
+        {
+          "type": "string",
+          "name": "reason",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "ADMIN_ROLE",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "bytes32",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "DEFAULT_ADMIN_ROLE",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "bytes32",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "EU_ID_CARD",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "PASSPORT_ID",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "VERIFIER_ROLE",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "bytes32",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "addSupportedAttestationType",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "attestationId"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "appScope",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "string",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "attestationHashToUser",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "batchVerifyUsers",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address[]",
+          "name": "users"
+        },
+        {
+          "type": "tuple[]",
+          "name": "proofDataArray",
+          "components": [
+            {
+              "type": "uint256[]",
+              "name": "proof"
+            },
+            {
+              "type": "uint256[]",
+              "name": "publicSignals"
+            },
+            {
+              "type": "string",
+              "name": "userContextData"
+            },
+            {
+              "type": "string",
+              "name": "jwtToken"
+            }
+          ]
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "config",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": "minimumAge"
+        },
+        {
+          "type": "bool",
+          "name": "ofacRequired"
+        },
+        {
+          "type": "bool",
+          "name": "requireNationality"
+        },
+        {
+          "type": "bool",
+          "name": "requireGender"
+        },
+        {
+          "type": "bool",
+          "name": "requireName"
+        },
+        {
+          "type": "bool",
+          "name": "requireDateOfBirth"
+        },
+        {
+          "type": "bool",
+          "name": "requirePassportNumber"
+        },
+        {
+          "type": "bool",
+          "name": "requireExpiryDate"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getRoleAdmin",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bytes32",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getUserNationality",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "user"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "string",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getUserVerification",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "user"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "tuple",
+          "name": "",
+          "components": [
+            {
+              "type": "bool",
+              "name": "isVerified"
+            },
+            {
+              "type": "uint256",
+              "name": "attestationId"
+            },
+            {
+              "type": "string",
+              "name": "attestationHash"
+            },
+            {
+              "type": "uint256",
+              "name": "verifiedAt"
+            },
+            {
+              "type": "uint256",
+              "name": "minimumAge"
+            },
+            {
+              "type": "string",
+              "name": "nationality"
+            },
+            {
+              "type": "string",
+              "name": "gender"
+            },
+            {
+              "type": "string",
+              "name": "name"
+            },
+            {
+              "type": "uint256",
+              "name": "dateOfBirth"
+            },
+            {
+              "type": "string",
+              "name": "passportNumber"
+            },
+            {
+              "type": "uint256",
+              "name": "expiryDate"
+            },
+            {
+              "type": "bool",
+              "name": "ofacCleared"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getVerificationStats",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": "totalUsers"
+        },
+        {
+          "type": "uint256",
+          "name": "passportUsers"
+        },
+        {
+          "type": "uint256",
+          "name": "euIdUsers"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "grantRole",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role"
+        },
+        {
+          "type": "address",
+          "name": "account"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "hasRole",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role"
+        },
+        {
+          "type": "address",
+          "name": "account"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "isUserVerified",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "user"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "isVerifiedHuman",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "user"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "pause",
+      "constant": false,
+      "payable": false,
+      "inputs": [],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "paused",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "renounceRole",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role"
+        },
+        {
+          "type": "address",
+          "name": "callerConfirmation"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "revokeRole",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role"
+        },
+        {
+          "type": "address",
+          "name": "account"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "revokeVerification",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "user"
+        },
+        {
+          "type": "string",
+          "name": "reason"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "selfProtocolEndpoint",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "string",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "supportedAttestationTypes",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "supportsInterface",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes4",
+          "name": "interfaceId"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "totalVerifiedUsers",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "unpause",
+      "constant": false,
+      "payable": false,
+      "inputs": [],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "updateAppScope",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "newScope"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "updateConfiguration",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "tuple",
+          "name": "newConfig",
+          "components": [
+            {
+              "type": "uint256",
+              "name": "minimumAge"
+            },
+            {
+              "type": "bool",
+              "name": "ofacRequired"
+            },
+            {
+              "type": "string[]",
+              "name": "excludedCountries"
+            },
+            {
+              "type": "bool",
+              "name": "requireNationality"
+            },
+            {
+              "type": "bool",
+              "name": "requireGender"
+            },
+            {
+              "type": "bool",
+              "name": "requireName"
+            },
+            {
+              "type": "bool",
+              "name": "requireDateOfBirth"
+            },
+            {
+              "type": "bool",
+              "name": "requirePassportNumber"
+            },
+            {
+              "type": "bool",
+              "name": "requireExpiryDate"
+            }
+          ]
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "userMeetsAgeRequirement",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "user"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "userVerifications",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": "isVerified"
+        },
+        {
+          "type": "uint256",
+          "name": "attestationId"
+        },
+        {
+          "type": "string",
+          "name": "attestationHash"
+        },
+        {
+          "type": "uint256",
+          "name": "verifiedAt"
+        },
+        {
+          "type": "uint256",
+          "name": "minimumAge"
+        },
+        {
+          "type": "string",
+          "name": "nationality"
+        },
+        {
+          "type": "string",
+          "name": "gender"
+        },
+        {
+          "type": "string",
+          "name": "name"
+        },
+        {
+          "type": "uint256",
+          "name": "dateOfBirth"
+        },
+        {
+          "type": "string",
+          "name": "passportNumber"
+        },
+        {
+          "type": "uint256",
+          "name": "expiryDate"
+        },
+        {
+          "type": "bool",
+          "name": "ofacCleared"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "verifyUserWithSelfProtocol",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "user"
+        },
+        {
+          "type": "tuple",
+          "name": "proofData",
+          "components": [
+            {
+              "type": "uint256[]",
+              "name": "proof"
+            },
+            {
+              "type": "uint256[]",
+              "name": "publicSignals"
+            },
+            {
+              "type": "string",
+              "name": "userContextData"
+            },
+            {
+              "type": "string",
+              "name": "jwtToken"
+            }
+          ]
+        }
+      ],
+      "outputs": []
+    }
+  ]
+}

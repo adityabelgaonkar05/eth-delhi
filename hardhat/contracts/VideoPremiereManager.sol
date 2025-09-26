@@ -23,6 +23,9 @@ contract VideoPremiereManager is AccessControl, ReentrancyGuard, Pausable {
     bytes32 public constant ORGANIZER_ROLE = keccak256("ORGANIZER_ROLE");
     bytes32 public constant ORACLE_ROLE = keccak256("ORACLE_ROLE");
 
+    
+   
+
     // Contract references
     WalrusStorage public walrusStorage;
     SelfProtocolIntegration public selfProtocol;
@@ -44,6 +47,7 @@ contract VideoPremiereManager is AccessControl, ReentrancyGuard, Pausable {
         AirdropConfig airdropConfig;
         uint256 createdAt;
         uint256 completedAt;
+
     }
 
     struct AirdropConfig {

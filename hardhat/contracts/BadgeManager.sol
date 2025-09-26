@@ -182,13 +182,11 @@ contract BadgeManager is AccessControl, ReentrancyGuard, Pausable {
         bool _requiresEvent,
         uint256 _requiredEventId
     ) external onlyRole(ADMIN_ROLE) whenNotPaused {
-        if (!validCategories[_category]) revert InvalidCategory();
-        if (!validRarities[_rarity]) revert InvalidRarity();
-        if (_basePrice == 0) revert InvalidPrice();
-        if (_isLimited && _maxSupply == 0) revert InvalidMaxSupply();
+        _validateBadgeParams(_category, _rarity, _basePrice, _isLimited, _maxSupply);
 
         uint256 badgeId = nextBadgeId++;
         uint256 finalPrice = (_basePrice * rarityMultipliers[_rarity]) / 100;
+        
         _createBadgeStruct(
             badgeId,
             _name,
@@ -202,6 +200,7 @@ contract BadgeManager is AccessControl, ReentrancyGuard, Pausable {
             _requiresEvent,
             _requiredEventId
         );
+        
         emit BadgeCreated(badgeId, _name, _category, _rarity, finalPrice, _isLimited, _maxSupply);
     }
 
@@ -246,48 +245,15 @@ contract BadgeManager is AccessControl, ReentrancyGuard, Pausable {
      * @param _badgeId The badge ID to purchase
      */
     function purchaseBadge(uint256 _badgeId) external whenNotPaused nonReentrant {
-        // Basic user verification (removed complex level checks)
-        UserRegistry.UserProfile memory profile = userRegistry.getUserProfile(msg.sender);
-        if (profile.userAddress == address(0)) revert UserNotRegistered();
-        if (!profile.isActive) revert UserNotRegistered();
-        
-        Badge storage badge = badges[_badgeId];
-        if (badge.badgeId == 0) revert BadgeNotFound();
-        if (!badge.isActive) revert BadgeNotActive();
-        if (userOwnsBadge[_badgeId][msg.sender]) revert BadgeAlreadyOwned();
-        
-        // Check supply limits
-        if (badge.isLimited && badge.currentSupply >= badge.maxSupply) {
-            revert MaxSupplyReached();
-        }
-        
-        // Check event requirements (simplified - remove getUserEvents call)
-        if (badge.requiresEvent) {
-            // Note: Event attendance verification now handled off-chain
-            // Badge purchase should be called by backend after event verification
-            UserRegistry.UserStats memory stats = userRegistry.getUserStats(msg.sender);
-            if (stats.eventsAttended == 0) revert EventNotAttended();
-        }
-        
-        // Check CVRS balance
-        if (cvrsToken.balanceOf(msg.sender) < badge.price) revert InsufficientCVRSBalance();
-        
-        // Process purchase
-        _processBadgePurchase(_badgeId, msg.sender, badge.price, "direct");
+        _validatePurchaseRequirements(_badgeId, msg.sender);
+        _processBadgePurchase(_badgeId, msg.sender, badges[_badgeId].price, "direct");
     }
     
     /**
-     * @notice Award a badge to user for free (platform role)
-     * @param _badgeId The badge ID to award
-     * @param _user The user to award the badge to
-     * @param _awardType The type of award ("level_unlock", "event_reward", etc.)
+     * @dev Validate purchase requirements
      */
-    function awardBadge(
-        uint256 _badgeId,
-        address _user,
-        string calldata _awardType
-    ) external onlyRole(PLATFORM_ROLE) {
-        // Basic user verification (simplified)
+    function _validatePurchaseRequirements(uint256 _badgeId, address _user) internal view {
+        // Basic user verification
         UserRegistry.UserProfile memory profile = userRegistry.getUserProfile(_user);
         if (profile.userAddress == address(0)) revert UserNotRegistered();
         if (!profile.isActive) revert UserNotRegistered();
@@ -302,8 +268,49 @@ contract BadgeManager is AccessControl, ReentrancyGuard, Pausable {
             revert MaxSupplyReached();
         }
         
-        // Award badge for free
+        // Check event requirements
+        if (badge.requiresEvent) {
+            UserRegistry.UserStats memory stats = userRegistry.getUserStats(_user);
+            if (stats.eventsAttended == 0) revert EventNotAttended();
+        }
+        
+        // Check CVRS balance
+        if (cvrsToken.balanceOf(_user) < badge.price) revert InsufficientCVRSBalance();
+    }
+    
+    /**
+     * @notice Award a badge to user for free (platform role)
+     * @param _badgeId The badge ID to award
+     * @param _user The user to award the badge to
+     * @param _awardType The type of award ("level_unlock", "event_reward", etc.)
+     */
+    function awardBadge(
+        uint256 _badgeId,
+        address _user,
+        string calldata _awardType
+    ) external onlyRole(PLATFORM_ROLE) {
+        _validateAwardRequirements(_badgeId, _user);
         _processBadgePurchase(_badgeId, _user, 0, _awardType);
+    }
+    
+    /**
+     * @dev Validate award requirements
+     */
+    function _validateAwardRequirements(uint256 _badgeId, address _user) internal view {
+        // Basic user verification
+        UserRegistry.UserProfile memory profile = userRegistry.getUserProfile(_user);
+        if (profile.userAddress == address(0)) revert UserNotRegistered();
+        if (!profile.isActive) revert UserNotRegistered();
+        
+        Badge storage badge = badges[_badgeId];
+        if (badge.badgeId == 0) revert BadgeNotFound();
+        if (!badge.isActive) revert BadgeNotActive();
+        if (userOwnsBadge[_badgeId][_user]) revert BadgeAlreadyOwned();
+        
+        // Check supply limits
+        if (badge.isLimited && badge.currentSupply >= badge.maxSupply) {
+            revert MaxSupplyReached();
+        }
     }
     
     /**
@@ -608,6 +615,22 @@ contract BadgeManager is AccessControl, ReentrancyGuard, Pausable {
     }
     
     // Internal functions
+    
+    /**
+     * @dev Validate badge creation parameters
+     */
+    function _validateBadgeParams(
+        string calldata _category,
+        string calldata _rarity,
+        uint256 _basePrice,
+        bool _isLimited,
+        uint256 _maxSupply
+    ) internal view {
+        if (!validCategories[_category]) revert InvalidCategory();
+        if (!validRarities[_rarity]) revert InvalidRarity();
+        if (_basePrice == 0) revert InvalidPrice();
+        if (_isLimited && _maxSupply == 0) revert InvalidMaxSupply();
+    }
     
     /**
      * @dev Internal function to add category

@@ -1,0 +1,1327 @@
+{
+  "address": "0xEF7BF1c0Da3d863a061C737cc9428502Ae618941",
+  "abi": [
+    {
+      "type": "constructor",
+      "stateMutability": "undefined",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "_premiereManager"
+        },
+        {
+          "type": "address",
+          "name": "_escrowManager"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "AccessControlBadConfirmation",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "AccessControlUnauthorizedAccount",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "account"
+        },
+        {
+          "type": "bytes32",
+          "name": "neededRole"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "ECDSAInvalidSignature",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "ECDSAInvalidSignatureLength",
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "length"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "ECDSAInvalidSignatureS",
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "EnforcedPause",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "ExpectedPause",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "ReentrancyGuardReentrantCall",
+      "inputs": []
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "BatchReputationProcessed",
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "dataHash",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "submitter",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "userCount",
+          "indexed": false
+        },
+        {
+          "type": "string",
+          "name": "dataSource",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "OracleNodeRegistered",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "nodeAddress",
+          "indexed": true
+        },
+        {
+          "type": "string",
+          "name": "nodeName",
+          "indexed": false
+        },
+        {
+          "type": "uint256",
+          "name": "stakeAmount",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "OracleNodeSlashed",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "nodeAddress",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "slashAmount",
+          "indexed": false
+        },
+        {
+          "type": "string",
+          "name": "reason",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "Paused",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "account",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "ReputationConsensusReached",
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "requestId",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "consensusCount",
+          "indexed": false
+        },
+        {
+          "type": "bool",
+          "name": "successful",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "ReputationDataSubmitted",
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "requestId",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "oracleNode",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "responseCount",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "ReputationRequestCreated",
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "requestId",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "requester",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "targetCount",
+          "indexed": false
+        },
+        {
+          "type": "string",
+          "name": "dataSource",
+          "indexed": false
+        },
+        {
+          "type": "uint8",
+          "name": "requestType",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "RoleAdminChanged",
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role",
+          "indexed": true
+        },
+        {
+          "type": "bytes32",
+          "name": "previousAdminRole",
+          "indexed": true
+        },
+        {
+          "type": "bytes32",
+          "name": "newAdminRole",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "RoleGranted",
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "account",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "sender",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "RoleRevoked",
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "account",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "sender",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "SybilCheckCompleted",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "user",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "riskScore",
+          "indexed": false
+        },
+        {
+          "type": "bool",
+          "name": "passed",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "Unpaused",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "account",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "ADMIN_ROLE",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "bytes32",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "DATA_PROVIDER_ROLE",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "bytes32",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "DEFAULT_ADMIN_ROLE",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "bytes32",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "ORACLE_NODE_ROLE",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "bytes32",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "addDataSource",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_dataSource"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "consensusThreshold",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "createReputationRequest",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address[]",
+          "name": "_targets"
+        },
+        {
+          "type": "string",
+          "name": "_dataSource"
+        },
+        {
+          "type": "uint8",
+          "name": "_requestType"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": "requestId"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "dataSourceList",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "string",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "escrowManager",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getAggregatedReputation",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "_user"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getOracleNode",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "_nodeAddress"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "string",
+          "name": "nodeName"
+        },
+        {
+          "type": "string",
+          "name": "endpoint"
+        },
+        {
+          "type": "uint256",
+          "name": "reputation"
+        },
+        {
+          "type": "uint256",
+          "name": "totalRequests"
+        },
+        {
+          "type": "uint256",
+          "name": "successfulRequests"
+        },
+        {
+          "type": "bool",
+          "name": "isActive"
+        },
+        {
+          "type": "uint256",
+          "name": "stakeAmount"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getRequest",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "_requestId"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "address",
+          "name": "requester"
+        },
+        {
+          "type": "address[]",
+          "name": "targets"
+        },
+        {
+          "type": "string",
+          "name": "dataSource"
+        },
+        {
+          "type": "uint256",
+          "name": "requestedAt"
+        },
+        {
+          "type": "uint256",
+          "name": "expiresAt"
+        },
+        {
+          "type": "bool",
+          "name": "fulfilled"
+        },
+        {
+          "type": "uint256",
+          "name": "responseCount"
+        },
+        {
+          "type": "uint8",
+          "name": "requestType"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getRoleAdmin",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bytes32",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getSybilData",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "_user"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": "riskScore"
+        },
+        {
+          "type": "string[]",
+          "name": "riskFactors"
+        },
+        {
+          "type": "uint256",
+          "name": "checkedAt"
+        },
+        {
+          "type": "bool",
+          "name": "isPassed"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getUserReputation",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "_user"
+        },
+        {
+          "type": "string",
+          "name": "_dataSource"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "grantRole",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role"
+        },
+        {
+          "type": "address",
+          "name": "account"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "hasRole",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role"
+        },
+        {
+          "type": "address",
+          "name": "account"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "maxOracleNodes",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "minOracleNodes",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "minStakeAmount",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "nextRequestId",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "nodeRewards",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "nodeSlashAmount",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "nodeStakeAmount",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "oracleNodes",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "address",
+          "name": "nodeAddress"
+        },
+        {
+          "type": "string",
+          "name": "nodeName"
+        },
+        {
+          "type": "string",
+          "name": "endpoint"
+        },
+        {
+          "type": "uint256",
+          "name": "reputation"
+        },
+        {
+          "type": "uint256",
+          "name": "totalRequests"
+        },
+        {
+          "type": "uint256",
+          "name": "successfulRequests"
+        },
+        {
+          "type": "bool",
+          "name": "isActive"
+        },
+        {
+          "type": "uint256",
+          "name": "registeredAt"
+        },
+        {
+          "type": "uint256",
+          "name": "lastActiveAt"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "pause",
+      "constant": false,
+      "payable": false,
+      "inputs": [],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "paused",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "premiereManager",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "processedDataHashes",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "registerAirdropParticipants",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "_campaignId"
+        },
+        {
+          "type": "address[]",
+          "name": "_participants"
+        },
+        {
+          "type": "uint256[]",
+          "name": "_reputationScores"
+        },
+        {
+          "type": "string",
+          "name": "_dataSource"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "registerOracleNode",
+      "constant": false,
+      "stateMutability": "payable",
+      "payable": true,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_nodeName"
+        },
+        {
+          "type": "string",
+          "name": "_endpoint"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "registerPremiereAttendees",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "_premiereId"
+        },
+        {
+          "type": "address[]",
+          "name": "_attendees"
+        },
+        {
+          "type": "uint256[]",
+          "name": "_reputationScores"
+        },
+        {
+          "type": "string",
+          "name": "_dataSource"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "removeDataSource",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_dataSource"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "renounceRole",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role"
+        },
+        {
+          "type": "address",
+          "name": "callerConfirmation"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "requestExpirationTime",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "revokeRole",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role"
+        },
+        {
+          "type": "address",
+          "name": "account"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "setConsensusThreshold",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "_threshold"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "setSybilThreshold",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "_threshold"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "slashOracleNode",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "_nodeAddress"
+        },
+        {
+          "type": "uint256",
+          "name": "_slashAmount"
+        },
+        {
+          "type": "string",
+          "name": "_reason"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "submitBatchReputationData",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "tuple",
+          "name": "_batchData",
+          "components": [
+            {
+              "type": "address[]",
+              "name": "users"
+            },
+            {
+              "type": "uint256[]",
+              "name": "scores"
+            },
+            {
+              "type": "string",
+              "name": "dataSource"
+            },
+            {
+              "type": "uint256",
+              "name": "timestamp"
+            },
+            {
+              "type": "bytes32",
+              "name": "dataHash"
+            },
+            {
+              "type": "bytes",
+              "name": "signature"
+            }
+          ]
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "submitReputationData",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "_requestId"
+        },
+        {
+          "type": "uint256[]",
+          "name": "_reputationScores"
+        },
+        {
+          "type": "bytes32",
+          "name": "_dataHash"
+        },
+        {
+          "type": "bytes",
+          "name": "_signature"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "submitSybilDetection",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "_user"
+        },
+        {
+          "type": "uint256",
+          "name": "_riskScore"
+        },
+        {
+          "type": "string[]",
+          "name": "_riskFactors"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "supportedDataSources",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "supportsInterface",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes4",
+          "name": "interfaceId"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "sybilData",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "address",
+          "name": "user"
+        },
+        {
+          "type": "uint256",
+          "name": "riskScore"
+        },
+        {
+          "type": "uint256",
+          "name": "checkedAt"
+        },
+        {
+          "type": "bool",
+          "name": "isPassed"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "sybilThreshold",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "unpause",
+      "constant": false,
+      "payable": false,
+      "inputs": [],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "userReputation",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": ""
+        },
+        {
+          "type": "string",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "userRequests",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": ""
+        },
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "withdrawSlashedFunds",
+      "constant": false,
+      "payable": false,
+      "inputs": [],
+      "outputs": []
+    }
+  ]
+}

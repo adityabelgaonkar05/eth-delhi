@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react
 import MultiplayerGame from './components/MultiplayerGame'
 import Cinema from './components/Cinema'
 import Library from './components/Library'
+import Townhall from './components/Townhall'
 import './App.css'
 
 const Navigation = () => {
@@ -55,6 +56,19 @@ const Navigation = () => {
       >
         📚 Library
       </Link>
+      <Link 
+        to="/townhall" 
+        style={{
+          padding: '8px 16px',
+          backgroundColor: location.pathname === '/townhall' ? '#4CAF50' : '#333',
+          color: 'white',
+          textDecoration: 'none',
+          borderRadius: '4px',
+          fontSize: '14px'
+        }}
+      >
+        🏛️ Townhall
+      </Link>
     </nav>
   )
 }
@@ -68,6 +82,7 @@ function App() {
           <Route path="/" element={<MultiplayerGame />} />
           <Route path="/cinema" element={<Cinema />} />
           <Route path="/library" element={<Library />} />
+          <Route path="/townhall" element={<Townhall />} />
         </Routes>
       </div>
     </Router>

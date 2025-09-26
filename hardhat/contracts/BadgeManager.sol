@@ -218,23 +218,23 @@ contract BadgeManager is AccessControl, ReentrancyGuard, Pausable {
         bool _requiresEvent,
         uint256 _requiredEventId
     ) internal {
-        badges[badgeId] = Badge({
-            badgeId: badgeId,
-            name: _name,
-            description: _description,
-            imageURI: _imageURI,
-            category: _category,
-            price: finalPrice,
-            rarity: _rarity,
-            isActive: true,
-            isLimited: _isLimited,
-            maxSupply: _maxSupply,
-            currentSupply: 0,
-            createdAt: block.timestamp,
-            creator: msg.sender,
-            requiresEvent: _requiresEvent,
-            requiredEventId: _requiredEventId
-        });
+        Badge storage badge = badges[badgeId];
+        badge.badgeId = badgeId;
+        badge.name = _name;
+        badge.description = _description;
+        badge.imageURI = _imageURI;
+        badge.category = _category;
+        badge.price = finalPrice;
+        badge.rarity = _rarity;
+        badge.isActive = true;
+        badge.isLimited = _isLimited;
+        badge.maxSupply = _maxSupply;
+        badge.currentSupply = 0;
+        badge.createdAt = block.timestamp;
+        badge.creator = msg.sender;
+        badge.requiresEvent = _requiresEvent;
+        badge.requiredEventId = _requiredEventId;
+        
         categoryBadges[_category].push(badgeId);
         rarityBadges[_rarity].push(badgeId);
         totalBadges++;

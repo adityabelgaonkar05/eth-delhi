@@ -39,10 +39,9 @@ contract SelfProtocolIntegration is AccessControl, Pausable {
     error NotAuthorized();
 
     constructor() {
-        address owner = 0x4C3F5A84041e562928394D63B3E339Be70dBCcC1;
-        _grantRole(DEFAULT_ADMIN_ROLE, owner);
-        _grantRole(ADMIN_ROLE, owner);
-        _grantRole(BACKEND_ROLE, owner); // Owner can act as backend initially
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(ADMIN_ROLE, msg.sender);
+        _grantRole(BACKEND_ROLE, msg.sender); // Owner can act as backend initially
     }
 
     /**

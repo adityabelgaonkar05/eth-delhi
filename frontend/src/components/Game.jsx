@@ -371,7 +371,11 @@ const Game = () => {
           style={{ 
             border: '2px solid #fff',
             backgroundColor: '#87CEEB',
-            display: isLoading || error ? 'none' : 'block'
+            display: isLoading || error ? 'none' : 'block',
+            width: '100vw',
+            height: '100vh',
+            objectFit: 'fill',
+            imageRendering: 'pixelated'
           }}
         />
         <div style={{ 

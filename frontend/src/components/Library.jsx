@@ -501,8 +501,10 @@ const Library = () => {
             border: '2px solid #fff',
             backgroundColor: '#16213e',
             display: isLoading || error ? 'none' : 'block',
-            width: '640px',
-            height: '320px'
+            width: '100vw',
+            height: '100vh',
+            objectFit: 'fill',
+            imageRendering: 'pixelated'
           }}
         />
         <div style={{ 

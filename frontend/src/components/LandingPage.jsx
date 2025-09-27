@@ -4,6 +4,7 @@ import bgHero from "../assets/bg-gif.gif";
 import bgMiddle from "../assets/bg-middle.png";
 import bgEnd from "../assets/bg-end.png";
 import bgFooter from "../assets/bg-footer.png";
+import logoCryptoverse from "../assets/logo-cryptoverse.png";
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -13,18 +14,24 @@ const LandingPage = () => {
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full max-w-full overflow-x-hidden">
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 via-black/70, via-black/50 to-transparent">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 via-black/50 to-transparent w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 w-full">
+          <div className="flex items-center justify-between w-full">
             {/* Logo/Brand Name */}
-            <div className="pixel-text text-white text-xl font-bold">
-              GameVerse
+            <div className="flex items-center">
+              <img
+                src={logoCryptoverse}
+                alt="Cryptoverse"
+                className="h-8 w-auto"
+                onClick={() => navigate("/")}
+                style={{ cursor: "pointer" }}
+              />
             </div>
 
             {/* Navigation Buttons */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4 flex-wrap">
               <button
                 className="navbar-button pixel-text rounded-4xl"
                 onClick={() => navigate("/business")}
@@ -56,15 +63,17 @@ const LandingPage = () => {
 
       {/* Hero Section */}
       <section
-        className="min-h-screen w-full bg-cover bg-center bg-no-repeat flex items-center justify-center"
+        className="min-h-screen w-full max-w-full bg-cover bg-center bg-no-repeat flex items-center justify-center overflow-hidden"
         style={{
           backgroundImage: `url(${bgHero})`,
         }}
       >
-        <div className="text-center text-white py-16 max-w-4xl mx-auto px-8">
-          <h1 className="text-6xl md:text-8xl font-bold mb-8 pixel-text">
-            CRYPTOVERSE
-          </h1>
+        <div className="text-center text-white py-16 max-w-4xl mx-auto px-4 sm:px-8 w-full">
+          <img
+            src={logoCryptoverse}
+            alt="CRYPTOVERSE"
+            className="mx-auto mb-8 max-w-full h-auto w-auto max-h-32 md:max-h-40"
+          />
           <p className="text-xl md:text-2xl mb-12 normal-text font-light leading-relaxed">
             Enter a world where gaming meets blockchain technology. Build,
             explore, and create in the ultimate virtual universe.
@@ -88,12 +97,12 @@ const LandingPage = () => {
 
       {/* Middle Section */}
       <section
-        className="min-h-screen w-full bg-cover bg-center bg-no-repeat flex items-center justify-center"
+        className="min-h-screen w-full max-w-full bg-cover bg-center bg-no-repeat flex items-center justify-center overflow-hidden"
         style={{
           backgroundImage: `url(${bgMiddle})`,
         }}
       >
-        <div className="text-center text-white max-w-6xl px-8 py-16">
+        <div className="text-center text-white max-w-6xl px-4 sm:px-8 py-16 w-full">
           <h2 className="text-4xl font-bold mb-8 pixel-text">
             Explore the World
           </h2>
@@ -132,12 +141,12 @@ const LandingPage = () => {
 
       {/* End Section */}
       <section
-        className="min-h-screen w-full bg-cover bg-center bg-no-repeat flex items-center justify-center"
+        className="min-h-screen w-full max-w-full bg-cover bg-center bg-no-repeat flex items-center justify-center overflow-hidden"
         style={{
           backgroundImage: `url(${bgEnd})`,
         }}
       >
-        <div className="text-center text-white max-w-4xl px-8 py-16">
+        <div className="text-center text-white max-w-4xl px-4 sm:px-8 py-16 w-full">
           <h2 className="text-5xl md:text-6xl font-bold mb-8 pixel-text">
             Ready to Begin?
           </h2>
@@ -156,12 +165,12 @@ const LandingPage = () => {
 
       {/* Footer Section */}
       <footer
-        className="w-full bg-cover bg-blue-900 bg-center bg-no-repeat py-12 relative"
+        className="w-full max-w-full bg-cover bg-blue-900 bg-center bg-no-repeat py-12 relative overflow-hidden"
         style={{
           backgroundImage: `url(${bgFooter})`,
         }}
       >
-        <div className="max-w-6xl mx-auto px-8 text-white py-8 relative z-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-8 text-white py-8 relative z-10 w-full">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
             <div>
               <h4 className="text-lg font-semibold mb-6 pixel-text">Game</h4>

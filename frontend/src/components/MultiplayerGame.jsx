@@ -10,6 +10,8 @@ import TokenBalance from "./TokenBalance";
 import PlayerStatus from './PlayerStatus'
 import PlayerNameTag from './PlayerNameTag'
 import PlayerProfileModal from './PlayerProfileModal'
+import PlayerSearch from './PlayerSearch'
+import { useSocket } from '../context/SocketContext'
 import { getUsernameColor } from '../utils/colorUtils'
 import { 
   collisions, 
@@ -60,6 +62,10 @@ const MultiplayerGame = () => {
   const [showPlayerModal, setShowPlayerModal] = useState(false)
   const [hoveredPlayer, setHoveredPlayer] = useState(null)
   const [playerCoords, setPlayerCoords] = useState({ x: 0, y: 0 })
+  
+  // Player search state
+  const [showPlayerSearch, setShowPlayerSearch] = useState(false)
+  
   const [showLibraryPrompt, setShowLibraryPrompt] = useState(false)
   const [hasShownLibraryPrompt, setHasShownLibraryPrompt] = useState(false)
   const [libraryPromptCooldown, setLibraryPromptCooldown] = useState(false)
@@ -91,6 +97,9 @@ const MultiplayerGame = () => {
   const townhallCooldownTimeoutRef = useRef(null)
   const townhallCooldownIntervalRef = useRef(null)
   const townhallHoldIntervalRef = useRef(null)
+
+  // Socket context
+  const { connect: connectSocket, disconnect: disconnectSocket, socket } = useSocket();
 
   console.log("MultiplayerGame state:", {
     isLoading,
@@ -443,33 +452,36 @@ const MultiplayerGame = () => {
   const initializeSocket = useCallback(() => {
     console.log("Initializing socket connection...");
     
-    // Disconnect existing socket if it exists
-    if (socketRef.current) {
-      console.log("Disconnecting existing socket...");
-      socketRef.current.disconnect();
+    // Use the socket context to connect
+    const newSocket = connectSocket("http://localhost:3001");
+    
+    if (!newSocket) {
+      console.error("Failed to create socket connection");
+      setError("Failed to connect to server");
+      return;
     }
     
-    const socket = io("http://localhost:3001");
-    socketRef.current = socket;
+    // Update socketRef for compatibility with existing code
+    socketRef.current = newSocket;
 
-    socket.on("connect", () => {
-      console.log("Connected to server:", socket.id);
+    newSocket.on("connect", () => {
+      console.log("Connected to server:", newSocket.id);
       setConnected(true);
       // Emit room join for main game
-      socket.emit("joinRoom", "main");
+      newSocket.emit("joinRoom", "main");
     });
 
-    socket.on("disconnect", () => {
+    newSocket.on("disconnect", () => {
       console.log("Disconnected from server");
       setConnected(false);
     });
 
-    socket.on("gameState", (gameState) => {
+    newSocket.on("gameState", (gameState) => {
       console.log("Received game state:", gameState);
 
       // Create other players
       Object.entries(gameState.players).forEach(([playerId, playerData]) => {
-        if (playerId !== socket.id) {
+        if (playerId !== newSocket.id) {
           const username = playerData.username || 'Anonymous';
           const userColor = getUsernameColor(username);
           const otherPlayer = new MultiPlayer({
@@ -494,7 +506,7 @@ const MultiplayerGame = () => {
       setPlayerCount(Object.keys(gameState.players).length);
     });
 
-    socket.on("playerJoined", (playerData) => {
+    newSocket.on("playerJoined", (playerData) => {
       console.log("Player joined:", playerData);
       const username = playerData.username || 'Anonymous';
       const userColor = getUsernameColor(username);
@@ -512,13 +524,13 @@ const MultiplayerGame = () => {
       setPlayerCount((prev) => prev + 1);
     });
 
-    socket.on("playerLeft", (playerId) => {
+    newSocket.on("playerLeft", (playerId) => {
       console.log("Player left:", playerId);
       otherPlayersRef.current.delete(playerId);
       setPlayerCount((prev) => prev - 1);
     });
 
-    socket.on("playerMoved", (data) => {
+    newSocket.on("playerMoved", (data) => {
       const player = otherPlayersRef.current.get(data.id);
       if (player) {
         player.updatePosition(data.x, data.y);
@@ -526,15 +538,15 @@ const MultiplayerGame = () => {
       }
     });
 
-    socket.on("playerInputChanged", (data) => {
+    newSocket.on("playerInputChanged", (data) => {
       const player = otherPlayersRef.current.get(data.id);
       if (player) {
         player.updateSprite(data.facing, data.currentSprite, data.moving);
       }
     });
 
-    return socket;
-  }, []);
+    return newSocket;
+  }, [connectSocket]);
 
   // Handle canvas clicks for player interaction
   const handleCanvasClick = useCallback((event) => {
@@ -1042,6 +1054,38 @@ const MultiplayerGame = () => {
         {/* Token Balance */}
         <TokenBalance />
 
+        {/* Player Search Button - Top Right */}
+        <button
+          onClick={() => setShowPlayerSearch(true)}
+          style={{
+            position: "absolute",
+            top: "20px",
+            right: "20px",
+            fontFamily: "'Press Start 2P', monospace",
+            fontSize: "10px",
+            backgroundColor: "#4C1D95",
+            color: "white",
+            border: "2px solid #7C3AED",
+            padding: "8px 12px",
+            borderRadius: "4px",
+            cursor: "pointer",
+            boxShadow: "2px 2px 4px rgba(0,0,0,0.5)",
+            textShadow: "1px 1px 2px rgba(0,0,0,0.8)",
+            transition: "all 0.2s",
+            zIndex: 10
+          }}
+          onMouseOver={(e) => {
+            e.target.style.backgroundColor = "#5B21B6";
+            e.target.style.transform = "scale(1.05)";
+          }}
+          onMouseOut={(e) => {
+            e.target.style.backgroundColor = "#4C1D95";
+            e.target.style.transform = "scale(1)";
+          }}
+        >
+          🔍 Find Players
+        </button>
+
         {/* Connection status - Bottom Right */}
         <div
           style={{
@@ -1548,6 +1592,23 @@ const MultiplayerGame = () => {
         }}
         playerData={selectedPlayer}
         userColor={selectedPlayer?.color}
+      />
+
+      {/* Player Search Modal */}
+      <PlayerSearch
+        isOpen={showPlayerSearch}
+        onClose={() => setShowPlayerSearch(false)}
+        onPlayerSelect={(player) => {
+          // Open player profile when selected from search
+          setSelectedPlayer({
+            id: player.userAddress || 'unknown',
+            username: player.username,
+            address: player.userAddress,
+            color: getUsernameColor(player.username)
+          });
+          setShowPlayerModal(true);
+          setShowPlayerSearch(false);
+        }}
       />
     </div>
   );

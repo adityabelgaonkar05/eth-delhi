@@ -126,6 +126,21 @@ const QuickNavigation = () => {
       >
         <span>🏛️</span> Town Hall
       </Link>
+      <Link 
+        to="/walrus-test" 
+        style={{ 
+          color: '#8B5CF6', 
+          textDecoration: 'none',
+          padding: '8px 12px',
+          borderRadius: '5px',
+          backgroundColor: 'rgba(255,255,255,0.1)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}
+      >
+        <span>🦭</span> Walrus Test
+      </Link>
     </div>
   );
 };

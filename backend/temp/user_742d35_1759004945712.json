@@ -1,0 +1,13 @@
+{
+  "userAddress": "0x742d35cc6634c0532925a3b8d4bc3db2be94b3bb",
+  "username": "BackendTestUser",
+  "bio": "Testing Walrus from backend",
+  "email": "backend@test.com",
+  "reputation": 500,
+  "avatar": "",
+  "joinedAt": 1759004945711,
+  "lastActive": 1759004945711,
+  "lastUpdated": "2025-09-27T20:29:05.711Z",
+  "version": "1.0",
+  "dataType": "cryptoverse_user_profile"
+}

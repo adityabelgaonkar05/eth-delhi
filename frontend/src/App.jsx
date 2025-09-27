@@ -50,60 +50,87 @@ function App() {
                   <Route path="/onboarding" element={<OnboardingPage />} />
 
                   {/* Protected routes that require authentication and onboarding */}
-                  <Route path="/game" element={
-                    // <AuthGuard>
-                    <MultiplayerGame />
-                    // </AuthGuard>
-                  } />
-                  <Route path="/cinema" element={
-                    // <AuthGuard>
-                    <Cinema />
-                    // </AuthGuard>
-                  } />
-                  <Route path="/library" element={
-                    // <AuthGuard>
-                    <Library />
-                    // </AuthGuard>
-                  } />
-                  <Route path="/townhall" element={
-                    // <AuthGuard>
-                    <Townhall />
-                    // </AuthGuard>
-                  } />
+                  <Route
+                    path="/game"
+                    element={
+                      // <AuthGuard>
+                      <MultiplayerGame />
+                      // </AuthGuard>
+                    }
+                  />
+                  <Route
+                    path="/cinema"
+                    element={
+                      // <AuthGuard>
+                      <Cinema />
+                      // </AuthGuard>
+                    }
+                  />
+                  <Route
+                    path="/library"
+                    element={
+                      // <AuthGuard>
+                      <Library />
+                      // </AuthGuard>
+                    }
+                  />
+                  <Route
+                    path="/townhall"
+                    element={
+                      // <AuthGuard>
+                      <Townhall />
+                      // </AuthGuard>
+                    }
+                  />
 
                   {/* Pet Shop route */}
-                  <Route path="/pets" element={
-                    // <AuthGuard>
-                    <PetNFTShop />
-                    // </AuthGuard>
-                  } />
+                  <Route
+                    path="/pets"
+                    element={
+                      // <AuthGuard>
+                      <PetNFTShop />
+                      // </AuthGuard>
+                    }
+                  />
 
                   {/* Leaderboards route */}
-                  <Route path="/leaderboards" element={
-                    // <AuthGuard>
-                    <LeaderboardsPage />
-                    // </AuthGuard>
-                  } />
+                  <Route
+                    path="/leaderboards"
+                    element={
+                      // <AuthGuard>
+                      <LeaderboardsPage />
+                      // </AuthGuard>
+                    }
+                  />
 
                   {/* Profile routes */}
-                  <Route path="/profile" element={
-                    // <AuthGuard>
-                    <UserProfile />
-                    // </AuthGuard>
-                  } />
+                  <Route
+                    path="/profile"
+                    element={
+                      // <AuthGuard>
+                      <UserProfile />
+                      // </AuthGuard>
+                    }
+                  />
 
-                  <Route path="/search-profile" element={
-                    // <AuthGuard>
-                    <ProfileSearch />
-                    // </AuthGuard>
-                  } />
+                  <Route
+                    path="/search-profile"
+                    element={
+                      // <AuthGuard>
+                      <ProfileSearch />
+                      // </AuthGuard>
+                    }
+                  />
 
                   {/* Admin/work routes */}
                   <Route path="/workwithus" element={<Workwithus />} />
                   <Route path="/admin" element={<Workwithus />} />
 
                   {/* Development/testing routes */}
-                  <Route path="/contractTesting" element={<ContractExample />} />
+                  <Route
+                    path="/contractTesting"
+                    element={<ContractExample />}
+                  />
                   {/* <Route path="wallet" element={<WalletSelector />} /> */}
                 </Routes>
 

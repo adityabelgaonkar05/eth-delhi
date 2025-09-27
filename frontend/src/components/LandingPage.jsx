@@ -4,56 +4,12 @@ import bgHero from "../assets/bg-hero.png";
 import bgMiddle from "../assets/bg-middle.png";
 import bgEnd from "../assets/bg-end.png";
 import bgFooter from "../assets/bg-footer.png";
-import BusinessOnboarding from "./BusinessOnboarding";
-import BusinessLogin from "./BusinessLogin";
-import { useAuth } from "../context/AuthContext";
 
 const LandingPage = () => {
   const navigate = useNavigate();
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
-  const { business, logout } = useAuth();
 
-  const handleWorkWithUs = () => {
-    if (business) {
-      // If already logged in, go directly to dashboard
-      navigate("/workwithus");
-    } else {
-      // Show signup form
-      setShowOnboarding(true);
-    }
-  };
-
-  const handleLogin = () => {
-    setShowLogin(true);
-  };
-
-  const handleLogout = async () => {
-    await logout();
-  };
-
-  const handleOnboardingComplete = (businessData) => {
-    console.log("Business onboarding completed:", businessData);
-    setShowOnboarding(false);
-    navigate("/workwithus");
-  };
-
-  const handleOnboardingClose = () => {
-    setShowOnboarding(false);
-  };
-
-  const handleLoginClose = () => {
-    setShowLogin(false);
-  };
-
-  const handleSwitchToSignup = () => {
-    setShowLogin(false);
-    setShowOnboarding(true);
-  };
-
-  const handleSwitchToLogin = () => {
-    setShowOnboarding(false);
-    setShowLogin(true);
+  const handleGameClick = () => {
+    navigate("/game");
   };
 
   return (
@@ -69,42 +25,24 @@ const LandingPage = () => {
 
             {/* Navigation Buttons */}
             <div className="flex items-center space-x-4">
-              {business ? (
-                // Authenticated business navigation
-                <>
-                  <span className="pixel-text text-white text-sm">
-                    Welcome, {business.companyName}
-                  </span>
-                  <button
-                    className="navbar-button pixel-text rounded-4xl"
-                    onClick={() => navigate("/workwithus")}
-                  >
-                    Dashboard
-                  </button>
-                  <button
-                    className="navbar-button pixel-text rounded-4xl"
-                    onClick={handleLogout}
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
-                // Unauthenticated navigation
-                <>
-                  <button
-                    className="navbar-button pixel-text rounded-4xl"
-                    onClick={handleLogin}
-                  >
-                    Business Login
-                  </button>
-                  <button
-                    className="navbar-button-primary pixel-text rounded-4xl"
-                    onClick={handleWorkWithUs}
-                  >
-                    Work With Us
-                  </button>
-                </>
-              )}
+              <button
+                className="navbar-button pixel-text rounded-4xl"
+                onClick={() => navigate("/business")}
+              >
+                For Businesses
+              </button>
+              <button
+                className="navbar-button pixel-text rounded-4xl"
+                onClick={handleGameClick}
+              >
+                Play Game
+              </button>
+              <button
+                className="navbar-button-primary pixel-text rounded-4xl"
+                onClick={() => navigate("/game")}
+              >
+                Get Started
+              </button>
             </div>
           </div>
         </div>
@@ -117,19 +55,28 @@ const LandingPage = () => {
           backgroundImage: `url(${bgHero})`,
         }}
       >
-        <div className="text-center text-white py-16">
+        <div className="text-center text-white py-16 max-w-4xl mx-auto px-8">
           <h1 className="text-6xl md:text-8xl font-bold mb-8 pixel-text">
-            Welcome
+            CRYPTOVERSE
           </h1>
-          <p className="text-2xl md:text-3xl mb-12 normal-text font-light">
-            Your adventure begins here
+          <p className="text-xl md:text-2xl mb-12 normal-text font-light leading-relaxed">
+            Enter a world where gaming meets blockchain technology. 
+            Build, explore, and create in the ultimate virtual universe.
           </p>
-          <button
-            className="arcade-button pixel-text"
-            onClick={() => navigate("/game")}
-          >
-            LET'S PLAY!
-          </button>
+          <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+            <button
+              className="arcade-button pixel-text text-lg px-8 py-4"
+              onClick={() => navigate("/game")}
+            >
+              ENTER WORLD
+            </button>
+            <button
+              className="arcade-button-secondary pixel-text text-lg px-8 py-4"
+              onClick={() => navigate("/business")}
+            >
+              FOR BUSINESSES
+            </button>
+          </div>
         </div>
       </section>
 
@@ -338,21 +285,6 @@ const LandingPage = () => {
           </div>
         </div>
       </footer>
-      
-      {/* Business Onboarding Modal */}
-      <BusinessOnboarding
-        isOpen={showOnboarding}
-        onClose={handleOnboardingClose}
-        onComplete={handleOnboardingComplete}
-        onSwitchToLogin={handleSwitchToLogin}
-      />
-      
-      {/* Business Login Modal */}
-      <BusinessLogin
-        isOpen={showLogin}
-        onClose={handleLoginClose}
-        onSwitchToSignup={handleSwitchToSignup}
-      />
     </div>
   );
 };

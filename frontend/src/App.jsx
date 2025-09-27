@@ -6,6 +6,7 @@ import {
   useLocation,
 } from "react-router-dom";
 import LandingPage from "./components/LandingPage";
+import BusinessLanding from "./components/BusinessLanding";
 import MultiplayerGame from "./components/MultiplayerGame";
 import Cinema from "./components/Cinema";
 import Library from "./components/Library";
@@ -24,6 +25,7 @@ function App() {
           <div className="App">
             <Routes>
               <Route path="/" element={<LandingPage />} />
+              <Route path="/business" element={<BusinessLanding />} />
               <Route path="/game" element={<MultiplayerGame />} />
               <Route path="/workwithus" element={<Workwithus />} />
               <Route path="/admin" element={<Workwithus />} />

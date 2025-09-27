@@ -17,7 +17,7 @@ export const WalletProvider = ({ children }) => {
   const [availableWallets, setAvailableWallets] = useState([]);
 
   // Detect available wallets
-  const detectWallets = () => {
+  const detectWallets = useCallback(() => {
     const wallets = [];
 
     // Check for MetaMask
@@ -63,7 +63,7 @@ export const WalletProvider = ({ children }) => {
 
     setAvailableWallets(wallets);
     return wallets;
-  };
+  }, []); // Empty dependency array since this function doesn't depend on any props or state
 
   const fetchWallet = async (selectedProvider = null) => {
     try {

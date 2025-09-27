@@ -5,15 +5,56 @@ const socketIo = require("socket.io");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db");
+const selfAuthRoutes = require("./routes/auth/selfAuth");
+const adminRoutes = require("./routes/auth/admin");
 const app = express();
 const server = http.createServer(app);
 
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:5173", // React dev server
+    origin: "*", // Allow all origins for development
     methods: ["GET", "POST"],
   },
 });
+
+// Enhanced CORS configuration for localtunnel and development
+app.use(cors({
+  origin: [
+    'http://localhost:5173', // Frontend dev server
+    'http://localhost:3000', // Alternative frontend port
+    /\.loca\.lt$/, // Allow all localtunnel subdomains
+    /\.ngrok\.io$/, // Allow all ngrok subdomains
+    /\.ngrok-free\.app$/, // Allow new ngrok domains
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
+app.use(express.json());
+
+// Middleware to handle localtunnel bypass
+app.use((req, res, next) => {
+  // Add localtunnel bypass header
+  if (req.get('host') && req.get('host').includes('loca.lt')) {
+    res.setHeader('Bypass-Tunnel-Reminder', 'true');
+  }
+  next();
+});
+
+// Add a health check endpoint for tunnel verification
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    service: 'CryptoVerse Backend',
+    port: process.env.PORT || 3001
+  });
+});
+
+// Authentication routes
+app.use('/api/auth', selfAuthRoutes);
+app.use('/api/admin', adminRoutes);
 const indexRoutes = require("./routes/indexRoutes");
 
 app.use(cors({

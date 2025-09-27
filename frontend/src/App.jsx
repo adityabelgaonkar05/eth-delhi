@@ -5,6 +5,8 @@ import {
   Link,
   useLocation,
 } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 import LandingPage from "./components/LandingPage";
 import BusinessLanding from "./components/BusinessLanding";
 import MultiplayerGame from "./components/MultiplayerGame";

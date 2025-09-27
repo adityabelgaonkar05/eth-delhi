@@ -294,6 +294,24 @@ async function main() {
     console.log("🔄 Continuing with deployment summary...");
   }
 
+  // 18. CryptoVersePetNFT
+  console.log("⏳ Deploying CryptoVersePetNFT...");
+  const CryptoVersePetNFT = await ethers.getContractFactory("CryptoVersePetNFT");
+  const petNFT = await CryptoVersePetNFT.deploy(
+    cryptoVerseTokenAddress,
+    deployer.address // Use deployer as treasury
+  );
+  await petNFT.waitForDeployment();
+  const petNFTAddress = await petNFT.getAddress();
+  saveContractData("CryptoVersePetNFT", petNFTAddress, petNFT);
+  console.log("✅ CryptoVersePetNFT deployed to:", petNFTAddress);
+  
+  // Display Pet NFT info
+  const totalPets = await petNFT.totalPets();
+  const stats = await petNFT.getMarketplaceStats();
+  console.log(`🐾 Pet Collection: ${totalPets} pets created`);
+  console.log(`🛒 Available for sale: ${stats.availableCount}`);
+
   // ============================
   // Deployment Summary
   // ============================
@@ -328,6 +346,7 @@ async function main() {
       name: "CryptoVerseBusinessDashboard",
       address: cryptoVerseBusinessDashboardAddress,
     },
+    { name: "CryptoVersePetNFT", address: petNFTAddress },
   ].filter((contract) => contract.address !== null);
 
   console.log(
@@ -341,17 +360,17 @@ async function main() {
     console.log(`🟢 ${contract.name}: ${contract.address}`);
   });
 
-  const skippedContracts = 17 - deployedContracts.length;
+  const skippedContracts = 18 - deployedContracts.length;
   if (skippedContracts > 0) {
     console.log("==========================================");
     console.log(
       `⚠️  ${skippedContracts} contract(s) skipped due to size limits`
     );
-    console.log("� These contracts work fine on local/mainnet networks");
+    console.log("📝 These contracts work fine on local/mainnet networks");
   }
 
   console.log("==========================================");
-  console.log(`✨ Total Contracts Deployed: ${deployedContracts.length}/17`);
+  console.log(`✨ Total Contracts Deployed: ${deployedContracts.length}/18`);
   console.log("==========================================");
   console.log("\n📁 CONTRACT DATA FILES CREATED:");
   console.log("All deployed contract addresses and ABIs have been saved to:");

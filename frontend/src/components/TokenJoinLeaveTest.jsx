@@ -9,7 +9,7 @@ const TokenJoinLeaveTest = () => {
     isLoading,
     hasJoined,
     joinTokensGiven,
-    manualGiveJoinTokens,
+    claimJoinTokens,
     manualRemoveLeaveTokens,
   } = useToken();
   const { isConnected, account } = useWallet();
@@ -89,11 +89,11 @@ const TokenJoinLeaveTest = () => {
         </h4>
         <div className="flex flex-wrap gap-3">
           <button
-            onClick={manualGiveJoinTokens}
+            onClick={claimJoinTokens}
             disabled={isLoading || joinTokensGiven}
             className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-bold text-sm transition-colors"
           >
-            {isLoading ? "⏳ Processing..." : "🎉 Give Join Tokens"}
+            {isLoading ? "⏳ Processing..." : "🎉 Claim Join Tokens"}
           </button>
 
           <button
@@ -111,20 +111,20 @@ const TokenJoinLeaveTest = () => {
         <h4 className="font-bold text-blue-700 mb-2">📋 How It Works</h4>
         <ul className="text-sm text-blue-700 space-y-1">
           <li>
-            • <strong>Auto Join:</strong> When you connect your wallet, you
-            automatically receive 100 CVRS tokens
+            • <strong>Manual Claim:</strong> Click "Claim Join Tokens" to
+            receive 100 CVRS tokens
           </li>
           <li>
             • <strong>Auto Leave:</strong> When you switch tabs, close the
             browser, or disconnect, 100 tokens are removed
           </li>
           <li>
-            • <strong>Manual Controls:</strong> Use the buttons above to
-            manually trigger join/leave actions
+            • <strong>One-Time Claim:</strong> You can only claim join tokens
+            once per session
           </li>
           <li>
             • <strong>Status Tracking:</strong> The system tracks whether you've
-            received join tokens in this session
+            claimed join tokens in this session
           </li>
         </ul>
       </div>

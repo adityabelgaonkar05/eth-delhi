@@ -1,0 +1,31 @@
+{
+  "name": "Pixel Pup",
+  "description": "A friendly digital companion from the CryptoVerse. This adorable pixel art pup is always ready for adventure in the metaverse.",
+  "image": "https://aggregator-devnet.walrus.space/v1/0xc09e435a32bfc22fa315cc590290097cc09045d043853b09d030e5403aa8b876",
+  "external_url": "http://localhost:5173/pets",
+  "attributes": [
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Type",
+      "value": "Dog"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Digital"
+    },
+    {
+      "trait_type": "Tier",
+      "value": "COMMON"
+    },
+    {
+      "trait_type": "Price",
+      "value": "100 CVRS"
+    }
+  ],
+  "walrus_image_id": "0xc09e435a32bfc22fa315cc590290097cc09045d043853b09d030e5403aa8b876",
+  "walrus_metadata_id": "0xd9da430b73c6a5aefb4249e6f82d03b5ce6d92d06fd026929de5a771c298cbe2",
+  "walrus_upload_date": "2025-09-27T14:38:39.490Z"
+}

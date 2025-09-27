@@ -115,8 +115,13 @@ export const WalletProvider = ({ children }) => {
     }
   };
 
-  const handleChainChanged = () => {
-    window.location.reload();
+  const handleChainChanged = (chainId) => {
+    console.log("Chain changed to:", chainId);
+    // Handle chain change gracefully without reloading
+    setAccount(null);
+    setSigner(null);
+    // Optional: You can uncomment the line below if you really need to reload
+    // window.location.reload();
   };
 
   useEffect(() => {
@@ -187,3 +192,4 @@ export const useWallet = () => {
   }
   return context;
 };
+

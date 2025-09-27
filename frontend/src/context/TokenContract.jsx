@@ -67,17 +67,33 @@ export const TokenProvider = ({ children }) => {
     }
   }, [account]);
 
-  // Give join tokens when user first connects
-  const handleUserJoin = useCallback(async () => {
-    if (!account || !isConnected || hasReceivedJoinTokens.current) return;
+  /**
+   * Manual function to give 100 tokens to the user
+   * This function is called when user clicks a button to claim their join tokens
+   * It mints 100 CVRS tokens to the user's wallet address
+   * @returns {Promise<Object>} Result object with success status and transaction details
+   */
+  const claimJoinTokens = useCallback(async () => {
+    if (!account || !isConnected) {
+      console.error("❌ Cannot claim tokens: Wallet not connected");
+      return { success: false, error: "Wallet not connected" };
+    }
 
-    console.log("🎉 User joined! Giving 100 join tokens...");
+    if (hasReceivedJoinTokens.current) {
+      console.warn("⚠️ User has already claimed join tokens in this session");
+      return {
+        success: false,
+        error: "Join tokens already claimed in this session",
+      };
+    }
+
+    console.log("🎉 User claiming join tokens! Giving 100 CVRS tokens...");
     setIsLoading(true);
 
     try {
       const result = await giveJoinTokens(account);
       if (result.success) {
-        console.log("✅ Join tokens given successfully:", result.txHash);
+        console.log("✅ Join tokens claimed successfully:", result.txHash);
         hasReceivedJoinTokens.current = true;
         joinTokensGiven.current = true;
         setHasJoined(true);
@@ -86,11 +102,20 @@ export const TokenProvider = ({ children }) => {
         setTimeout(() => {
           fetchBalance();
         }, 2000);
+
+        return {
+          success: true,
+          txHash: result.txHash,
+          amount: result.amount,
+          message: "Successfully claimed 100 CVRS join tokens!",
+        };
       } else {
-        console.error("❌ Failed to give join tokens:", result.error);
+        console.error("❌ Failed to claim join tokens:", result.error);
+        return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error("❌ Error in handleUserJoin:", error);
+      console.error("❌ Error in claimJoinTokens:", error);
+      return { success: false, error: error.message };
     } finally {
       setIsLoading(false);
     }
@@ -134,9 +159,7 @@ export const TokenProvider = ({ children }) => {
       } else {
         // User returned to the page
         console.log("📱 Page visible - user returned");
-        if (isConnected && account && !hasReceivedJoinTokens.current) {
-          handleUserJoin();
-        }
+        // Note: No automatic token giving on return - user must manually claim
       }
     };
 
@@ -155,20 +178,20 @@ export const TokenProvider = ({ children }) => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [handleUserJoin, handleUserLeave, isConnected, account]);
+  }, [handleUserLeave]);
 
   // Handle wallet connection changes
   useEffect(() => {
-    if (isConnected && account && !hasReceivedJoinTokens.current) {
-      console.log("🔗 Wallet connected - giving join tokens");
-      handleUserJoin();
-    } else if (!isConnected) {
+    if (!isConnected) {
       // Reset state when wallet disconnects
       hasReceivedJoinTokens.current = false;
       joinTokensGiven.current = false;
       setHasJoined(false);
+      console.log("🔗 Wallet disconnected - resetting token state");
+    } else if (isConnected && account) {
+      console.log("🔗 Wallet connected - ready to claim join tokens manually");
     }
-  }, [isConnected, account, handleUserJoin]);
+  }, [isConnected, account]);
 
   // Fetch token balance whenever account changes
   useEffect(() => {
@@ -181,15 +204,19 @@ export const TokenProvider = ({ children }) => {
     fetchBalance();
   }, [account, fetchBalance]);
 
-  // Manual functions for testing/debugging
-  const manualGiveJoinTokens = useCallback(async () => {
-    if (!account) return;
-    await handleUserJoin();
-  }, [account, handleUserJoin]);
-
+  /**
+   * Manual function to remove leave tokens (for testing/debugging)
+   * This function manually triggers the leave token removal process
+   * @returns {Promise<Object>} Result object with success status and transaction details
+   */
   const manualRemoveLeaveTokens = useCallback(async () => {
-    if (!account) return;
-    await handleUserLeave();
+    if (!account) {
+      console.error("❌ Cannot remove tokens: No account connected");
+      return { success: false, error: "No account connected" };
+    }
+
+    console.log("🧪 Manual leave token removal triggered");
+    return await handleUserLeave();
   }, [account, handleUserLeave]);
 
   const refreshBalance = useCallback(async () => {
@@ -206,8 +233,9 @@ export const TokenProvider = ({ children }) => {
         hasJoined,
         hasReceivedJoinTokens: hasReceivedJoinTokens.current,
         joinTokensGiven: joinTokensGiven.current,
-        // Manual functions for testing
-        manualGiveJoinTokens,
+        // Main function for claiming join tokens
+        claimJoinTokens,
+        // Manual functions for testing/debugging
         manualRemoveLeaveTokens,
       }}
     >

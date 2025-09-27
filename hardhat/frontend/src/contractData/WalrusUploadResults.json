@@ -1,0 +1,10 @@
+{
+  "network": "flowTestnet",
+  "walrusStorageContract": "0x8e3352B34C8b6FeC6018cd2478593dBbF77565c3",
+  "uploaderAddress": "0x4C3F5a84041E562928394d63b3E339bE70DBcC17",
+  "uploadedAt": "2025-09-27T14:36:52.801Z",
+  "totalAssets": 0,
+  "successfulUploads": 0,
+  "failedUploads": 0,
+  "assets": []
+}

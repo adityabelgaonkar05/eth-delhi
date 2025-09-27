@@ -38,6 +38,14 @@ const Townhall = () => {
   const [connected, setConnected] = useState(false)
   const [playerCount, setPlayerCount] = useState(0)
   const [playerCoords, setPlayerCoords] = useState({ x: 0, y: 0 })
+  
+  // Exit to main island states
+  const [showExitPrompt, setShowExitPrompt] = useState(false)
+  const [hasShownExitPrompt, setHasShownExitPrompt] = useState(false)
+  const [exitPromptCooldown, setExitPromptCooldown] = useState(false)
+  const [exitCooldownTimeLeft, setExitCooldownTimeLeft] = useState(0)
+  const exitCooldownTimeoutRef = useRef(null)
+  const exitCooldownIntervalRef = useRef(null)
 
   console.log('Townhall state:', { isLoading, error, connected, playerCount })
 
@@ -155,6 +163,55 @@ const Townhall = () => {
       })
     }
   }, [])
+
+  // Start exit cooldown period to prevent prompt spam
+  const startExitCooldown = useCallback(() => {
+    console.log('startExitCooldown called - setting cooldown to true')
+    setExitPromptCooldown(true)
+    setExitCooldownTimeLeft(5)
+    
+    // Clear any existing timeout and interval
+    if (exitCooldownTimeoutRef.current) {
+      clearTimeout(exitCooldownTimeoutRef.current)
+    }
+    if (exitCooldownIntervalRef.current) {
+      clearInterval(exitCooldownIntervalRef.current)
+    }
+    
+    // Start countdown interval
+    exitCooldownIntervalRef.current = setInterval(() => {
+      setExitCooldownTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(exitCooldownIntervalRef.current)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    
+    // Set 5-second cooldown
+    exitCooldownTimeoutRef.current = setTimeout(() => {
+      console.log('Exit cooldown timeout triggered - setting cooldown to false')
+      setExitPromptCooldown(false)
+      setHasShownExitPrompt(false) // Reset so it can trigger again after cooldown
+      setExitCooldownTimeLeft(0)
+      console.log('Exit prompt cooldown ended')
+    }, 5000) // 5 seconds cooldown
+  }, [])
+
+  // Handle exit navigation
+  const handleExitToMain = useCallback(() => {
+    setShowExitPrompt(false)
+    startExitCooldown()
+    // Navigate back to main game
+    window.location.href = '/game'
+  }, [startExitCooldown])
+
+  const handleStayInTownhall = useCallback(() => {
+    console.log('handleStayInTownhall called - starting cooldown')
+    setShowExitPrompt(false)
+    startExitCooldown()
+  }, [startExitCooldown])
 
   // Layer data and tileset configuration for townhall
   const layersData = {
@@ -336,11 +393,32 @@ const Townhall = () => {
       player.update(deltaTime)
     })
 
+    // Check for exit to main island interaction zone (coordinates 303,289 to 310,289)
+    const playerX = playerRef.current.x
+    const playerY = playerRef.current.y
+    const isInExitZone = playerX >= 303 && playerX <= 310 && playerY >= 284 && playerY <= 294
+    
+    // Debug logging (remove in production)
+    if (playerX >= 300 && playerX <= 315 && playerY >= 280 && playerY <= 300) {
+      console.log(`Player at (${Math.round(playerX)}, ${Math.round(playerY)}), in exit zone: ${isInExitZone}, prompt shown: ${hasShownExitPrompt}, cooldown: ${exitPromptCooldown}`)
+    }
+    
+    // Only trigger exit prompt if in zone, not already shown, and not in cooldown
+    if (isInExitZone && !hasShownExitPrompt && !exitPromptCooldown) {
+      console.log('Triggering exit prompt!')
+      setShowExitPrompt(true)
+      setHasShownExitPrompt(true)
+    }
+
     // Render scene
     ctx.save()
     ctx.scale(dpr, dpr)
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     ctx.drawImage(backgroundCanvasRef.current, 0, 0)
+    
+    // Draw exit to main island indicator
+    ctx.fillStyle = 'rgba(255, 0, 0, 0.3)'
+    ctx.fillRect(303, 300, 17, 19) // Highlight the exit area (X: 303-310, Y: 284-294)
     
     // Draw local player
     playerRef.current.draw(ctx)
@@ -358,6 +436,14 @@ const Townhall = () => {
   // Handle keyboard input
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Handle ESC key to close exit prompt
+      if (e.key === 'Escape') {
+        if (showExitPrompt) {
+          handleStayInTownhall()
+          return
+        }
+      }
+
       const wasPressed = Object.values(keysRef.current).some(key => key.pressed)
       
       switch (e.key.toLowerCase()) {
@@ -418,7 +504,7 @@ const Townhall = () => {
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
     }
-  }, [sendPlayerInput])
+  }, [sendPlayerInput, showExitPrompt, handleStayInTownhall])
 
   // Initialize game on component mount
   useEffect(() => {
@@ -440,6 +526,13 @@ const Townhall = () => {
       }
       if (socketRef.current) {
         socketRef.current.disconnect()
+      }
+      // Cleanup exit cooldown timeout and interval
+      if (exitCooldownTimeoutRef.current) {
+        clearTimeout(exitCooldownTimeoutRef.current)
+      }
+      if (exitCooldownIntervalRef.current) {
+        clearInterval(exitCooldownIntervalRef.current)
       }
     }
   }, [])
@@ -496,6 +589,11 @@ const Townhall = () => {
         }}>
           <div>X: {Math.round(playerCoords.x)}</div>
           <div>Y: {Math.round(playerCoords.y)}</div>
+          {exitPromptCooldown && (
+            <div style={{ color: '#ff6b6b', fontSize: '10px', marginTop: '2px' }}>
+              Exit cooldown: {exitCooldownTimeLeft}s
+            </div>
+          )}
         </div>
 
         <canvas 
@@ -548,6 +646,106 @@ const Townhall = () => {
             backgroundColor: '#222'
           }}>
             🏛️ Loading townhall...
+          </div>
+        )}
+
+        {/* Exit to Main Island Prompt */}
+        {showExitPrompt && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+          }}>
+            <div style={{
+              backgroundColor: '#2a2a2a',
+              border: '3px solid #4a4a4a',
+              borderRadius: '15px',
+              padding: '30px',
+              textAlign: 'center',
+              maxWidth: '400px',
+              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)'
+            }}>
+              <h2 style={{
+                color: '#fff',
+                fontSize: '24px',
+                marginBottom: '20px',
+                fontFamily: 'monospace'
+              }}>
+                🏝️ Exit to Main Island
+              </h2>
+              
+              <p style={{
+                color: '#ccc',
+                fontSize: '16px',
+                marginBottom: '30px',
+                lineHeight: '1.5'
+              }}>
+                You've found the exit portal!<br/>
+                Would you like to return to the main island?
+              </p>
+              
+              <div style={{
+                display: 'flex',
+                gap: '15px',
+                justifyContent: 'center'
+              }}>
+                <button
+                  onClick={handleExitToMain}
+                  style={{
+                    backgroundColor: '#FF6B35',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    cursor: 'pointer',
+                    fontFamily: 'monospace',
+                    fontWeight: 'bold',
+                    transition: 'background-color 0.3s'
+                  }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#E55A2B'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = '#FF6B35'}
+                >
+                  Exit to Main Island
+                </button>
+                
+                <button
+                  onClick={handleStayInTownhall}
+                  style={{
+                    backgroundColor: '#666',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    cursor: 'pointer',
+                    fontFamily: 'monospace',
+                    fontWeight: 'bold',
+                    transition: 'background-color 0.3s'
+                  }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#555'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = '#666'}
+                >
+                  Stay in Townhall
+                </button>
+              </div>
+              
+              <p style={{
+                color: '#888',
+                fontSize: '12px',
+                marginTop: '20px',
+                fontStyle: 'italic'
+              }}>
+                Press ESC to close this dialog
+              </p>
+            </div>
           </div>
         )}
       </div>

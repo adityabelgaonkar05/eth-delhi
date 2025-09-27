@@ -1,0 +1,4 @@
+# Walrus client configuration
+network: "testnet" # or "mainnet" for production
+rpc_url: "https://walrus-testnet.sui.io:443"
+wallet_path: "./wallet.json"

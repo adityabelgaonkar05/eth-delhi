@@ -7,6 +7,7 @@ import {
   useLeaderboardManager,
   useCryptoVersePetNFT
 } from '../context/ContractContext';
+import useWalrusProfile from '../hooks/useWalrusProfile';
 
 const PlayerProfileModal = ({ 
   isOpen, 
@@ -20,12 +21,21 @@ const PlayerProfileModal = ({
   const { contract: leaderboardManager } = useLeaderboardManager();
   const { contract: petNFT } = useCryptoVersePetNFT();
 
+  // Walrus profile hook
+  const { 
+    getUserProfile: getWalrusProfile, 
+    isLoading: walrusLoading,
+    error: walrusError 
+  } = useWalrusProfile();
+
   const [profileData, setProfileData] = useState({
     userProfile: null,
     tokenBalance: '0',
     userBadges: [],
     leaderboardRank: null,
-    userPets: []
+    userPets: [],
+    walrusProfile: null,
+    dataSource: 'loading' // 'walrus', 'contract', 'loading', 'error'
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -40,40 +50,85 @@ const PlayerProfileModal = ({
     try {
       setLoading(true);
       setError(null);
-      const data = {};
+      
+      // Initialize data with loading state
+      setProfileData(prev => ({
+        ...prev,
+        dataSource: 'loading'
+      }));
+      
+      let walrusData = null;
+      let contractData = {};
+      let dataSource = 'contract'; // default to contract
+      
+      // Try to load from Walrus first (with 10s timeout)
+      try {
+        console.log('🦭 Attempting to load profile from Walrus...');
+        walrusData = await getWalrusProfile(playerData.address);
+        dataSource = 'walrus';
+        
+        console.log('✅ Loaded profile from Walrus:', walrusData.source);
+        
+        // If Walrus data is fresh, use it primarily
+        if (walrusData && walrusData.source === 'walrus') {
+          contractData = {
+            userProfile: {
+              username: walrusData.username || playerData.username || 'Anonymous',
+              email: walrusData.email || '',
+              isVerified: walrusData.isVerified || false,
+              reputation: walrusData.reputation || 0,
+              bio: walrusData.bio || '',
+              avatar: walrusData.avatar || '',
+              userAddress: playerData.address,
+              isActive: true,
+              joinedAt: walrusData.joinedAt || 0,
+              lastActive: walrusData.lastActive || Date.now()
+            }
+          };
+        }
+      } catch (walrusErr) {
+        console.warn('⚠️ Walrus profile loading failed, falling back to contracts:', walrusErr.message);
+        // Continue with contract loading
+      }
 
-      // Load User Registry Profile
-      if (userRegistry && playerData.address) {
-        try {
-          const userProfile = await userRegistry.read('getUserProfile', playerData.address);
-          data.userProfile = {
-            userAddress: userProfile.userAddress,
-            username: userProfile.username || playerData.username || 'Anonymous',
-            email: userProfile.email || '',
-            isVerified: userProfile.isVerified,
-            isActive: userProfile.isActive,
-            reputation: userProfile.reputation ? Number(userProfile.reputation) : 0,
-            joinedAt: userProfile.joinedAt ? Number(userProfile.joinedAt) : 0,
-            lastActive: userProfile.lastActive ? Number(userProfile.lastActive) : 0
-          };
-        } catch (error) {
-          console.error('Error loading user profile:', error);
-          data.userProfile = {
-            username: playerData.username || 'Anonymous',
-            isVerified: false,
-            reputation: 0
-          };
+      // Load from contracts (either as fallback or primary)
+      if (!walrusData || dataSource === 'contract') {
+        console.log('📄 Loading profile data from smart contracts...');
+        
+        // Load User Registry Profile
+        if (userRegistry && playerData.address) {
+          try {
+            const userProfile = await userRegistry.read('getUserProfile', playerData.address);
+            contractData.userProfile = {
+              userAddress: userProfile.userAddress,
+              username: userProfile.username || playerData.username || 'Anonymous',
+              email: userProfile.email || '',
+              isVerified: userProfile.isVerified,
+              isActive: userProfile.isActive,
+              reputation: userProfile.reputation ? Number(userProfile.reputation) : 0,
+              joinedAt: userProfile.joinedAt ? Number(userProfile.joinedAt) : 0,
+              lastActive: userProfile.lastActive ? Number(userProfile.lastActive) : 0
+            };
+          } catch (error) {
+            console.error('Error loading user profile from contract:', error);
+            contractData.userProfile = {
+              username: playerData.username || 'Anonymous',
+              isVerified: false,
+              reputation: 0,
+              userAddress: playerData.address
+            };
+          }
         }
       }
 
-      // Load Token Balance
+      // Load Token Balance (always from contract)
       if (cryptoVerseToken && playerData.address) {
         try {
           const balance = await cryptoVerseToken.read('balanceOf', playerData.address);
-          data.tokenBalance = ethers.formatEther(balance);
+          contractData.tokenBalance = ethers.formatEther(balance);
         } catch (error) {
           console.error('Error loading token balance:', error);
-          data.tokenBalance = '0';
+          contractData.tokenBalance = '0';
         }
       }
 
@@ -97,10 +152,10 @@ const PlayerProfileModal = ({
               }
             })
           );
-          data.userBadges = badges.filter(badge => badge !== null);
+          contractData.userBadges = badges.filter(badge => badge !== null);
         } catch (error) {
           console.error('Error loading badges:', error);
-          data.userBadges = [];
+          contractData.userBadges = [];
         }
       }
 
@@ -108,10 +163,10 @@ const PlayerProfileModal = ({
       if (leaderboardManager && playerData.address) {
         try {
           const rank = await leaderboardManager.read('getUserRank', playerData.address);
-          data.leaderboardRank = Number(rank);
+          contractData.leaderboardRank = Number(rank);
         } catch (error) {
           console.error('Error loading leaderboard rank:', error);
-          data.leaderboardRank = null;
+          contractData.leaderboardRank = null;
         }
       }
 
@@ -135,14 +190,22 @@ const PlayerProfileModal = ({
               }
             })
           );
-          data.userPets = pets.filter(pet => pet !== null);
+          contractData.userPets = pets.filter(pet => pet !== null);
         } catch (error) {
           console.error('Error loading pets:', error);
-          data.userPets = [];
+          contractData.userPets = [];
         }
       }
 
-      setProfileData(data);
+      // Combine Walrus and contract data
+      const finalData = {
+        ...contractData,
+        walrusProfile: walrusData,
+        dataSource
+      };
+
+      console.log(`✅ Profile loaded via ${dataSource}:`, finalData);
+      setProfileData(finalData);
     } catch (error) {
       console.error('Error loading player profile:', error);
       setError('Failed to load player profile');
@@ -225,6 +288,18 @@ const PlayerProfileModal = ({
                     }}
                   >
                     {getReputationLevel(profileData.userProfile?.reputation || 0).level}
+                  </span>
+                  
+                  {/* Data Source Indicator */}
+                  <span 
+                    className="text-xs px-2 py-1 rounded flex items-center gap-1"
+                    style={{ 
+                      backgroundColor: profileData.dataSource === 'walrus' ? '#8B5CF620' : '#6B728020',
+                      color: profileData.dataSource === 'walrus' ? '#8B5CF6' : '#6B7280'
+                    }}
+                  >
+                    {profileData.dataSource === 'walrus' ? '🦭' : '⛓️'}
+                    {profileData.dataSource === 'walrus' ? 'Walrus' : 'Chain'}
                   </span>
                 </div>
                 <p className="text-gray-400 text-xs">

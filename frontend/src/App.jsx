@@ -24,8 +24,10 @@ import ProfileSearch from "./components/ProfileSearch";
 import QuickNavigation from "./components/QuickNavigation";
 import OnboardingPage from "./components/OnboardingPage";
 import UserOnboarding from "./components/UserOnboarding";
+import WalrusStorageTest from "./components/WalrusStorageTest";
 import "./App.css";
 import { WalletProvider } from "./context/WalletContext";
+import { SocketProvider } from "./context/SocketContext";
 import WalletSelector from "./components/WalletSelector";
 import { TokenProvider } from "./context/TokenContract";
 import { ContractProvider } from "./context/ContractContext";
@@ -39,9 +41,10 @@ function App() {
     <WalletProvider>
       <ContractProvider>
         <TokenProvider>
-          <Router>
-            <SelfAuthProvider>
-              <div className="App">
+          <SocketProvider>
+            <Router>
+              <SelfAuthProvider>
+                <div className="App">
                 <Routes>
                   {/* Public routes */}
                   <Route path="/auth" element={<SelfAuthentication />} />
@@ -104,6 +107,7 @@ function App() {
 
                   {/* Development/testing routes */}
                   <Route path="/contractTesting" element={<ContractExample />} />
+                  <Route path="/walrus-test" element={<WalrusStorageTest />} />
                   {/* <Route path="wallet" element={<WalletSelector />} /> */}
                 </Routes>
 
@@ -112,9 +116,10 @@ function App() {
               </div>
             </SelfAuthProvider>
           </Router>
-        </TokenProvider>
-      </ContractProvider>
-    </WalletProvider>
+        </SocketProvider>
+      </TokenProvider>
+    </ContractProvider>
+  </WalletProvider>
     // </AuthProvider >
   );
 }

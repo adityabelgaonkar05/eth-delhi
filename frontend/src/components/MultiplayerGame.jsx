@@ -237,8 +237,9 @@ const MultiplayerGame = () => {
 
     try {
       const dpr = window.devicePixelRatio || 1
-      canvas.width = 1024 * dpr
-      canvas.height = 576 * dpr
+      // Main map is 40 tiles wide × 20 tiles high, each tile is 16px
+      canvas.width = (40 * 16) * dpr  // 640px
+      canvas.height = (20 * 16) * dpr // 320px
 
       // Create collision blocks
       const blockSize = 16
@@ -541,7 +542,9 @@ const MultiplayerGame = () => {
           style={{ 
             border: '2px solid #fff',
             backgroundColor: '#87CEEB',
-            display: isLoading || error ? 'none' : 'block'
+            display: isLoading || error ? 'none' : 'block',
+            width: '640px',
+            height: '320px'
           }}
         />
         <div style={{ 
@@ -558,8 +561,8 @@ const MultiplayerGame = () => {
             display: 'flex', 
             justifyContent: 'center', 
             alignItems: 'center', 
-            height: '576px',
-            width: '1024px',
+            height: '320px',
+            width: '640px',
             fontSize: '18px',
             color: 'red',
             border: '2px solid #fff',
@@ -574,8 +577,8 @@ const MultiplayerGame = () => {
             display: 'flex', 
             justifyContent: 'center', 
             alignItems: 'center', 
-            height: '576px',
-            width: '1024px',
+            height: '320px',
+            width: '640px',
             fontSize: '18px',
             color: 'white',
             border: '2px solid #fff',

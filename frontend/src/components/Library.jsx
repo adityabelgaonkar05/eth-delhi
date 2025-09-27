@@ -245,8 +245,9 @@ const Library = () => {
 
     try {
       const dpr = window.devicePixelRatio || 1
-      canvas.width = 1024 * dpr
-      canvas.height = 576 * dpr
+      // Library map is 20 tiles wide × 22 tiles high, each tile is 16px
+      canvas.width = (20 * 16) * dpr  // 320px
+      canvas.height = (22 * 16) * dpr // 352px
 
       // Create collision blocks for library
       const blockSize = 16
@@ -477,7 +478,9 @@ const Library = () => {
           style={{ 
             border: '2px solid #fff',
             backgroundColor: '#16213e',
-            display: isLoading || error ? 'none' : 'block'
+            display: isLoading || error ? 'none' : 'block',
+            width: '320px',
+            height: '352px'
           }}
         />
         <div style={{ 
@@ -494,8 +497,8 @@ const Library = () => {
             display: 'flex', 
             justifyContent: 'center', 
             alignItems: 'center', 
-            height: '576px',
-            width: '1024px',
+            height: '352px',
+            width: '320px',
             fontSize: '18px',
             color: 'red',
             border: '2px solid #fff',
@@ -510,8 +513,8 @@ const Library = () => {
             display: 'flex', 
             justifyContent: 'center', 
             alignItems: 'center', 
-            height: '576px',
-            width: '1024px',
+            height: '352px',
+            width: '320px',
             fontSize: '18px',
             color: 'white',
             border: '2px solid #fff',

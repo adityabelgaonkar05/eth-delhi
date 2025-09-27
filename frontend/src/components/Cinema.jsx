@@ -11,7 +11,7 @@ import {
   cinema_l_New_Layer_4, 
   cinema_l_New_Layer_5, 
   cinema_l_New_Layer_6 
-} from '../game/data/cinemaData'
+} from '../game/data/cinemaDataNew'
 import { loadImage } from '../game/utils/gameUtils'
 
 const Cinema = () => {
@@ -245,8 +245,9 @@ const Cinema = () => {
 
     try {
       const dpr = window.devicePixelRatio || 1
-      canvas.width = 1024 * dpr
-      canvas.height = 576 * dpr
+      // Cinema map is 40 tiles wide × 20 tiles high, each tile is 16px
+      canvas.width = (40 * 16) * dpr  // 640px
+      canvas.height = (20 * 16) * dpr // 320px
 
       // Create collision blocks for cinema
       const blockSize = 16
@@ -267,10 +268,10 @@ const Cinema = () => {
       collisionBlocksRef.current = collisionBlocks
       console.log('Created', collisionBlocks.length, 'cinema collision blocks')
 
-      // Create player (cinema starting position)
+      // Create player (cinema starting position - bottom center of the room)
       playerRef.current = new Player({
-        x: 100,
-        y: 250,
+        x: 320,  // Center horizontally (40 * 16 / 2)
+        y: 280,  // Near bottom (20 * 16 - 40)
         size: 15,
       })
       console.log('Created cinema player')
@@ -477,7 +478,9 @@ const Cinema = () => {
           style={{ 
             border: '2px solid #fff',
             backgroundColor: '#16213e',
-            display: isLoading || error ? 'none' : 'block'
+            display: isLoading || error ? 'none' : 'block',
+            width: '640px',
+            height: '320px'
           }}
         />
         <div style={{ 
@@ -494,8 +497,8 @@ const Cinema = () => {
             display: 'flex', 
             justifyContent: 'center', 
             alignItems: 'center', 
-            height: '576px',
-            width: '1024px',
+            height: '320px',
+            width: '640px',
             fontSize: '18px',
             color: 'red',
             border: '2px solid #fff',
@@ -510,8 +513,8 @@ const Cinema = () => {
             display: 'flex', 
             justifyContent: 'center', 
             alignItems: 'center', 
-            height: '576px',
-            width: '1024px',
+            height: '320px',
+            width: '640px',
             fontSize: '18px',
             color: 'white',
             border: '2px solid #fff',

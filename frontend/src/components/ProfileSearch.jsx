@@ -30,14 +30,63 @@ const ProfileSearch = () => {
 
   if (viewingAddress) {
     return (
-      <div>
+      <div 
+        style={{ 
+          fontFamily: 'monospace',
+          backgroundColor: '#333',
+          minHeight: '100vh',
+          padding: '20px'
+        }}
+      >
         {/* Search Header */}
-        <div className="bg-white rounded-lg shadow-lg p-4 mb-6 max-w-6xl mx-auto">
+        <div 
+          style={{
+            backgroundColor: '#2a1810',
+            border: '3px solid #8b4513',
+            borderRadius: '0',
+            boxShadow: '6px 6px 0px #1a0f08, inset 2px 2px 0px #d2b48c, inset -2px -2px 0px #654321',
+            padding: '20px',
+            imageRendering: 'pixelated',
+            textShadow: '2px 2px 0px #1a0f08',
+            marginBottom: '25px',
+            maxWidth: '1200px',
+            margin: '0 auto 25px auto',
+            position: 'relative'
+          }}
+        >
+          {/* Medieval decorative border pattern */}
+          <div style={{
+            position: 'absolute',
+            top: '2px',
+            left: '2px',
+            right: '2px',
+            height: '2px',
+            background: 'linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)',
+            imageRendering: 'pixelated'
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: '2px',
+            left: '2px',
+            right: '2px',
+            height: '2px',
+            background: 'linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)',
+            imageRendering: 'pixelated'
+          }} />
+          
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-4">
               <button
                 onClick={handleReset}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 flex items-center gap-2"
+                className="px-4 py-2 text-white font-bold uppercase transition-all duration-200 flex items-center gap-2"
+                style={{ 
+                  fontFamily: 'monospace', 
+                  borderStyle: 'solid',
+                  border: '2px solid #8b4513',
+                  backgroundColor: '#ff6b6b',
+                  borderRadius: '0',
+                  textShadow: '2px 2px 0px #1a0f08'
+                }}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -45,8 +94,24 @@ const ProfileSearch = () => {
                 Back to Search
               </button>
               <div>
-                <div className="text-sm text-gray-500">Viewing Profile:</div>
-                <div className="font-mono text-sm text-gray-700">
+                <div 
+                  className="text-sm uppercase tracking-wider" 
+                  style={{ 
+                    fontFamily: 'monospace',
+                    color: '#d2b48c',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  Viewing Profile:
+                </div>
+                <div 
+                  className="font-mono text-sm uppercase tracking-wider" 
+                  style={{ 
+                    fontFamily: 'monospace',
+                    color: '#ffd700',
+                    fontWeight: 'bold'
+                  }}
+                >
                   {viewingAddress.slice(0, 10)}...{viewingAddress.slice(-8)}
                 </div>
               </div>
@@ -61,23 +126,131 @@ const ProfileSearch = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-6">
-      <div className="max-w-2xl mx-auto">
-        {/* Search Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            🔍 Profile Search
-          </h1>
-          <p className="text-lg text-gray-600">
-            Search for any user's profile by their wallet address
-          </p>
+    <div 
+      className="min-h-screen p-4" 
+      style={{ 
+        fontFamily: 'monospace',
+        backgroundColor: '#333',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}
+    >
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Page Header */}
+        <div className="text-center">
+          <div 
+            style={{
+              backgroundColor: '#2a1810',
+              border: '3px solid #8b4513',
+              borderRadius: '0',
+              boxShadow: '6px 6px 0px #1a0f08, inset 2px 2px 0px #d2b48c, inset -2px -2px 0px #654321',
+              width: '600px',
+              height: '140px',
+              padding: '25px',
+              imageRendering: 'pixelated',
+              textShadow: '2px 2px 0px #1a0f08',
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              margin: '0 auto 25px auto',
+              position: 'relative'
+            }}
+          >
+            {/* Medieval decorative border pattern */}
+            <div style={{
+              position: 'absolute',
+              top: '2px',
+              left: '2px',
+              right: '2px',
+              height: '2px',
+              background: 'linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)',
+              imageRendering: 'pixelated'
+            }} />
+            <div style={{
+              position: 'absolute',
+              bottom: '2px',
+              left: '2px',
+              right: '2px',
+              height: '2px',
+              background: 'linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)',
+              imageRendering: 'pixelated'
+            }} />
+            
+            <div className="flex items-center justify-center gap-4 mb-3">
+              <span style={{ color: '#d2b48c', fontSize: '2rem' }}>🔍</span>
+              <h1 
+                className="text-4xl font-bold uppercase tracking-wider" 
+                style={{ 
+                  fontFamily: 'monospace', 
+                  textShadow: '3px 3px 0px #1a0f08',
+                  color: '#d2b48c',
+                  fontWeight: 'bold'
+                }}
+              >
+                PROFILE SEARCH
+              </h1>
+              <span style={{ color: '#d2b48c', fontSize: '2rem' }}>🔍</span>
+            </div>
+            <p 
+              className="uppercase tracking-wider text-lg" 
+              style={{ 
+                fontFamily: 'monospace',
+                color: '#ffd700',
+                fontWeight: 'bold'
+              }}
+            >
+              SEARCH FOR ANY USER'S PROFILE
+            </p>
+          </div>
         </div>
 
         {/* Search Form */}
-        <div className="bg-white rounded-lg shadow-lg p-8">
+        <div 
+          style={{
+            backgroundColor: '#2a1810',
+            border: '3px solid #8b4513',
+            borderRadius: '0',
+            boxShadow: '6px 6px 0px #1a0f08, inset 2px 2px 0px #d2b48c, inset -2px -2px 0px #654321',
+            padding: '25px',
+            imageRendering: 'pixelated',
+            textShadow: '2px 2px 0px #1a0f08',
+            position: 'relative'
+          }}
+        >
+          {/* Medieval decorative border pattern */}
+          <div style={{
+            position: 'absolute',
+            top: '2px',
+            left: '2px',
+            right: '2px',
+            height: '2px',
+            background: 'linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)',
+            imageRendering: 'pixelated'
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: '2px',
+            left: '2px',
+            right: '2px',
+            height: '2px',
+            background: 'linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)',
+            imageRendering: 'pixelated'
+          }} />
+          
           <div className="mb-6">
-            <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
-              Wallet Address
+            <label 
+              htmlFor="address" 
+              className="block text-sm font-medium mb-2 uppercase tracking-wider" 
+              style={{ 
+                fontFamily: 'monospace',
+                color: '#d2b48c',
+                fontWeight: 'bold'
+              }}
+            >
+              🏰 WALLET ADDRESS
             </label>
             <div className="flex gap-3">
               <input
@@ -86,50 +259,166 @@ const ProfileSearch = () => {
                 value={searchAddress}
                 onChange={(e) => setSearchAddress(e.target.value)}
                 placeholder="0x..."
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                className="flex-1 px-4 py-3 font-mono text-sm uppercase tracking-wider"
+                style={{
+                  border: '2px solid #8b4513',
+                  borderRadius: '0',
+                  backgroundColor: '#1a0f08',
+                  color: '#ffd700',
+                  fontFamily: 'monospace',
+                  fontWeight: 'bold',
+                  textShadow: '1px 1px 0px #1a0f08'
+                }}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               />
               <button
                 onClick={handleSearch}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                className="px-6 py-3 text-white font-bold uppercase transition-all duration-200 flex items-center gap-2"
+                style={{ 
+                  fontFamily: 'monospace', 
+                  borderStyle: 'solid',
+                  border: '2px solid #8b4513',
+                  backgroundColor: '#44ff44',
+                  borderRadius: '0',
+                  textShadow: '2px 2px 0px #1a0f08'
+                }}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                Search
+                SEARCH
               </button>
             </div>
-            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+            {error && (
+              <p 
+                className="mt-2 text-sm uppercase tracking-wider" 
+                style={{ 
+                  fontFamily: 'monospace',
+                  color: '#ff6b6b',
+                  fontWeight: 'bold'
+                }}
+              >
+                ⚠️ {error}
+              </p>
+            )}
           </div>
 
           {/* Tips */}
-          <div className="bg-blue-50 rounded-lg p-4">
-            <h3 className="font-semibold text-blue-900 mb-2">💡 Tips:</h3>
-            <ul className="text-sm text-blue-800 space-y-1">
-              <li>• Enter a valid Ethereum address (starts with 0x)</li>
-              <li>• Make sure the address is 42 characters long</li>
-              <li>• You can view any registered user's public profile</li>
-              <li>• Use your browser's back button to return to search</li>
+          <div 
+            style={{
+              backgroundColor: '#1a0f08',
+              border: '2px solid #44ff44',
+              borderRadius: '0',
+              padding: '15px',
+              marginBottom: '20px'
+            }}
+          >
+            <h3 
+              className="font-semibold mb-2 uppercase tracking-wider" 
+              style={{ 
+                fontFamily: 'monospace',
+                color: '#44ff44',
+                fontWeight: 'bold'
+              }}
+            >
+              💡 SEARCH TIPS:
+            </h3>
+            <ul 
+              className="text-sm space-y-1 uppercase tracking-wide" 
+              style={{ 
+                fontFamily: 'monospace',
+                color: '#ffd700',
+                fontWeight: 'bold'
+              }}
+            >
+              <li>• ENTER A VALID ETHEREUM ADDRESS (STARTS WITH 0X)</li>
+              <li>• MAKE SURE THE ADDRESS IS 42 CHARACTERS LONG</li>
+              <li>• YOU CAN VIEW ANY REGISTERED USER'S PUBLIC PROFILE</li>
+              <li>• USE YOUR BROWSER'S BACK BUTTON TO RETURN TO SEARCH</li>
             </ul>
           </div>
 
           {/* Quick Actions */}
-          <div className="mt-6 text-center">
-            <p className="text-gray-600 mb-4">Or view your own profile:</p>
+          <div className="text-center">
+            <p 
+              className="mb-4 uppercase tracking-wider" 
+              style={{ 
+                fontFamily: 'monospace',
+                color: '#d2b48c',
+                fontWeight: 'bold'
+              }}
+            >
+              OR VIEW YOUR OWN PROFILE:
+            </p>
             <button
               onClick={() => window.location.href = '/profile'}
-              className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+              className="px-6 py-3 text-white font-bold uppercase transition-all duration-200"
+              style={{ 
+                fontFamily: 'monospace', 
+                borderStyle: 'solid',
+                border: '2px solid #8b4513',
+                backgroundColor: '#ff6b6b',
+                borderRadius: '0',
+                textShadow: '2px 2px 0px #1a0f08'
+              }}
             >
-              👤 My Profile
+              👤 MY PROFILE
             </button>
           </div>
         </div>
 
         {/* Sample Addresses (for testing) */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mt-6">
-          <h3 className="font-semibold text-gray-900 mb-4">🧪 Test with Sample Addresses</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Click any address below to quickly test the profile viewer:
+        <div 
+          style={{
+            backgroundColor: '#2a1810',
+            border: '3px solid #8b4513',
+            borderRadius: '0',
+            boxShadow: '6px 6px 0px #1a0f08, inset 2px 2px 0px #d2b48c, inset -2px -2px 0px #654321',
+            padding: '25px',
+            imageRendering: 'pixelated',
+            textShadow: '2px 2px 0px #1a0f08',
+            position: 'relative'
+          }}
+        >
+          {/* Medieval decorative border pattern */}
+          <div style={{
+            position: 'absolute',
+            top: '2px',
+            left: '2px',
+            right: '2px',
+            height: '2px',
+            background: 'linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)',
+            imageRendering: 'pixelated'
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: '2px',
+            left: '2px',
+            right: '2px',
+            height: '2px',
+            background: 'linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)',
+            imageRendering: 'pixelated'
+          }} />
+          
+          <h3 
+            className="font-semibold mb-4 uppercase tracking-wider text-center" 
+            style={{ 
+              fontFamily: 'monospace',
+              color: '#d2b48c',
+              fontWeight: 'bold'
+            }}
+          >
+            🧪 TEST WITH SAMPLE ADDRESSES
+          </h3>
+          <p 
+            className="text-sm mb-4 uppercase tracking-wider text-center" 
+            style={{ 
+              fontFamily: 'monospace',
+              color: '#ffd700',
+              fontWeight: 'bold'
+            }}
+          >
+            CLICK ANY ADDRESS BELOW TO QUICKLY TEST THE PROFILE VIEWER:
           </p>
           <div className="space-y-2">
             {[
@@ -143,7 +432,24 @@ const ProfileSearch = () => {
                   setSearchAddress(address);
                   setViewingAddress(address);
                 }}
-                className="block w-full text-left px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded font-mono text-sm"
+                className="block w-full text-left px-3 py-2 font-mono text-sm uppercase tracking-wider transition-all duration-200"
+                style={{
+                  backgroundColor: '#1a0f08',
+                  border: '2px solid #654321',
+                  borderRadius: '0',
+                  color: '#ffd700',
+                  fontFamily: 'monospace',
+                  fontWeight: 'bold',
+                  textShadow: '1px 1px 0px #1a0f08'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = '#2a1810';
+                  e.target.style.borderColor = '#8b4513';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = '#1a0f08';
+                  e.target.style.borderColor = '#654321';
+                }}
               >
                 {address}
               </button>

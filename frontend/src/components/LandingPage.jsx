@@ -4,9 +4,21 @@ import bgHero from "../assets/bg-hero.png";
 import bgMiddle from "../assets/bg-middle.png";
 import bgEnd from "../assets/bg-end.png";
 import bgFooter from "../assets/bg-footer.png";
+import { useWallet } from "../context/WalletContext";
+import { useToken } from "../context/TokenContract";
 
 const LandingPage = () => {
+  const { fetchWallet, account } = useWallet();
+  const { fetchBalance } = useToken();
   const navigate = useNavigate();
+
+  async function handleNavigateGame() {
+    console.log("Fetching wallet!");
+    await fetchWallet();
+    await fetchBalance();
+    console.log("wallet fetched: ", account);
+    navigate("/game");
+  }
 
   return (
     <div className="w-full">
@@ -54,7 +66,7 @@ const LandingPage = () => {
           </p>
           <button
             className="arcade-button pixel-text"
-            onClick={() => navigate("/game")}
+            onClick={() => handleNavigateGame()}
           >
             LET'S PLAY!
           </button>

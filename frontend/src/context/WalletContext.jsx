@@ -1,6 +1,12 @@
 // ONLY FOR WALLET TESTING
 import { ethers } from "ethers";
-import { createContext, useState, useEffect, useContext } from "react";
+import {
+  createContext,
+  useState,
+  useEffect,
+  useContext,
+  useCallback,
+} from "react";
 
 export const WalletContext = createContext();
 
@@ -116,6 +122,31 @@ export const WalletProvider = ({ children }) => {
   useEffect(() => {
     // Detect available wallets
     detectWallets();
+
+    // Check if already connected (non-intrusive - doesn't prompt user)
+    const checkExistingConnection = async () => {
+      if (window.ethereum) {
+        try {
+          const accounts = await window.ethereum.request({
+            method: "eth_accounts",
+          });
+          if (accounts.length > 0) {
+            setAccount(accounts[0]);
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            const newSigner = await provider.getSigner();
+            setSigner(newSigner);
+            console.log(
+              "Auto-detected existing wallet connection:",
+              accounts[0]
+            );
+          }
+        } catch (err) {
+          console.error("Error checking existing connection:", err);
+        }
+      }
+    };
+
+    checkExistingConnection();
 
     // Set up event listeners for any available provider
     if (window.ethereum) {

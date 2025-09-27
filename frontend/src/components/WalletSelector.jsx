@@ -1,5 +1,5 @@
 import React from "react";
-import { useWallet } from "../../context/WalletContext";
+import { useWallet } from "../context/WalletContext";
 
 const WalletSelector = () => {
   const {

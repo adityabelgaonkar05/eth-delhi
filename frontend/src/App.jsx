@@ -19,6 +19,8 @@ import Workwithus from "./components/Workwithus";
 import ChatTest from "./components/ChatTest";
 import PetNFTShop from "./components/PetNFTShop";
 import LeaderboardsPage from "./components/LeaderboardsPage";
+import UserProfile from "./components/UserProfile";
+import ProfileSearch from "./components/ProfileSearch";
 import QuickNavigation from "./components/QuickNavigation";
 import OnboardingPage from "./components/OnboardingPage";
 import UserOnboarding from "./components/UserOnboarding";
@@ -79,6 +81,19 @@ function App() {
                   <Route path="/leaderboards" element={
                     // <AuthGuard>
                     <LeaderboardsPage />
+                    // </AuthGuard>
+                  } />
+
+                  {/* Profile routes */}
+                  <Route path="/profile" element={
+                    // <AuthGuard>
+                    <UserProfile />
+                    // </AuthGuard>
+                  } />
+
+                  <Route path="/search-profile" element={
+                    // <AuthGuard>
+                    <ProfileSearch />
                     // </AuthGuard>
                   } />
 

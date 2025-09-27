@@ -1,5 +1,5 @@
 {
-  "address": "0xd8ccE5e598D817DD0F499Beb6EAc20a6804b7310",
+  "address": "0x8dd9da7a829b3F3Ef6302c816b14Be73DE605F60",
   "abi": [
     {
       "type": "constructor",
@@ -7,52 +7,36 @@
       "payable": false,
       "inputs": [
         {
-          "type": "string",
-          "name": "_appScope"
-        },
-        {
-          "type": "string",
-          "name": "_selfProtocolEndpoint"
-        },
-        {
           "type": "tuple",
           "name": "_config",
           "components": [
+            {
+              "type": "string",
+              "name": "appScope"
+            },
             {
               "type": "uint256",
               "name": "minimumAge"
             },
             {
               "type": "bool",
-              "name": "ofacRequired"
+              "name": "requireOfacScreening"
             },
             {
               "type": "string[]",
               "name": "excludedCountries"
             },
             {
-              "type": "bool",
-              "name": "requireNationality"
+              "type": "uint256",
+              "name": "verificationValidityPeriod"
             },
             {
               "type": "bool",
-              "name": "requireGender"
+              "name": "requireNationalityDisclosure"
             },
             {
               "type": "bool",
-              "name": "requireName"
-            },
-            {
-              "type": "bool",
-              "name": "requireDateOfBirth"
-            },
-            {
-              "type": "bool",
-              "name": "requirePassportNumber"
-            },
-            {
-              "type": "bool",
-              "name": "requireExpiryDate"
+              "name": "requireGenderDisclosure"
             }
           ]
         }
@@ -79,12 +63,17 @@
     },
     {
       "type": "error",
-      "name": "ConfigurationMismatch",
+      "name": "AgeRequirementNotMet",
       "inputs": []
     },
     {
       "type": "error",
-      "name": "CountryExcluded",
+      "name": "BackendRateLimited",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "CountryNotAllowed",
       "inputs": []
     },
     {
@@ -99,37 +88,27 @@
     },
     {
       "type": "error",
-      "name": "InvalidAge",
+      "name": "InvalidBackend",
       "inputs": []
     },
     {
       "type": "error",
-      "name": "InvalidDisclosures",
+      "name": "InvalidConfiguration",
       "inputs": []
     },
     {
       "type": "error",
-      "name": "InvalidJWT",
+      "name": "OfacScreeningRequired",
       "inputs": []
     },
     {
       "type": "error",
-      "name": "InvalidProof",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "OFACCheckFailed",
+      "name": "ProofAlreadyUsed",
       "inputs": []
     },
     {
       "type": "error",
       "name": "ReentrancyGuardReentrantCall",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "UnsupportedAttestationType",
       "inputs": []
     },
     {
@@ -143,30 +122,40 @@
       "inputs": []
     },
     {
+      "type": "error",
+      "name": "VerificationHasExpired",
+      "inputs": []
+    },
+    {
       "type": "event",
       "anonymous": false,
-      "name": "ConfigurationUpdated",
+      "name": "BackendAuthorized",
       "inputs": [
         {
           "type": "address",
-          "name": "updatedBy",
+          "name": "backend",
           "indexed": true
+        },
+        {
+          "type": "bool",
+          "name": "authorized",
+          "indexed": false
         }
       ]
     },
     {
       "type": "event",
       "anonymous": false,
-      "name": "JWTValidated",
+      "name": "ConfigUpdated",
       "inputs": [
         {
-          "type": "address",
-          "name": "user",
-          "indexed": true
+          "type": "uint256",
+          "name": "minimumAge",
+          "indexed": false
         },
         {
-          "type": "string",
-          "name": "jwtHash",
+          "type": "bool",
+          "name": "requireOfac",
           "indexed": false
         }
       ]
@@ -179,28 +168,6 @@
         {
           "type": "address",
           "name": "account",
-          "indexed": false
-        }
-      ]
-    },
-    {
-      "type": "event",
-      "anonymous": false,
-      "name": "ProofSubmitted",
-      "inputs": [
-        {
-          "type": "address",
-          "name": "user",
-          "indexed": true
-        },
-        {
-          "type": "uint256",
-          "name": "attestationId",
-          "indexed": false
-        },
-        {
-          "type": "string",
-          "name": "attestationHash",
           "indexed": false
         }
       ]
@@ -295,13 +262,35 @@
         },
         {
           "type": "uint256",
-          "name": "attestationId",
-          "indexed": false
+          "name": "documentType",
+          "indexed": true
         },
         {
           "type": "string",
-          "name": "attestationHash",
+          "name": "selfProtocolId",
           "indexed": false
+        },
+        {
+          "type": "uint256",
+          "name": "verificationScore",
+          "indexed": false
+        },
+        {
+          "type": "uint256",
+          "name": "timestamp",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "VerificationExpired",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "user",
+          "indexed": true
         },
         {
           "type": "uint256",
@@ -328,8 +317,39 @@
       ]
     },
     {
+      "type": "event",
+      "anonymous": false,
+      "name": "VerificationUpdated",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "user",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "newScore",
+          "indexed": false
+        }
+      ]
+    },
+    {
       "type": "function",
       "name": "ADMIN_ROLE",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "bytes32",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "BACKEND_ROLE",
       "constant": true,
       "stateMutability": "view",
       "payable": false,
@@ -371,7 +391,7 @@
     },
     {
       "type": "function",
-      "name": "PASSPORT_ID",
+      "name": "PASSPORT_DOC",
       "constant": true,
       "stateMutability": "view",
       "payable": false,
@@ -385,98 +405,77 @@
     },
     {
       "type": "function",
-      "name": "VERIFIER_ROLE",
-      "constant": true,
-      "stateMutability": "view",
-      "payable": false,
-      "inputs": [],
-      "outputs": [
-        {
-          "type": "bytes32",
-          "name": ""
-        }
-      ]
-    },
-    {
-      "type": "function",
-      "name": "addSupportedAttestationType",
+      "name": "authorizeBackend",
       "constant": false,
       "payable": false,
       "inputs": [
         {
-          "type": "uint256",
-          "name": "attestationId"
+          "type": "address",
+          "name": "backend"
+        },
+        {
+          "type": "bool",
+          "name": "authorized"
         }
       ],
       "outputs": []
     },
     {
       "type": "function",
-      "name": "appScope",
-      "constant": true,
-      "stateMutability": "view",
-      "payable": false,
-      "inputs": [],
-      "outputs": [
-        {
-          "type": "string",
-          "name": ""
-        }
-      ]
-    },
-    {
-      "type": "function",
-      "name": "attestationHashToUser",
+      "name": "authorizedBackends",
       "constant": true,
       "stateMutability": "view",
       "payable": false,
       "inputs": [
         {
-          "type": "string",
+          "type": "address",
           "name": ""
         }
       ],
       "outputs": [
         {
-          "type": "address",
+          "type": "bool",
           "name": ""
         }
       ]
     },
     {
       "type": "function",
-      "name": "batchVerifyUsers",
-      "constant": false,
+      "name": "backendVerificationCount",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "batchCheckVerification",
+      "constant": true,
+      "stateMutability": "view",
       "payable": false,
       "inputs": [
         {
           "type": "address[]",
           "name": "users"
-        },
-        {
-          "type": "tuple[]",
-          "name": "proofDataArray",
-          "components": [
-            {
-              "type": "uint256[]",
-              "name": "proof"
-            },
-            {
-              "type": "uint256[]",
-              "name": "publicSignals"
-            },
-            {
-              "type": "string",
-              "name": "userContextData"
-            },
-            {
-              "type": "string",
-              "name": "jwtToken"
-            }
-          ]
         }
       ],
-      "outputs": []
+      "outputs": [
+        {
+          "type": "bool[]",
+          "name": "statuses"
+        }
+      ]
     },
     {
       "type": "function",
@@ -487,38 +486,43 @@
       "inputs": [],
       "outputs": [
         {
+          "type": "string",
+          "name": "appScope"
+        },
+        {
           "type": "uint256",
           "name": "minimumAge"
         },
         {
           "type": "bool",
-          "name": "ofacRequired"
+          "name": "requireOfacScreening"
+        },
+        {
+          "type": "uint256",
+          "name": "verificationValidityPeriod"
         },
         {
           "type": "bool",
-          "name": "requireNationality"
+          "name": "requireNationalityDisclosure"
         },
         {
           "type": "bool",
-          "name": "requireGender"
-        },
-        {
-          "type": "bool",
-          "name": "requireName"
-        },
-        {
-          "type": "bool",
-          "name": "requireDateOfBirth"
-        },
-        {
-          "type": "bool",
-          "name": "requirePassportNumber"
-        },
-        {
-          "type": "bool",
-          "name": "requireExpiryDate"
+          "name": "requireGenderDisclosure"
         }
       ]
+    },
+    {
+      "type": "function",
+      "name": "expireVerification",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "user"
+        }
+      ],
+      "outputs": []
     },
     {
       "type": "function",
@@ -560,7 +564,7 @@
     },
     {
       "type": "function",
-      "name": "getUserVerification",
+      "name": "getVerificationDetails",
       "constant": true,
       "stateMutability": "view",
       "payable": false,
@@ -573,7 +577,7 @@
       "outputs": [
         {
           "type": "tuple",
-          "name": "",
+          "name": "result",
           "components": [
             {
               "type": "bool",
@@ -581,49 +585,90 @@
             },
             {
               "type": "uint256",
-              "name": "attestationId"
-            },
-            {
-              "type": "string",
-              "name": "attestationHash"
-            },
-            {
-              "type": "uint256",
               "name": "verifiedAt"
             },
             {
               "type": "uint256",
-              "name": "minimumAge"
+              "name": "documentType"
             },
             {
               "type": "string",
-              "name": "nationality"
+              "name": "selfProtocolId"
             },
             {
-              "type": "string",
-              "name": "gender"
+              "type": "bytes32",
+              "name": "proofHash"
             },
             {
-              "type": "string",
-              "name": "name"
+              "type": "tuple",
+              "name": "disclosures",
+              "components": [
+                {
+                  "type": "bool",
+                  "name": "ageVerified"
+                },
+                {
+                  "type": "uint256",
+                  "name": "minimumAge"
+                },
+                {
+                  "type": "string",
+                  "name": "nationality"
+                },
+                {
+                  "type": "string",
+                  "name": "gender"
+                },
+                {
+                  "type": "bool",
+                  "name": "hasName"
+                },
+                {
+                  "type": "bool",
+                  "name": "documentValid"
+                },
+                {
+                  "type": "uint256",
+                  "name": "documentExpiryYear"
+                }
+              ]
             },
             {
               "type": "uint256",
-              "name": "dateOfBirth"
-            },
-            {
-              "type": "string",
-              "name": "passportNumber"
-            },
-            {
-              "type": "uint256",
-              "name": "expiryDate"
+              "name": "verificationScore"
             },
             {
               "type": "bool",
-              "name": "ofacCleared"
+              "name": "ofacScreeningPassed"
+            },
+            {
+              "type": "uint256",
+              "name": "expiresAt"
             }
           ]
+        },
+        {
+          "type": "bool",
+          "name": "isCurrentlyValid"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getVerificationScore",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "user"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
         }
       ]
     },
@@ -637,15 +682,19 @@
       "outputs": [
         {
           "type": "uint256",
-          "name": "totalUsers"
+          "name": "total"
         },
         {
           "type": "uint256",
-          "name": "passportUsers"
+          "name": "valid"
         },
         {
           "type": "uint256",
-          "name": "euIdUsers"
+          "name": "passportVerifications"
+        },
+        {
+          "type": "uint256",
+          "name": "euIdVerifications"
         }
       ]
     },
@@ -710,19 +759,14 @@
     },
     {
       "type": "function",
-      "name": "isVerifiedHuman",
+      "name": "maxVerificationsPerBackend",
       "constant": true,
       "stateMutability": "view",
       "payable": false,
-      "inputs": [
-        {
-          "type": "address",
-          "name": "user"
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
-          "type": "bool",
+          "type": "uint256",
           "name": ""
         }
       ]
@@ -802,36 +846,124 @@
     },
     {
       "type": "function",
-      "name": "selfProtocolEndpoint",
+      "name": "selfIdToAddress",
       "constant": true,
       "stateMutability": "view",
       "payable": false,
-      "inputs": [],
-      "outputs": [
+      "inputs": [
         {
           "type": "string",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "address",
           "name": ""
         }
       ]
     },
     {
       "type": "function",
-      "name": "supportedAttestationTypes",
-      "constant": true,
-      "stateMutability": "view",
+      "name": "setBackendRateLimit",
+      "constant": false,
       "payable": false,
       "inputs": [
         {
           "type": "uint256",
-          "name": ""
+          "name": "newLimit"
         }
       ],
-      "outputs": [
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "submitVerification",
+      "constant": false,
+      "payable": false,
+      "inputs": [
         {
-          "type": "bool",
-          "name": ""
+          "type": "address",
+          "name": "user"
+        },
+        {
+          "type": "tuple",
+          "name": "selfProtocolResult",
+          "components": [
+            {
+              "type": "bool",
+              "name": "isVerified"
+            },
+            {
+              "type": "uint256",
+              "name": "verifiedAt"
+            },
+            {
+              "type": "uint256",
+              "name": "documentType"
+            },
+            {
+              "type": "string",
+              "name": "selfProtocolId"
+            },
+            {
+              "type": "bytes32",
+              "name": "proofHash"
+            },
+            {
+              "type": "tuple",
+              "name": "disclosures",
+              "components": [
+                {
+                  "type": "bool",
+                  "name": "ageVerified"
+                },
+                {
+                  "type": "uint256",
+                  "name": "minimumAge"
+                },
+                {
+                  "type": "string",
+                  "name": "nationality"
+                },
+                {
+                  "type": "string",
+                  "name": "gender"
+                },
+                {
+                  "type": "bool",
+                  "name": "hasName"
+                },
+                {
+                  "type": "bool",
+                  "name": "documentValid"
+                },
+                {
+                  "type": "uint256",
+                  "name": "documentExpiryYear"
+                }
+              ]
+            },
+            {
+              "type": "uint256",
+              "name": "verificationScore"
+            },
+            {
+              "type": "bool",
+              "name": "ofacScreeningPassed"
+            },
+            {
+              "type": "uint256",
+              "name": "expiresAt"
+            }
+          ]
+        },
+        {
+          "type": "bytes32",
+          "name": "proofHash"
         }
-      ]
+      ],
+      "outputs": []
     },
     {
       "type": "function",
@@ -854,7 +986,7 @@
     },
     {
       "type": "function",
-      "name": "totalVerifiedUsers",
+      "name": "totalVerifications",
       "constant": true,
       "stateMutability": "view",
       "payable": false,
@@ -876,20 +1008,7 @@
     },
     {
       "type": "function",
-      "name": "updateAppScope",
-      "constant": false,
-      "payable": false,
-      "inputs": [
-        {
-          "type": "string",
-          "name": "newScope"
-        }
-      ],
-      "outputs": []
-    },
-    {
-      "type": "function",
-      "name": "updateConfiguration",
+      "name": "updateConfig",
       "constant": false,
       "payable": false,
       "inputs": [
@@ -898,40 +1017,32 @@
           "name": "newConfig",
           "components": [
             {
+              "type": "string",
+              "name": "appScope"
+            },
+            {
               "type": "uint256",
               "name": "minimumAge"
             },
             {
               "type": "bool",
-              "name": "ofacRequired"
+              "name": "requireOfacScreening"
             },
             {
               "type": "string[]",
               "name": "excludedCountries"
             },
             {
-              "type": "bool",
-              "name": "requireNationality"
+              "type": "uint256",
+              "name": "verificationValidityPeriod"
             },
             {
               "type": "bool",
-              "name": "requireGender"
+              "name": "requireNationalityDisclosure"
             },
             {
               "type": "bool",
-              "name": "requireName"
-            },
-            {
-              "type": "bool",
-              "name": "requireDateOfBirth"
-            },
-            {
-              "type": "bool",
-              "name": "requirePassportNumber"
-            },
-            {
-              "type": "bool",
-              "name": "requireExpiryDate"
+              "name": "requireGenderDisclosure"
             }
           ]
         }
@@ -940,7 +1051,66 @@
     },
     {
       "type": "function",
-      "name": "userMeetsAgeRequirement",
+      "name": "updateVerificationScore",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "user"
+        },
+        {
+          "type": "uint256",
+          "name": "newScore"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "usedProofHashes",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "userMeetsAge",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "user"
+        },
+        {
+          "type": "uint256",
+          "name": "minimumAge"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "userPassedOfacScreening",
       "constant": true,
       "stateMutability": "view",
       "payable": false,
@@ -959,7 +1129,21 @@
     },
     {
       "type": "function",
-      "name": "userVerifications",
+      "name": "validVerifications",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "verifications",
       "constant": true,
       "stateMutability": "view",
       "payable": false,
@@ -976,84 +1160,86 @@
         },
         {
           "type": "uint256",
-          "name": "attestationId"
-        },
-        {
-          "type": "string",
-          "name": "attestationHash"
-        },
-        {
-          "type": "uint256",
           "name": "verifiedAt"
         },
         {
           "type": "uint256",
-          "name": "minimumAge"
+          "name": "documentType"
         },
         {
           "type": "string",
-          "name": "nationality"
+          "name": "selfProtocolId"
         },
         {
-          "type": "string",
-          "name": "gender"
+          "type": "bytes32",
+          "name": "proofHash"
         },
         {
-          "type": "string",
-          "name": "name"
+          "type": "tuple",
+          "name": "disclosures",
+          "components": [
+            {
+              "type": "bool",
+              "name": "ageVerified"
+            },
+            {
+              "type": "uint256",
+              "name": "minimumAge"
+            },
+            {
+              "type": "string",
+              "name": "nationality"
+            },
+            {
+              "type": "string",
+              "name": "gender"
+            },
+            {
+              "type": "bool",
+              "name": "hasName"
+            },
+            {
+              "type": "bool",
+              "name": "documentValid"
+            },
+            {
+              "type": "uint256",
+              "name": "documentExpiryYear"
+            }
+          ]
         },
         {
           "type": "uint256",
-          "name": "dateOfBirth"
-        },
-        {
-          "type": "string",
-          "name": "passportNumber"
-        },
-        {
-          "type": "uint256",
-          "name": "expiryDate"
+          "name": "verificationScore"
         },
         {
           "type": "bool",
-          "name": "ofacCleared"
+          "name": "ofacScreeningPassed"
+        },
+        {
+          "type": "uint256",
+          "name": "expiresAt"
         }
       ]
     },
     {
       "type": "function",
-      "name": "verifyUserWithSelfProtocol",
-      "constant": false,
+      "name": "verifiedUsers",
+      "constant": true,
+      "stateMutability": "view",
       "payable": false,
       "inputs": [
         {
-          "type": "address",
-          "name": "user"
-        },
-        {
-          "type": "tuple",
-          "name": "proofData",
-          "components": [
-            {
-              "type": "uint256[]",
-              "name": "proof"
-            },
-            {
-              "type": "uint256[]",
-              "name": "publicSignals"
-            },
-            {
-              "type": "string",
-              "name": "userContextData"
-            },
-            {
-              "type": "string",
-              "name": "jwtToken"
-            }
-          ]
+          "type": "uint256",
+          "name": ""
         }
       ],
-      "outputs": []
+      "outputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ]
     }
   ]
 }

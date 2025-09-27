@@ -1,14 +1,17 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import bgHero from "../assets/bg-hero.png";
 import bgMiddle from "../assets/bg-middle.png";
 import bgEnd from "../assets/bg-end.png";
 import bgFooter from "../assets/bg-footer.png";
 
 const LandingPage = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="w-full">
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/90 via-black/70, via-black/40 to-transparent">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 via-black/70, via-black/50 to-transparent">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             {/* Logo/Brand Name */}
@@ -18,8 +21,16 @@ const LandingPage = () => {
 
             {/* Navigation Buttons */}
             <div className="flex items-center space-x-4">
-              <button className="navbar-button normal-text">Sign Up</button>
-              <button className="navbar-button-primary normal-text">
+              <button
+                className="navbar-button pixel-text rounded-4xl"
+                onClick={() => navigate("/game")}
+              >
+                Sign Up
+              </button>
+              <button
+                className="navbar-button-primary pixel-text rounded-4xl"
+                onClick={() => navigate("/workwithus")}
+              >
                 Work With Us
               </button>
             </div>
@@ -41,7 +52,12 @@ const LandingPage = () => {
           <p className="text-2xl md:text-3xl mb-12 normal-text font-light">
             Your adventure begins here
           </p>
-          <button className="arcade-button pixel-text">LET'S PLAY!</button>
+          <button
+            className="arcade-button pixel-text"
+            onClick={() => navigate("/game")}
+          >
+            LET'S PLAY!
+          </button>
         </div>
       </section>
 
@@ -104,7 +120,12 @@ const LandingPage = () => {
             Join thousands of players in this epic adventure. Your journey
             awaits!
           </p>
-          <button className="arcade-button pixel-text">START PLAYING</button>
+          <button
+            className="arcade-button pixel-text"
+            onClick={() => navigate("/game")}
+          >
+            START PLAYING
+          </button>
         </div>
       </section>
 

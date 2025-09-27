@@ -6,15 +6,20 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const app = express();
 const server = http.createServer(app);
+
 const io = socketIo(server, {
   cors: {
     origin: "http://localhost:5173", // React dev server
     methods: ["GET", "POST"],
   },
 });
+const indexRoutes = require("./routes/indexRoutes");
 
 app.use(cors());
 app.use(express.json());
+
+//using routes
+app.use("/api", indexRoutes);
 
 // Store connected players by room
 const playersByRoom = new Map();

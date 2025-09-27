@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import bgHero from "../assets/bg-hero.png";
+import bgHero from "../assets/bg-gif.gif";
 import bgMiddle from "../assets/bg-middle.png";
 import bgEnd from "../assets/bg-end.png";
 import bgFooter from "../assets/bg-footer.png";

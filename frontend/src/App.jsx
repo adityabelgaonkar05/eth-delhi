@@ -17,7 +17,6 @@ import Workwithus from "./components/Workwithus";
 import ChatTest from "./components/ChatTest";
 import "./App.css";
 import { WalletProvider } from "./context/WalletContext";
-import { AuthProvider } from "./context/AuthContext";
 import WalletSelector from "./components/WalletSelector";
 import { TokenProvider } from "./context/TokenContract";
 import { ContractProvider } from "./context/ContractContext";

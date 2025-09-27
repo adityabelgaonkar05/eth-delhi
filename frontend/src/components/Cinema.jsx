@@ -44,8 +44,11 @@ const Cinema = () => {
   const [hasShownExitPrompt, setHasShownExitPrompt] = useState(false)
   const [exitPromptCooldown, setExitPromptCooldown] = useState(false)
   const [exitCooldownTimeLeft, setExitCooldownTimeLeft] = useState(0)
+  const [isHoldingExit, setIsHoldingExit] = useState(false)
+  const [holdProgress, setHoldProgress] = useState(0)
   const exitCooldownTimeoutRef = useRef(null)
   const exitCooldownIntervalRef = useRef(null)
+  const holdIntervalRef = useRef(null)
 
   console.log('Cinema state:', { isLoading, error, connected, playerCount })
 
@@ -210,8 +213,38 @@ const Cinema = () => {
   const handleStayInCinema = useCallback(() => {
     console.log('handleStayInCinema called - starting cooldown')
     setShowExitPrompt(false)
+    setIsHoldingExit(false)
+    setHoldProgress(0)
+    if (holdIntervalRef.current) {
+      clearInterval(holdIntervalRef.current)
+    }
     startExitCooldown()
   }, [startExitCooldown])
+
+  // Handle hold button functionality
+  const handleHoldStart = useCallback(() => {
+    setIsHoldingExit(true)
+    setHoldProgress(0)
+    
+    holdIntervalRef.current = setInterval(() => {
+      setHoldProgress(prev => {
+        if (prev >= 100) {
+          // Hold complete - exit to main
+          handleExitToMain()
+          return 100
+        }
+        return prev + 2 // 2% per 10ms = 100% in 500ms
+      })
+    }, 10)
+  }, [])
+
+  const handleHoldEnd = useCallback(() => {
+    setIsHoldingExit(false)
+    setHoldProgress(0)
+    if (holdIntervalRef.current) {
+      clearInterval(holdIntervalRef.current)
+    }
+  }, [])
 
   // Layer data and tileset configuration for cinema
   const layersData = {
@@ -532,6 +565,9 @@ const Cinema = () => {
       if (exitCooldownIntervalRef.current) {
         clearInterval(exitCooldownIntervalRef.current)
       }
+      if (holdIntervalRef.current) {
+        clearInterval(holdIntervalRef.current)
+      }
     }
   }, [])
 
@@ -686,18 +722,22 @@ const Cinema = () => {
                 lineHeight: '1.5'
               }}>
                 You've found the exit portal!<br/>
-                Would you like to return to the main island?
+                Hold the button to return to the main island.
               </p>
               
               <div style={{
                 display: 'flex',
-                gap: '15px',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                marginBottom: '20px'
               }}>
                 <button
-                  onClick={handleExitToMain}
+                  onMouseDown={handleHoldStart}
+                  onMouseUp={handleHoldEnd}
+                  onMouseLeave={handleHoldEnd}
+                  onTouchStart={handleHoldStart}
+                  onTouchEnd={handleHoldEnd}
                   style={{
-                    backgroundColor: '#FF6B35',
+                    backgroundColor: isHoldingExit ? '#E55A2B' : '#FF6B35',
                     color: 'white',
                     border: 'none',
                     padding: '12px 24px',
@@ -706,32 +746,29 @@ const Cinema = () => {
                     cursor: 'pointer',
                     fontFamily: 'monospace',
                     fontWeight: 'bold',
-                    transition: 'background-color 0.3s'
+                    transition: 'background-color 0.1s',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    minWidth: '200px',
+                    height: '50px'
                   }}
-                  onMouseOver={(e) => e.target.style.backgroundColor = '#E55A2B'}
-                  onMouseOut={(e) => e.target.style.backgroundColor = '#FF6B35'}
                 >
-                  Exit to Main Island
-                </button>
-                
-                <button
-                  onClick={handleStayInCinema}
-                  style={{
-                    backgroundColor: '#666',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    cursor: 'pointer',
-                    fontFamily: 'monospace',
-                    fontWeight: 'bold',
-                    transition: 'background-color 0.3s'
-                  }}
-                  onMouseOver={(e) => e.target.style.backgroundColor = '#555'}
-                  onMouseOut={(e) => e.target.style.backgroundColor = '#666'}
-                >
-                  Stay in Cinema
+                  {/* Progress bar overlay */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    height: '100%',
+                    width: `${holdProgress}%`,
+                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                    transition: 'width 0.1s linear',
+                    borderRadius: '8px'
+                  }} />
+                  
+                  {/* Button text */}
+                  <span style={{ position: 'relative', zIndex: 1 }}>
+                    {isHoldingExit ? `Exiting... ${Math.round(holdProgress)}%` : 'Hold to Exit'}
+                  </span>
                 </button>
               </div>
               

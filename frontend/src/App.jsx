@@ -18,6 +18,8 @@ import Townhall from "./components/Townhall";
 import Workwithus from "./components/Workwithus";
 import ChatTest from "./components/ChatTest";
 import PetNFTShop from "./components/PetNFTShop";
+import LeaderboardsPage from "./components/LeaderboardsPage";
+import QuickNavigation from "./components/QuickNavigation";
 import OnboardingPage from "./components/OnboardingPage";
 import UserOnboarding from "./components/UserOnboarding";
 import "./App.css";
@@ -48,22 +50,36 @@ function App() {
                   <Route path="/game" element={
                     // <AuthGuard>
                     <MultiplayerGame />
-                    // {/* </AuthGuard> */}
+                    // </AuthGuard>
                   } />
                   <Route path="/cinema" element={
                     // <AuthGuard>
                     <Cinema />
-                    // {/* </AuthGuard> */}
+                    // </AuthGuard>
                   } />
                   <Route path="/library" element={
                     // <AuthGuard>
                     <Library />
-                    // {/* </AuthGuard> */}
+                    // </AuthGuard>
                   } />
                   <Route path="/townhall" element={
                     // <AuthGuard>
                     <Townhall />
-                    // {/* </AuthGuard> */}
+                    // </AuthGuard>
+                  } />
+
+                  {/* Pet Shop route */}
+                  <Route path="/pets" element={
+                    // <AuthGuard>
+                    <PetNFTShop />
+                    // </AuthGuard>
+                  } />
+
+                  {/* Leaderboards route */}
+                  <Route path="/leaderboards" element={
+                    // <AuthGuard>
+                    <LeaderboardsPage />
+                    // </AuthGuard>
                   } />
 
                   {/* Admin/work routes */}
@@ -74,13 +90,16 @@ function App() {
                   <Route path="/contractTesting" element={<ContractExample />} />
                   {/* <Route path="wallet" element={<WalletSelector />} /> */}
                 </Routes>
+
+                {/* Quick Navigation - remove in production */}
+                <QuickNavigation />
               </div>
             </SelfAuthProvider>
           </Router>
         </TokenProvider>
       </ContractProvider>
     </WalletProvider>
-    // </AuthProvider>
+    // </AuthProvider >
   );
 }
 

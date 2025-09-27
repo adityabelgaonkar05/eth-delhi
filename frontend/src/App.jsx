@@ -33,6 +33,7 @@ import { TokenProvider } from "./context/TokenContract";
 import { ContractProvider } from "./context/ContractContext";
 import ContractExample from "./components/ContractExample";
 import SelfAuthentication from "./components/SelfAuthenticationFixed";
+import WalrusTest from "./components/WalrusTest";
 
 function App() {
   return (

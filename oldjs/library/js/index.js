@@ -6,21 +6,21 @@ canvas.width = 1024 * dpr
 canvas.height = 576 * dpr
 
 const layersData = {
-   l_New_Layer_2: l_New_Layer_2,
-   l_New_Layer_1: l_New_Layer_1,
-   l_New_Layer_3: l_New_Layer_3,
+   l_New_Layer_7: l_New_Layer_7,
    l_New_Layer_4: l_New_Layer_4,
    l_New_Layer_5: l_New_Layer_5,
-   l_New_Layer_6: l_New_Layer_6,
+   l_New_Layer_7_1: l_New_Layer_7_1,
+   l_New_Layer_8: l_New_Layer_8,
+   l_New_Layer_9: l_New_Layer_9,
 };
 
 const tilesets = {
-  l_New_Layer_2: { imageUrl: './images/terrain.png', tileSize: 16 },
-  l_New_Layer_1: { imageUrl: './images/terrain.png', tileSize: 16 },
-  l_New_Layer_3: { imageUrl: './images/decorations.png', tileSize: 8 },
+  l_New_Layer_7: { imageUrl: './images/terrain.png', tileSize: 16 },
   l_New_Layer_4: { imageUrl: './images/decorations.png', tileSize: 8 },
   l_New_Layer_5: { imageUrl: './images/decorations.png', tileSize: 8 },
-  l_New_Layer_6: { imageUrl: './images/decorations.png', tileSize: 8 },
+  l_New_Layer_7_1: { imageUrl: './images/decorations.png', tileSize: 8 },
+  l_New_Layer_8: { imageUrl: './images/decorations.png', tileSize: 8 },
+  l_New_Layer_9: { imageUrl: './images/decorations.png', tileSize: 8 },
 };
 
 

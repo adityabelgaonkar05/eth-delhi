@@ -5,22 +5,34 @@ const GameChat = ({ room = "main", username = "Anonymous", isVisible = true }) =
   const [socket, setSocket] = useState(null);
   const [messages, setMessages] = useState([]);
   const [currentMessage, setCurrentMessage] = useState('');
-  const [isExpanded, setIsExpanded] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [chatError, setChatError] = useState('');
-  const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
-  const chatContainerRef = useRef(null);
+  const messageTimeoutsRef = useRef(new Map());
 
-  // Auto-scroll to bottom when new messages arrive
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  // Add message with auto-fade (Minecraft style)
+  const addMessage = useCallback((message) => {
+    const messageId = Date.now() + Math.random();
+    const newMessage = { ...message, id: messageId };
+    
+    setMessages(prev => [...prev, newMessage]);
+    
+    // Auto-remove message after 10 seconds (like Minecraft)
+    const timeout = setTimeout(() => {
+      setMessages(prev => prev.filter(msg => msg.id !== messageId));
+      messageTimeoutsRef.current.delete(messageId);
+    }, 10000);
+    
+    messageTimeoutsRef.current.set(messageId, timeout);
+  }, []);
 
+  // Cleanup timeouts on unmount
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    return () => {
+      messageTimeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+    };
+  }, []);
 
   // Initialize socket connection
   useEffect(() => {
@@ -40,13 +52,15 @@ const GameChat = ({ room = "main", username = "Anonymous", isVisible = true }) =
     // Listen for chat messages
     newSocket.on('chatMessage', (message) => {
       console.log('💬 Received chat message:', message);
-      setMessages(prev => [...prev, message]);
+      addMessage(message);
     });
 
-    // Listen for chat history
+    // Listen for chat history (only show recent messages)
     newSocket.on('chatHistory', (history) => {
       console.log('📜 Received chat history:', history);
-      setMessages(history);
+      // Only show last 5 messages from history
+      const recentHistory = history.slice(-5);
+      recentHistory.forEach(msg => addMessage(msg));
     });
 
     // Listen for chat errors
@@ -106,14 +120,25 @@ const GameChat = ({ room = "main", username = "Anonymous", isVisible = true }) =
       setIsTyping(false);
       setCurrentMessage('');
       inputRef.current?.blur();
-    } else if (e.key === 'Tab') {
-      e.preventDefault();
-      setIsTyping(!isTyping);
-      if (!isTyping) {
-        setTimeout(() => inputRef.current?.focus(), 50);
-      }
     }
   };
+
+  // Handle T key to open chat (Minecraft style)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key.toLowerCase() === 't' && !isTyping && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        // Only trigger if not typing in an input field
+        if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+          setIsTyping(true);
+          setTimeout(() => inputRef.current?.focus(), 50);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isTyping]);
 
   // Format timestamp
   const formatTime = (timestamp) => {
@@ -136,140 +161,123 @@ const GameChat = ({ room = "main", username = "Anonymous", isVisible = true }) =
 
   return (
     <div 
-      className="fixed bottom-4 left-4 z-50"
+      className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none"
       style={{ fontFamily: 'monospace' }}
     >
-      {/* Chat Container */}
-      <div 
-        ref={chatContainerRef}
-        className={`bg-black/80 backdrop-blur-sm border border-gray-600 transition-all duration-200 ${
-          isExpanded || isTyping 
-            ? 'w-80 h-64' 
-            : 'w-80 h-32'
-        }`}
-        style={{
-          borderRadius: '4px',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)'
-        }}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-2 border-b border-gray-600 bg-black/90">
-          <div className="flex items-center space-x-2">
-            <span className="text-white text-xs font-bold">
-              Chat • {room}
-            </span>
-            <div 
-              className={`w-2 h-2 rounded-full ${
-                isConnected ? 'bg-green-400' : 'bg-red-400'
-              }`}
-              title={isConnected ? 'Connected' : 'Disconnected'}
-            />
-          </div>
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="text-gray-400 hover:text-white text-xs px-1"
-          >
-            {isExpanded ? '−' : '+'}
-          </button>
-        </div>
-
-        {/* Error Display */}
-        {chatError && (
-          <div className="bg-red-900/80 border-b border-red-600 p-2">
-            <span className="text-red-200 text-xs">{chatError}</span>
-          </div>
-        )}
-
-        {/* Messages */}
+      {/* Messages Display (Minecraft style - bottom left) */}
+      <div className="absolute bottom-4 left-4 max-w-md">
+        {/* Single dark background box for all messages */}
         <div 
-          className={`overflow-y-auto p-2 space-y-1 ${
-            isExpanded || isTyping ? 'h-40' : 'h-16'
-          } ${chatError ? 'h-12' : ''}`}
-          style={{ 
-            scrollbarWidth: 'thin',
-            scrollbarColor: '#4B5563 transparent' 
+          className="p-3 rounded"
+          style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            backdropFilter: 'blur(4px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)'
           }}
         >
-          {messages.length === 0 && !chatError && (
-            <div className="text-xs text-gray-500 italic">
-              No messages yet. Be the first to say something!
-            </div>
-          )}
-          {messages.map((msg) => (
-            <div key={msg.id} className="text-xs">
-              <span className="text-gray-400 mr-1">
-                [{formatTime(msg.timestamp)}]
-              </span>
-              <span 
-                className="font-bold mr-1"
-                style={{ color: msg.playerColor }}
-              >
-                {msg.username}:
-              </span>
-              <span className="text-white">
-                {msg.message}
-              </span>
+          {messages.slice(-10).map((msg, index) => (
+            <div 
+              key={msg.id} 
+              className="text-base mb-1 text-white"
+              style={{
+                animation: 'fadeInUp 0.3s ease-out'
+              }}
+            >
+              {/* Check if it's a system message (like "Herobrine joined the game") */}
+              {msg.isSystemMessage ? (
+                <span className="text-yellow-400">
+                  {msg.message}
+                </span>
+              ) : (
+                <>
+                  <span className="text-white">&lt;</span>
+                  <span 
+                    className="font-bold"
+                    style={{ color: msg.playerColor || '#FFFFFF' }}
+                  >
+                    {msg.username}
+                  </span>
+                  <span className="text-white">&gt; </span>
+                  <span className="text-white">
+                    {msg.message}
+                  </span>
+                </>
+              )}
             </div>
           ))}
-          <div ref={messagesEndRef} />
         </div>
-
-        {/* Input */}
-        <div className="border-t border-gray-600 bg-black/90">
-          <form onSubmit={sendMessage} className="flex">
-            <input
-              ref={inputRef}
-              type="text"
-              value={currentMessage}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyPress}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-              placeholder={
-                chatError 
-                  ? "Register in game to chat" 
-                  : isTyping 
-                    ? "Type your message..." 
-                    : "Press Tab to chat"
-              }
-              className="flex-1 bg-transparent text-white text-xs p-2 outline-none placeholder-gray-500"
-              maxLength={200}
-              autoComplete="off"
-              disabled={!!chatError}
-            />
-            {isTyping && !chatError && (
-              <button
-                type="submit"
-                className="px-3 text-xs text-gray-400 hover:text-white"
-              >
-                Send
-              </button>
-            )}
-          </form>
-        </div>
-
-        {/* Instructions */}
-        {!isTyping && !chatError && (
-          <div className="absolute -top-6 left-0 text-xs text-gray-500 bg-black/60 px-2 py-1 rounded">
-            Press Tab to chat
-          </div>
-        )}
       </div>
 
-      {/* CSS for scrollbar styling */}
+      {/* Input Bar (only when typing) */}
+      {isTyping && (
+        <div className="absolute bottom-4 left-4 pointer-events-auto">
+          <form onSubmit={sendMessage} className="flex items-center">
+            <div 
+              className="flex items-center px-3 py-2 rounded"
+              style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                backdropFilter: 'blur(4px)',
+                border: '1px solid rgba(255, 255, 255, 0.1)'
+              }}
+            >
+              <span className="text-white text-base mr-2">&gt;</span>
+              <input
+                ref={inputRef}
+                type="text"
+                value={currentMessage}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyPress}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                placeholder={
+                  chatError 
+                    ? "Register in game to chat" 
+                    : "Type your message..."
+                }
+                className="bg-transparent text-white text-base outline-none placeholder-gray-500 min-w-64"
+                maxLength={200}
+                autoComplete="off"
+                disabled={!!chatError}
+                style={{ 
+                  fontFamily: 'monospace'
+                }}
+              />
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Error Display */}
+      {chatError && (
+        <div className="absolute bottom-4 left-4 bg-red-900/90 px-3 py-1 rounded">
+          <span className="text-red-200 text-base">{chatError}</span>
+        </div>
+      )}
+
+      {/* Connection Status (top-right corner) */}
+      <div className="absolute top-4 right-4 flex items-center space-x-2 bg-black/60 px-3 py-1 rounded pointer-events-auto">
+        <span className="text-white text-xs">
+          Chat • {room}
+        </span>
+        <div 
+          className={`w-2 h-2 rounded-full ${
+            isConnected ? 'bg-green-400' : 'bg-red-400'
+          }`}
+          title={isConnected ? 'Connected' : 'Disconnected'}
+        />
+      </div>
+
+      {/* CSS for animations */}
       <style jsx>{`
-        div::-webkit-scrollbar {
-          width: 4px;
-        }
-        div::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        div::-webkit-scrollbar-thumb {
-          background: #4B5563;
-          border-radius: 2px;
-        }
-        div::-webkit-scrollbar-thumb:hover {
-          background: #6B7280;
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
       `}</style>
     </div>

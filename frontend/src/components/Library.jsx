@@ -5,6 +5,7 @@ import MultiPlayer from '../game/classes/MultiPlayer'
 import CollisionBlock from '../game/classes/CollisionBlock'
 import GameChat from './GameChat'
 import TokenBalance from './TokenBalance'
+import PlayerStatus from './PlayerStatus'
 import { 
   libraryCollisions,
   library_l_New_Layer_2, 
@@ -595,6 +596,9 @@ const Library = () => {
       position: 'relative'
     }}>
       <div>
+        {/* Player Status */}
+        <PlayerStatus />
+
         {/* Token Balance */}
         <TokenBalance />
 
@@ -685,14 +689,6 @@ const Library = () => {
             imageRendering: 'pixelated'
           }}
         />
-        <div style={{ 
-          color: 'white', 
-          textAlign: 'center', 
-          marginTop: '10px',
-          display: isLoading || error ? 'none' : 'block'
-        }}>
-          📚 Library • Use WASD or Arrow Keys to move • Multiplayer Mode
-        </div>
         
         {error && (
           <div style={{ 
@@ -762,7 +758,7 @@ const Library = () => {
                 color: '#ccc',
                 fontSize: '16px',
                 marginBottom: '30px',
-                    lineHeight: '1.5'
+                lineHeight: '1.5'
               }}>
                 You've found the exit portal!<br/>
                 Hold the button to return to the main island.

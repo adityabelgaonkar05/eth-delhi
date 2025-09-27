@@ -5,6 +5,7 @@ import MultiPlayer from '../game/classes/MultiPlayer'
 import CollisionBlock from '../game/classes/CollisionBlock'
 import GameChat from './GameChat'
 import TokenBalance from './TokenBalance'
+import PlayerStatus from './PlayerStatus'
 import { 
   cinemaCollisions,
   cinema_l_New_Layer_1, 
@@ -595,6 +596,9 @@ const Cinema = () => {
       position: 'relative'
     }}>
       <div>
+        {/* Player Status */}
+        <PlayerStatus />
+
         {/* Token Balance */}
         <TokenBalance />
 
@@ -685,14 +689,6 @@ const Cinema = () => {
             imageRendering: 'pixelated'
           }}
         />
-        <div style={{ 
-          color: 'white', 
-          textAlign: 'center', 
-          marginTop: '10px',
-          display: isLoading || error ? 'none' : 'block'
-        }}>
-          🎬 Cinema • Use WASD or Arrow Keys to move • Multiplayer Mode
-        </div>
         
         {error && (
           <div style={{ 

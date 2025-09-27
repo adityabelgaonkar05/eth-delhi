@@ -7,6 +7,7 @@ import CollisionBlock from '../game/classes/CollisionBlock'
 import Sprite from '../game/classes/Sprite'
 import GameChat from './GameChat'
 import TokenBalance from "./TokenBalance";
+import PlayerStatus from './PlayerStatus'
 import { 
   collisions, 
   l_New_Layer_1, 
@@ -942,6 +943,9 @@ const MultiplayerGame = () => {
       }}
     >
       <div>
+        {/* Player Status */}
+        <PlayerStatus />
+
         {/* Token Balance */}
         <TokenBalance />
 
@@ -1046,16 +1050,6 @@ const MultiplayerGame = () => {
             imageRendering: "pixelated",
           }}
         />
-        <div
-          style={{
-            color: "white",
-            textAlign: "center",
-            marginTop: "10px",
-            display: isLoading || error ? "none" : "block",
-          }}
-        >
-          Use WASD or Arrow Keys to move • Multiplayer Mode
-        </div>
 
         {error && (
           <div

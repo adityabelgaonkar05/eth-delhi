@@ -5,6 +5,7 @@ import MultiPlayer from '../game/classes/MultiPlayer'
 import CollisionBlock from '../game/classes/CollisionBlock'
 import GameChat from './GameChat'
 import TokenBalance from './TokenBalance'
+import PlayerStatus from './PlayerStatus'
 import { 
   townhallCollisions,
   townhall_l_New_Layer_1,
@@ -598,6 +599,9 @@ const Townhall = () => {
       position: 'relative'
     }}>
       <div>
+        {/* Player Status */}
+        <PlayerStatus />
+
         {/* Token Balance */}
         <TokenBalance />
 
@@ -688,14 +692,6 @@ const Townhall = () => {
             imageRendering: 'pixelated'
           }}
         />
-        <div style={{ 
-          color: 'white', 
-          textAlign: 'center', 
-          marginTop: '10px',
-          display: isLoading || error ? 'none' : 'block'
-        }}>
-          🏛️ Townhall • Use WASD or Arrow Keys to move • Multiplayer Mode
-        </div>
         
         {error && (
           <div style={{ 

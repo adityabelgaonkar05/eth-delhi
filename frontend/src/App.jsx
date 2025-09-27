@@ -26,6 +26,7 @@ function App() {
               <Route path="/" element={<LandingPage />} />
               <Route path="/game" element={<MultiplayerGame />} />
               <Route path="/workwithus" element={<Workwithus />} />
+              <Route path="/admin" element={<Workwithus />} />
               <Route path="/cinema" element={<Cinema />} />
               <Route path="/library" element={<Library />} />
               <Route path="/townhall" element={<Townhall />} />

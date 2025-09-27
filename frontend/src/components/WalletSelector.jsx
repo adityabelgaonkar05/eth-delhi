@@ -1,15 +1,15 @@
-import React from 'react';
-import { useWallet } from '../context/WalletContext';
+import React from "react";
+import { useWallet } from "../../context/WalletContext";
 
 const WalletSelector = () => {
-  const { 
-    account, 
-    isConnected, 
-    isConnecting, 
-    fetchWallet, 
-    disconnectWallet, 
-    availableWallets, 
-    walletType 
+  const {
+    account,
+    isConnected,
+    isConnecting,
+    fetchWallet,
+    disconnectWallet,
+    availableWallets,
+    walletType,
   } = useWallet();
 
   const handleWalletConnect = (wallet) => {
@@ -20,12 +20,19 @@ const WalletSelector = () => {
     return (
       <div className="wallet-connected">
         <div className="wallet-info">
-          <h3>✅ Connected to {walletType === 'evm' ? 'EVM' : 'Flow'} Wallet</h3>
+          <h3>
+            ✅ Connected to {walletType === "evm" ? "EVM" : "Flow"} Wallet
+          </h3>
           <p>
-            <strong>Address:</strong> 
-            {account ? `${account.slice(0, 6)}...${account.slice(-4)}` : 'Loading...'}
+            <strong>Address:</strong>
+            {account
+              ? `${account.slice(0, 6)}...${account.slice(-4)}`
+              : "Loading..."}
           </p>
-          <p><strong>Network:</strong> {walletType === 'evm' ? 'Flow EVM Testnet' : 'Flow Testnet'}</p>
+          <p>
+            <strong>Network:</strong>{" "}
+            {walletType === "evm" ? "Flow EVM Testnet" : "Flow Testnet"}
+          </p>
         </div>
         <button onClick={disconnectWallet} className="disconnect-btn">
           Disconnect Wallet
@@ -38,7 +45,7 @@ const WalletSelector = () => {
     <div className="wallet-selector">
       <h3>Connect Your Wallet</h3>
       <p>Choose from EVM wallets or Flow-native wallets:</p>
-      
+
       {isConnecting ? (
         <div className="connecting">
           <p>🔄 Connecting to wallet...</p>
@@ -50,7 +57,7 @@ const WalletSelector = () => {
             <h4>🔗 EVM Wallets (Flow EVM Testnet)</h4>
             <div className="wallet-grid">
               {availableWallets
-                .filter(wallet => wallet.type === 'evm')
+                .filter((wallet) => wallet.type === "evm")
                 .map((wallet) => (
                   <button
                     key={wallet.name}
@@ -60,8 +67,7 @@ const WalletSelector = () => {
                     <span className="wallet-icon">{wallet.icon}</span>
                     <span className="wallet-name">{wallet.name}</span>
                   </button>
-                ))
-              }
+                ))}
             </div>
           </div>
 
@@ -70,7 +76,7 @@ const WalletSelector = () => {
             <h4>🌊 Flow Native Wallets</h4>
             <div className="wallet-grid">
               {availableWallets
-                .filter(wallet => wallet.type === 'flow')
+                .filter((wallet) => wallet.type === "flow")
                 .map((wallet) => (
                   <button
                     key={wallet.name}
@@ -81,8 +87,7 @@ const WalletSelector = () => {
                     <span className="wallet-icon">{wallet.icon}</span>
                     <span className="wallet-name">{wallet.name}</span>
                   </button>
-                ))
-              }
+                ))}
             </div>
           </div>
         </div>
@@ -91,8 +96,14 @@ const WalletSelector = () => {
       <div className="wallet-info">
         <h4>💡 About Wallet Types:</h4>
         <ul>
-          <li><strong>EVM Wallets:</strong> Use Flow EVM testnet (compatible with Ethereum apps)</li>
-          <li><strong>Flow Wallets:</strong> Native Flow blockchain wallets (Cadence smart contracts)</li>
+          <li>
+            <strong>EVM Wallets:</strong> Use Flow EVM testnet (compatible with
+            Ethereum apps)
+          </li>
+          <li>
+            <strong>Flow Wallets:</strong> Native Flow blockchain wallets
+            (Cadence smart contracts)
+          </li>
         </ul>
       </div>
 
@@ -101,7 +112,7 @@ const WalletSelector = () => {
           max-width: 600px;
           margin: 0 auto;
           padding: 20px;
-          font-family: 'Inter', sans-serif;
+          font-family: "Inter", sans-serif;
         }
 
         .wallet-connected {

@@ -1,3 +1,4 @@
+// ONLY FOR WALLET TESTING
 import { ethers } from "ethers";
 import { createContext, useState, useEffect, useContext } from "react";
 

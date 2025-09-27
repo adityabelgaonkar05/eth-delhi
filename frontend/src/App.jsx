@@ -13,6 +13,7 @@ import Townhall from "./components/Townhall";
 import Workwithus from "./components/Workwithus";
 import "./App.css";
 import { WalletProvider } from "../context/WalletContext";
+import WalletSelector from "./components/WalletSelector";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
             <Route path="/cinema" element={<Cinema />} />
             <Route path="/library" element={<Library />} />
             <Route path="/townhall" element={<Townhall />} />
+            {/* <Route path="wallet" element={<WalletSelector />} /> wallet testing route */}
           </Routes>
         </div>
       </Router>

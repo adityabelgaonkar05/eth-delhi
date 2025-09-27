@@ -15,6 +15,7 @@ import Library from "./components/Library";
 import Townhall from "./components/Townhall";
 import Workwithus from "./components/Workwithus";
 import ChatTest from "./components/ChatTest";
+import PetNFTShop from "./components/PetNFTShop";
 import "./App.css";
 import { WalletProvider } from "./context/WalletContext";
 import WalletSelector from "./components/WalletSelector";
@@ -39,6 +40,7 @@ function App() {
                   <Route path="/cinema" element={<Cinema />} />
                   <Route path="/library" element={<Library />} />
                   <Route path="/townhall" element={<Townhall />} />
+                  <Route path="/pets" element={<PetNFTShop />} />
                   <Route
                     path="/contractTesting"
                     element={<ContractExample />}

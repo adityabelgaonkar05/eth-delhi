@@ -1,0 +1,28 @@
+{
+  "name": "Cosmic Guardian",
+  "description": "The ultimate protector of the CryptoVerse, forged from stardust and quantum code. This legendary being transcends dimensions and watches over all digital realms with infinite wisdom.",
+  "image": "http://localhost:5173/images/pet7.webp",
+  "external_url": "http://localhost:5173/pets",
+  "attributes": [
+    {
+      "trait_type": "Rarity",
+      "value": "Legendary"
+    },
+    {
+      "trait_type": "Type",
+      "value": "Cosmic Entity"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Cosmic"
+    },
+    {
+      "trait_type": "Tier",
+      "value": "LEGENDARY"
+    },
+    {
+      "trait_type": "Price",
+      "value": "1000 CVRS"
+    }
+  ]
+}

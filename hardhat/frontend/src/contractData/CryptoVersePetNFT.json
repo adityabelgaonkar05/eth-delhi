@@ -1,0 +1,18 @@
+{
+  "address": "0x342c9AB36110277b6279125d6dDa181618176e7E",
+  "abi": [
+    "function totalPets() view returns (uint256)",
+    "function getAvailablePets() view returns (uint256[], tuple(uint256 petId, string name, string description, uint8 tier, string imageURI, uint256 price, bool isForSale, uint256 createdAt)[])",
+    "function getPetDetails(uint256 tokenId) view returns (tuple(uint256 petId, string name, string description, uint8 tier, string imageURI, uint256 price, bool isForSale, uint256 createdAt))",
+    "function getUserPets(address user) view returns (uint256[])",
+    "function getUserPurchases(address user) view returns (tuple(uint256 tokenId, address buyer, uint256 price, uint256 timestamp, uint8 tier)[])",
+    "function purchasePet(uint256 tokenId)",
+    "function getMarketplaceStats() view returns (uint256, uint256, uint256, uint256)",
+    "function tierPrices(uint8 tier) view returns (uint256)",
+    "function balanceOf(address owner) view returns (uint256)",
+    "function ownerOf(uint256 tokenId) view returns (address)",
+    "function tokenURI(uint256 tokenId) view returns (string)"
+  ],
+  "network": "flowTestnet",
+  "deployedAt": "2025-09-27T14:24:49.574Z"
+}

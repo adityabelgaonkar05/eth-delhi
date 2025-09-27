@@ -33,6 +33,12 @@ const LandingPage = () => {
               </button>
               <button
                 className="navbar-button pixel-text rounded-4xl"
+                onClick={() => navigate("/pets")}
+              >
+                Pet Shop
+              </button>
+              <button
+                className="navbar-button pixel-text rounded-4xl"
                 onClick={handleGameClick}
               >
                 Play Game

@@ -61,9 +61,9 @@ const LandingPage = () => {
               </button>
               <button
                 className="navbar-button-primary pixel-text rounded-4xl"
-                onClick={() => navigate("/game")}
+                onClick={() => navigate("/auth")}
               >
-                Get Started
+                Login
               </button>
             </div>
           </div>

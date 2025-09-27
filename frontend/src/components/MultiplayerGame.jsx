@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useNavigate } from 'react-router-dom'
 import { io } from "socket.io-client";
 import Player from "../game/classes/Player";
 import MultiPlayer from "../game/classes/MultiPlayer";
@@ -26,6 +27,7 @@ import { loadImage } from "../game/utils/gameUtils";
 const MultiplayerGame = () => {
   console.log("MultiplayerGame component rendering...");
 
+  const navigate = useNavigate()
   const canvasRef = useRef(null);
   const playerRef = useRef(null); // Local player
   const otherPlayersRef = useRef(new Map()); // Other players
@@ -43,11 +45,33 @@ const MultiplayerGame = () => {
   const lastTimeRef = useRef(performance.now());
   const elapsedTimeRef = useRef(0);
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [connected, setConnected] = useState(false);
-  const [playerCount, setPlayerCount] = useState(0);
-  const [playerCoords, setPlayerCoords] = useState({ x: 0, y: 0 });
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [connected, setConnected] = useState(false)
+  const [playerCount, setPlayerCount] = useState(0)
+  const [playerCoords, setPlayerCoords] = useState({ x: 0, y: 0 })
+  const [showLibraryPrompt, setShowLibraryPrompt] = useState(false)
+  const [hasShownLibraryPrompt, setHasShownLibraryPrompt] = useState(false)
+  const [libraryPromptCooldown, setLibraryPromptCooldown] = useState(false)
+  const [cooldownTimeLeft, setCooldownTimeLeft] = useState(0)
+  const cooldownTimeoutRef = useRef(null)
+  const cooldownIntervalRef = useRef(null)
+
+  // Cinema room states
+  const [showCinemaPrompt, setShowCinemaPrompt] = useState(false)
+  const [hasShownCinemaPrompt, setHasShownCinemaPrompt] = useState(false)
+  const [cinemaPromptCooldown, setCinemaPromptCooldown] = useState(false)
+  const [cinemaCooldownTimeLeft, setCinemaCooldownTimeLeft] = useState(0)
+  const cinemaCooldownTimeoutRef = useRef(null)
+  const cinemaCooldownIntervalRef = useRef(null)
+
+  // Townhall room states
+  const [showTownhallPrompt, setShowTownhallPrompt] = useState(false)
+  const [hasShownTownhallPrompt, setHasShownTownhallPrompt] = useState(false)
+  const [townhallPromptCooldown, setTownhallPromptCooldown] = useState(false)
+  const [townhallCooldownTimeLeft, setTownhallCooldownTimeLeft] = useState(0)
+  const townhallCooldownTimeoutRef = useRef(null)
+  const townhallCooldownIntervalRef = useRef(null)
 
   console.log("MultiplayerGame state:", {
     isLoading,
@@ -55,6 +79,150 @@ const MultiplayerGame = () => {
     connected,
     playerCount,
   });
+
+  // Start cooldown period to prevent prompt spam
+  const startCooldown = useCallback(() => {
+    console.log('startCooldown called - setting cooldown to true')
+    setLibraryPromptCooldown(true)
+    setCooldownTimeLeft(5)
+    
+    // Clear any existing timeout and interval
+    if (cooldownTimeoutRef.current) {
+      clearTimeout(cooldownTimeoutRef.current)
+    }
+    if (cooldownIntervalRef.current) {
+      clearInterval(cooldownIntervalRef.current)
+    }
+    
+    // Start countdown interval
+    cooldownIntervalRef.current = setInterval(() => {
+      setCooldownTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(cooldownIntervalRef.current)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    
+    // Set 5-second cooldown
+    cooldownTimeoutRef.current = setTimeout(() => {
+      console.log('Cooldown timeout triggered - setting cooldown to false')
+      setLibraryPromptCooldown(false)
+      setHasShownLibraryPrompt(false) // Reset so it can trigger again after cooldown
+      setCooldownTimeLeft(0)
+      console.log('Library prompt cooldown ended')
+    }, 5000) // 5 seconds cooldown
+  }, [])
+
+  // Start cinema cooldown period to prevent prompt spam
+  const startCinemaCooldown = useCallback(() => {
+    console.log('startCinemaCooldown called - setting cooldown to true')
+    setCinemaPromptCooldown(true)
+    setCinemaCooldownTimeLeft(5)
+    
+    // Clear any existing timeout and interval
+    if (cinemaCooldownTimeoutRef.current) {
+      clearTimeout(cinemaCooldownTimeoutRef.current)
+    }
+    if (cinemaCooldownIntervalRef.current) {
+      clearInterval(cinemaCooldownIntervalRef.current)
+    }
+    
+    // Start countdown interval
+    cinemaCooldownIntervalRef.current = setInterval(() => {
+      setCinemaCooldownTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(cinemaCooldownIntervalRef.current)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    
+    // Set 5-second cooldown
+    cinemaCooldownTimeoutRef.current = setTimeout(() => {
+      console.log('Cinema cooldown timeout triggered - setting cooldown to false')
+      setCinemaPromptCooldown(false)
+      setHasShownCinemaPrompt(false) // Reset so it can trigger again after cooldown
+      setCinemaCooldownTimeLeft(0)
+      console.log('Cinema prompt cooldown ended')
+    }, 5000) // 5 seconds cooldown
+  }, [])
+
+  // Start townhall cooldown period to prevent prompt spam
+  const startTownhallCooldown = useCallback(() => {
+    console.log('startTownhallCooldown called - setting cooldown to true')
+    setTownhallPromptCooldown(true)
+    setTownhallCooldownTimeLeft(5)
+    
+    // Clear any existing timeout and interval
+    if (townhallCooldownTimeoutRef.current) {
+      clearTimeout(townhallCooldownTimeoutRef.current)
+    }
+    if (townhallCooldownIntervalRef.current) {
+      clearInterval(townhallCooldownIntervalRef.current)
+    }
+    
+    // Start countdown interval
+    townhallCooldownIntervalRef.current = setInterval(() => {
+      setTownhallCooldownTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(townhallCooldownIntervalRef.current)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    
+    // Set 5-second cooldown
+    townhallCooldownTimeoutRef.current = setTimeout(() => {
+      console.log('Townhall cooldown timeout triggered - setting cooldown to false')
+      setTownhallPromptCooldown(false)
+      setHasShownTownhallPrompt(false) // Reset so it can trigger again after cooldown
+      setTownhallCooldownTimeLeft(0)
+      console.log('Townhall prompt cooldown ended')
+    }, 5000) // 5 seconds cooldown
+  }, [])
+
+  // Handle library navigation
+  const handleGoToLibrary = useCallback(() => {
+    setShowLibraryPrompt(false)
+    startCooldown()
+    navigate('/library')
+  }, [startCooldown, navigate])
+
+  const handleStayInGame = useCallback(() => {
+    console.log('handleStayInGame called - starting cooldown')
+    setShowLibraryPrompt(false)
+    startCooldown()
+  }, [startCooldown])
+
+  // Handle cinema navigation
+  const handleGoToCinema = useCallback(() => {
+    setShowCinemaPrompt(false)
+    startCinemaCooldown()
+    navigate('/cinema')
+  }, [startCinemaCooldown, navigate])
+
+  const handleStayInGameCinema = useCallback(() => {
+    console.log('handleStayInGameCinema called - starting cooldown')
+    setShowCinemaPrompt(false)
+    startCinemaCooldown()
+  }, [startCinemaCooldown])
+
+  // Handle townhall navigation
+  const handleGoToTownhall = useCallback(() => {
+    setShowTownhallPrompt(false)
+    startTownhallCooldown()
+    navigate('/townhall')
+  }, [startTownhallCooldown, navigate])
+
+  const handleStayInGameTownhall = useCallback(() => {
+    console.log('handleStayInGameTownhall called - starting cooldown')
+    setShowTownhallPrompt(false)
+    startTownhallCooldown()
+  }, [startTownhallCooldown])
 
   // Layer data and tileset configuration
   const layersData = {
@@ -410,6 +578,52 @@ const MultiplayerGame = () => {
     const isMoving =
       playerRef.current.velocity.x !== 0 || playerRef.current.velocity.y !== 0;
 
+    // Check for library interaction zone (coordinates 258,80 to 272,80)
+    const playerX = playerRef.current.x
+    const playerY = playerRef.current.y
+    const isInLibraryZone = playerX >= 258 && playerX <= 272 && playerY >= 75 && playerY <= 85
+    
+    // Check for cinema interaction zone (coordinates 481,117)
+    const isInCinemaZone = playerX >= 475 && playerX <= 485 && playerY >= 112 && playerY <= 122
+    
+    // Check for townhall interaction zone (coordinates 259,224)
+    const isInTownhallZone = playerX >= 253 && playerX <= 265 && playerY >= 219 && playerY <= 229
+    
+    // Debug logging (remove in production)
+    if (playerX >= 250 && playerX <= 280 && playerY >= 70 && playerY <= 90) {
+      console.log(`Player at (${Math.round(playerX)}, ${Math.round(playerY)}), in library zone: ${isInLibraryZone}, prompt shown: ${hasShownLibraryPrompt}, cooldown: ${libraryPromptCooldown}`)
+    }
+    if (playerX >= 470 && playerX <= 490 && playerY >= 110 && playerY <= 125) {
+      console.log(`Player at (${Math.round(playerX)}, ${Math.round(playerY)}), in cinema zone: ${isInCinemaZone}, prompt shown: ${hasShownCinemaPrompt}, cooldown: ${cinemaPromptCooldown}`)
+    }
+    if (playerX >= 250 && playerX <= 270 && playerY >= 215 && playerY <= 235) {
+      console.log(`Player at (${Math.round(playerX)}, ${Math.round(playerY)}), in townhall zone: ${isInTownhallZone}, prompt shown: ${hasShownTownhallPrompt}, cooldown: ${townhallPromptCooldown}`)
+    }
+    
+    // Only trigger library prompt if in zone, not already shown, and not in cooldown
+    if (isInLibraryZone && !hasShownLibraryPrompt && !libraryPromptCooldown) {
+      console.log('Triggering library prompt!')
+      setShowLibraryPrompt(true)
+      setHasShownLibraryPrompt(true)
+    }
+    
+    // Only trigger cinema prompt if in zone, not already shown, and not in cooldown
+    if (isInCinemaZone && !hasShownCinemaPrompt && !cinemaPromptCooldown) {
+      console.log('Triggering cinema prompt!')
+      setShowCinemaPrompt(true)
+      setHasShownCinemaPrompt(true)
+    }
+    
+    // Only trigger townhall prompt if in zone, not already shown, and not in cooldown
+    if (isInTownhallZone && !hasShownTownhallPrompt && !townhallPromptCooldown) {
+      console.log('Triggering townhall prompt!')
+      setShowTownhallPrompt(true)
+      setHasShownTownhallPrompt(true)
+    }
+    
+    // Don't reset the prompt state when leaving zone - let cooldown handle it
+    // This prevents the loop issue
+
     // Send movement updates
     sendPlayerMovement();
 
@@ -424,11 +638,23 @@ const MultiplayerGame = () => {
     });
 
     // Render scene
-    ctx.save();
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(backgroundCanvasRef.current, 0, 0);
+    ctx.save()
+    ctx.scale(dpr, dpr)
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    ctx.drawImage(backgroundCanvasRef.current, 0, 0)
 
+    // Draw library entrance indicator
+    ctx.fillStyle = 'rgba(255, 255, 0, 0.3)'
+    ctx.fillRect(257, 75, 14, 10) // Highlight the library entrance area (X: 258-272, Y: 75-85)
+    
+    // Draw cinema entrance indicator
+    ctx.fillStyle = 'rgba(255, 0, 255, 0.3)'
+    ctx.fillRect(481.5, 120, 13, 10) // Highlight the cinema entrance area (X: 475-485, Y: 112-122)
+    
+    // Draw townhall entrance indicator
+    ctx.fillStyle = 'rgba(0, 255, 255, 0.3)'
+    ctx.fillRect(258, 219, 13, 10) // Highlight the townhall entrance area (X: 253-265, Y: 219-229)
+    
     // Draw local player
     playerRef.current.draw(ctx);
 
@@ -456,10 +682,24 @@ const MultiplayerGame = () => {
   // Handle keyboard input
   useEffect(() => {
     const handleKeyDown = (e) => {
-      const wasPressed = Object.values(keysRef.current).some(
-        (key) => key.pressed
-      );
+      // Handle ESC key to close prompts
+      if (e.key === 'Escape') {
+        if (showLibraryPrompt) {
+          handleStayInGame()
+          return
+        }
+        if (showCinemaPrompt) {
+          handleStayInGameCinema()
+          return
+        }
+        if (showTownhallPrompt) {
+          handleStayInGameTownhall()
+          return
+        }
+      }
 
+      const wasPressed = Object.values(keysRef.current).some(key => key.pressed)
+      
       switch (e.key.toLowerCase()) {
         case "w":
         case "arrowup":
@@ -519,10 +759,10 @@ const MultiplayerGame = () => {
     window.addEventListener("keyup", handleKeyUp);
 
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
-    };
-  }, [sendPlayerInput]);
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+    }
+  }, [sendPlayerInput, showLibraryPrompt, showCinemaPrompt, showTownhallPrompt, handleStayInGame, handleStayInGameCinema, handleStayInGameTownhall])
 
   // Initialize game on component mount
   useEffect(() => {
@@ -545,8 +785,15 @@ const MultiplayerGame = () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
       }
-    };
-  }, []);
+      // Cleanup cooldown timeout and interval
+      if (cooldownTimeoutRef.current) {
+        clearTimeout(cooldownTimeoutRef.current)
+      }
+      if (cooldownIntervalRef.current) {
+        clearInterval(cooldownIntervalRef.current)
+      }
+    }
+  }, [])
 
   // Start animation loop when not loading
   useEffect(() => {
@@ -609,6 +856,21 @@ const MultiplayerGame = () => {
         >
           <div>X: {Math.round(playerCoords.x)}</div>
           <div>Y: {Math.round(playerCoords.y)}</div>
+          {libraryPromptCooldown && (
+            <div style={{ color: '#ff6b6b', fontSize: '10px', marginTop: '2px' }}>
+              Library cooldown: {cooldownTimeLeft}s
+            </div>
+          )}
+          {cinemaPromptCooldown && (
+            <div style={{ color: '#ff6b6b', fontSize: '10px', marginTop: '2px' }}>
+              Cinema cooldown: {cinemaCooldownTimeLeft}s
+            </div>
+          )}
+          {townhallPromptCooldown && (
+            <div style={{ color: '#ff6b6b', fontSize: '10px', marginTop: '2px' }}>
+              Townhall cooldown: {townhallCooldownTimeLeft}s
+            </div>
+          )}
         </div>
 
         <canvas
@@ -667,6 +929,306 @@ const MultiplayerGame = () => {
             }}
           >
             Loading multiplayer game...
+          </div>
+        )}
+
+        {/* Library Interaction Prompt */}
+        {showLibraryPrompt && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+          }}>
+            <div style={{
+              backgroundColor: '#2a2a2a',
+              border: '3px solid #4a4a4a',
+              borderRadius: '15px',
+              padding: '30px',
+              textAlign: 'center',
+              maxWidth: '400px',
+              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)'
+            }}>
+              <h2 style={{
+                color: '#fff',
+                fontSize: '24px',
+                marginBottom: '20px',
+                fontFamily: 'monospace'
+              }}>
+                📚 Library Access
+              </h2>
+              
+              <p style={{
+                color: '#ccc',
+                fontSize: '16px',
+                marginBottom: '30px',
+                lineHeight: '1.5'
+              }}>
+                You've discovered the library entrance!<br/>
+                Would you like to enter the library?
+              </p>
+              
+              <div style={{
+                display: 'flex',
+                gap: '15px',
+                justifyContent: 'center'
+              }}>
+                <button
+                  onClick={handleGoToLibrary}
+                  style={{
+                    backgroundColor: '#4CAF50',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    cursor: 'pointer',
+                    fontFamily: 'monospace',
+                    fontWeight: 'bold',
+                    transition: 'background-color 0.3s'
+                  }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#45a049'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = '#4CAF50'}
+                >
+                  Enter Library
+                </button>
+                
+                <button
+                  onClick={handleStayInGame}
+                  style={{
+                    backgroundColor: '#666',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    cursor: 'pointer',
+                    fontFamily: 'monospace',
+                    fontWeight: 'bold',
+                    transition: 'background-color 0.3s'
+                  }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#555'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = '#666'}
+                >
+                  Stay in Game
+                </button>
+              </div>
+              
+              <p style={{
+                color: '#888',
+                fontSize: '12px',
+                marginTop: '20px',
+                fontStyle: 'italic'
+              }}>
+                Press ESC to close this dialog
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Cinema Interaction Prompt */}
+        {showCinemaPrompt && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+          }}>
+            <div style={{
+              backgroundColor: '#2a2a2a',
+              border: '3px solid #4a4a4a',
+              borderRadius: '15px',
+              padding: '30px',
+              textAlign: 'center',
+              maxWidth: '400px',
+              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)'
+            }}>
+              <h2 style={{
+                color: '#fff',
+                fontSize: '24px',
+                marginBottom: '20px',
+                fontFamily: 'monospace'
+              }}>
+                🎬 Cinema Access
+              </h2>
+              
+              <p style={{
+                color: '#ccc',
+                fontSize: '16px',
+                marginBottom: '30px',
+                lineHeight: '1.5'
+              }}>
+                You've discovered the cinema entrance!<br/>
+                Would you like to enter the cinema?
+              </p>
+              
+              <div style={{
+                display: 'flex',
+                gap: '15px',
+                justifyContent: 'center'
+              }}>
+                <button
+                  onClick={handleGoToCinema}
+                  style={{
+                    backgroundColor: '#4CAF50',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    cursor: 'pointer',
+                    fontFamily: 'monospace',
+                    fontWeight: 'bold',
+                    transition: 'background-color 0.3s'
+                  }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#45a049'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = '#4CAF50'}
+                >
+                  Enter Cinema
+                </button>
+                
+                <button
+                  onClick={handleStayInGameCinema}
+                  style={{
+                    backgroundColor: '#666',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    cursor: 'pointer',
+                    fontFamily: 'monospace',
+                    fontWeight: 'bold',
+                    transition: 'background-color 0.3s'
+                  }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#555'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = '#666'}
+                >
+                  Stay in Game
+                </button>
+              </div>
+              
+              <p style={{
+                color: '#888',
+                fontSize: '12px',
+                marginTop: '20px',
+                fontStyle: 'italic'
+              }}>
+                Press ESC to close this dialog
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Townhall Interaction Prompt */}
+        {showTownhallPrompt && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+          }}>
+            <div style={{
+              backgroundColor: '#2a2a2a',
+              border: '3px solid #4a4a4a',
+              borderRadius: '15px',
+              padding: '30px',
+              textAlign: 'center',
+              maxWidth: '400px',
+              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)'
+            }}>
+              <h2 style={{
+                color: '#fff',
+                fontSize: '24px',
+                marginBottom: '20px',
+                fontFamily: 'monospace'
+              }}>
+                🏛️ Townhall Access
+              </h2>
+              
+              <p style={{
+                color: '#ccc',
+                fontSize: '16px',
+                marginBottom: '30px',
+                lineHeight: '1.5'
+              }}>
+                You've discovered the townhall entrance!<br/>
+                Would you like to enter the townhall?
+              </p>
+              
+              <div style={{
+                display: 'flex',
+                gap: '15px',
+                justifyContent: 'center'
+              }}>
+                <button
+                  onClick={handleGoToTownhall}
+                  style={{
+                    backgroundColor: '#4CAF50',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    cursor: 'pointer',
+                    fontFamily: 'monospace',
+                    fontWeight: 'bold',
+                    transition: 'background-color 0.3s'
+                  }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#45a049'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = '#4CAF50'}
+                >
+                  Enter Townhall
+                </button>
+                
+                <button
+                  onClick={handleStayInGameTownhall}
+                  style={{
+                    backgroundColor: '#666',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    cursor: 'pointer',
+                    fontFamily: 'monospace',
+                    fontWeight: 'bold',
+                    transition: 'background-color 0.3s'
+                  }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#555'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = '#666'}
+                >
+                  Stay in Game
+                </button>
+              </div>
+              
+              <p style={{
+                color: '#888',
+                fontSize: '12px',
+                marginTop: '20px',
+                fontStyle: 'italic'
+              }}>
+                Press ESC to close this dialog
+              </p>
+            </div>
           </div>
         )}
       </div>

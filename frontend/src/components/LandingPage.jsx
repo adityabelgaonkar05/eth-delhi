@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import bgHero from "../assets/bg-hero.png";
 import bgMiddle from "../assets/bg-middle.png";
@@ -6,11 +6,29 @@ import bgEnd from "../assets/bg-end.png";
 import bgFooter from "../assets/bg-footer.png";
 import { useWallet } from "../context/WalletContext";
 import { useToken } from "../context/TokenContract";
+import BusinessOnboarding from "./BusinessOnboarding";
 
 const LandingPage = () => {
   const { fetchWallet, account } = useWallet();
   const { fetchBalance } = useToken();
   const navigate = useNavigate();
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  const handleWorkWithUs = () => {
+    setShowOnboarding(true);
+  };
+
+  const handleOnboardingComplete = (formData) => {
+    console.log("Business onboarding completed:", formData);
+    // Here you can save the data, send to API, etc.
+    setShowOnboarding(false);
+    // Navigate to the work with us page or show success message
+    navigate("/workwithus");
+  };
+
+  const handleOnboardingClose = () => {
+    setShowOnboarding(false);
+  };
 
   async function handleNavigateGame() {
     console.log("Fetching wallet!");
@@ -41,7 +59,7 @@ const LandingPage = () => {
               </button>
               <button
                 className="navbar-button-primary pixel-text rounded-4xl"
-                onClick={() => navigate("/workwithus")}
+                onClick={handleWorkWithUs}
               >
                 Work With Us
               </button>
@@ -278,6 +296,13 @@ const LandingPage = () => {
           </div>
         </div>
       </footer>
+      
+      {/* Business Onboarding Modal */}
+      <BusinessOnboarding
+        isOpen={showOnboarding}
+        onClose={handleOnboardingClose}
+        onComplete={handleOnboardingComplete}
+      />
     </div>
   );
 };

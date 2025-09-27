@@ -4,39 +4,13 @@ import bgHero from "../assets/bg-hero.png";
 import bgMiddle from "../assets/bg-middle.png";
 import bgEnd from "../assets/bg-end.png";
 import bgFooter from "../assets/bg-footer.png";
-import { useWallet } from "../context/WalletContext";
-import { useToken } from "../context/TokenContract";
-import BusinessOnboarding from "./BusinessOnboarding";
 
 const LandingPage = () => {
-  const { fetchWallet, account } = useWallet();
-  const { fetchBalance } = useToken();
   const navigate = useNavigate();
-  const [showOnboarding, setShowOnboarding] = useState(false);
 
-  const handleWorkWithUs = () => {
-    setShowOnboarding(true);
-  };
-
-  const handleOnboardingComplete = (formData) => {
-    console.log("Business onboarding completed:", formData);
-    // Here you can save the data, send to API, etc.
-    setShowOnboarding(false);
-    // Navigate to the work with us page or show success message
-    navigate("/workwithus");
-  };
-
-  const handleOnboardingClose = () => {
-    setShowOnboarding(false);
-  };
-
-  async function handleNavigateGame() {
-    console.log("Fetching wallet!");
-    await fetchWallet();
-    await fetchBalance();
-    console.log("wallet fetched: ", account);
+  const handleGameClick = () => {
     navigate("/game");
-  }
+  };
 
   return (
     <div className="w-full">
@@ -53,15 +27,21 @@ const LandingPage = () => {
             <div className="flex items-center space-x-4">
               <button
                 className="navbar-button pixel-text rounded-4xl"
-                onClick={() => navigate("/game")}
+                onClick={() => navigate("/business")}
               >
-                Sign Up
+                For Businesses
+              </button>
+              <button
+                className="navbar-button pixel-text rounded-4xl"
+                onClick={handleGameClick}
+              >
+                Play Game
               </button>
               <button
                 className="navbar-button-primary pixel-text rounded-4xl"
-                onClick={handleWorkWithUs}
+                onClick={() => navigate("/game")}
               >
-                Work With Us
+                Get Started
               </button>
             </div>
           </div>
@@ -75,19 +55,28 @@ const LandingPage = () => {
           backgroundImage: `url(${bgHero})`,
         }}
       >
-        <div className="text-center text-white py-16">
+        <div className="text-center text-white py-16 max-w-4xl mx-auto px-8">
           <h1 className="text-6xl md:text-8xl font-bold mb-8 pixel-text">
-            Welcome
+            CRYPTOVERSE
           </h1>
-          <p className="text-2xl md:text-3xl mb-12 normal-text font-light">
-            Your adventure begins here
+          <p className="text-xl md:text-2xl mb-12 normal-text font-light leading-relaxed">
+            Enter a world where gaming meets blockchain technology. Build,
+            explore, and create in the ultimate virtual universe.
           </p>
-          <button
-            className="arcade-button pixel-text"
-            onClick={() => handleNavigateGame()}
-          >
-            LET'S PLAY!
-          </button>
+          <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+            <button
+              className="arcade-button pixel-text text-lg px-8 py-4"
+              onClick={() => navigate("/game")}
+            >
+              ENTER WORLD
+            </button>
+            <button
+              className="arcade-button-secondary pixel-text text-lg px-8 py-4"
+              onClick={() => navigate("/business")}
+            >
+              FOR BUSINESSES
+            </button>
+          </div>
         </div>
       </section>
 
@@ -296,13 +285,6 @@ const LandingPage = () => {
           </div>
         </div>
       </footer>
-      
-      {/* Business Onboarding Modal */}
-      <BusinessOnboarding
-        isOpen={showOnboarding}
-        onClose={handleOnboardingClose}
-        onComplete={handleOnboardingComplete}
-      />
     </div>
   );
 };

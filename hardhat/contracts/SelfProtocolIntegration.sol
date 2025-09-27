@@ -6,489 +6,427 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /**
- * @title SelfProtocolIntegration
- * @dev Real Self Protocol integration with JWT verification and on-chain proof validation
- * @notice Integrates with Self Protocol SDK for human verification using zero-knowledge proofs
+ * @title SelfProtocolVerificationRegistry
+ * @dev Registry for Self Protocol verification results from real backend verification
+ * @notice Stores verification results after backend uses real Self Protocol SDK
  * 
- * FEATURES:
- * - Real Self Protocol SDK integration
- * - JWT token validation from Self Protocol
- * - Zero-knowledge proof verification on-chain
- * - Support for multiple document types (passport, EU ID cards)
- * - Age verification, OFAC screening, country exclusions
- * - Disclosure management (nationality, gender, etc.)
- * - Attestation tracking with document type validation
+ * ARCHITECTURE:
+ * 1. User scans QR code generated with real Self Protocol SDK
+ * 2. Backend verifies proof using Self Protocol core SelfBackendVerifier
+ * 3. Backend calls this contract to store verification results
+ * 4. Other contracts can query verification status
+ * 
+ * This is the correct approach as Self Protocol verification must happen off-chain
+ * using their official SDK, then results are stored on-chain for other contracts.
  */
 contract SelfProtocolIntegration is AccessControl, Pausable, ReentrancyGuard {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
-    bytes32 public constant VERIFIER_ROLE = keccak256("VERIFIER_ROLE");
+    bytes32 public constant BACKEND_ROLE = keccak256("BACKEND_ROLE");
 
-    // Self Protocol specific constants
-    uint256 public constant PASSPORT_ID = 1;
+    // Self Protocol document types
+    uint256 public constant PASSPORT_DOC = 1;
     uint256 public constant EU_ID_CARD = 2;
     
-    // Verification configuration
-    struct VerificationConfig {
-        uint256 minimumAge;
-        bool ofacRequired;
-        string[] excludedCountries;
-        bool requireNationality;
-        bool requireGender;
-        bool requireName;
-        bool requireDateOfBirth;
-        bool requirePassportNumber;
-        bool requireExpiryDate;
-    }
-
-    // User verification data
-    struct UserVerification {
+    // Verification result from Self Protocol SDK
+    struct VerificationResult {
         bool isVerified;
-        uint256 attestationId; // Document type used for verification
-        string attestationHash; // Hash of the attestation for integrity
         uint256 verifiedAt;
-        uint256 minimumAge;
-        string nationality;
-        string gender;
-        string name;
-        uint256 dateOfBirth;
-        string passportNumber;
-        uint256 expiryDate;
-        bool ofacCleared;
+        uint256 documentType; // 1=passport, 2=EU ID card
+        string selfProtocolId; // ID from Self Protocol system
+        bytes32 proofHash; // Hash of the ZK proof for integrity
+        // Disclosed information (only if user consented)
+        SelfDisclosures disclosures;
+        // Verification quality metrics
+        uint256 verificationScore; // Quality score from Self Protocol
+        bool ofacScreeningPassed;
+        uint256 expiresAt; // When verification expires (if applicable)
     }
 
-    // Proof verification data structure
-    struct ProofData {
-        uint256[] proof;
-        uint256[] publicSignals;
-        string userContextData;
-        string jwtToken;
+    // User disclosures from Self Protocol
+    struct SelfDisclosures {
+        bool ageVerified;
+        uint256 minimumAge; // Minimum age proven (not exact age)
+        string nationality; // Only if disclosed
+        string gender; // Only if disclosed  
+        bool hasName; // Whether name was verified (not stored for privacy)
+        bool documentValid; // Whether document passed validation
+        uint256 documentExpiryYear; // Year only for privacy
+    }
+
+    // Configuration for Self Protocol integration
+    struct ProtocolConfig {
+        string appScope; // Your app's Self Protocol scope
+        uint256 minimumAge; // Minimum age requirement
+        bool requireOfacScreening; // Whether OFAC screening required
+        string[] excludedCountries; // Countries not allowed
+        uint256 verificationValidityPeriod; // How long verifications are valid
+        bool requireNationalityDisclosure;
+        bool requireGenderDisclosure;
     }
 
     // State variables
-    mapping(address => UserVerification) public userVerifications;
-    mapping(string => address) public attestationHashToUser;
-    mapping(uint256 => bool) public supportedAttestationTypes;
+    mapping(address => VerificationResult) public verifications;
+    mapping(string => address) public selfIdToAddress; // Self Protocol ID to address
+    mapping(bytes32 => bool) public usedProofHashes; // Prevent proof replay
+    address[] public verifiedUsers;
     
-    VerificationConfig public config;
-    string public appScope;
-    string public selfProtocolEndpoint;
-    uint256 public totalVerifiedUsers;
+    ProtocolConfig public config;
+    uint256 public totalVerifications;
+    uint256 public validVerifications; // Currently valid verifications
+
+    // Backend tracking for security
+    mapping(address => bool) public authorizedBackends;
+    mapping(address => uint256) public backendVerificationCount;
+    uint256 public maxVerificationsPerBackend = 1000; // Rate limiting
 
     // Events
     event UserVerified(
-        address indexed user, 
-        uint256 attestationId, 
-        string attestationHash, 
+        address indexed user,
+        uint256 indexed documentType,
+        string selfProtocolId,
+        uint256 verificationScore,
         uint256 timestamp
     );
+    event VerificationExpired(address indexed user, uint256 timestamp);
     event VerificationRevoked(address indexed user, string reason);
-    event ConfigurationUpdated(address indexed updatedBy);
-    event ProofSubmitted(
-        address indexed user, 
-        uint256 attestationId, 
-        string attestationHash
-    );
-    event JWTValidated(address indexed user, string jwtHash);
+    event BackendAuthorized(address indexed backend, bool authorized);
+    event ConfigUpdated(uint256 minimumAge, bool requireOfac);
+    event VerificationUpdated(address indexed user, uint256 newScore);
 
     // Errors
     error UserAlreadyVerified();
     error UserNotVerified();
-    error InvalidProof();
-    error InvalidJWT();
-    error UnsupportedAttestationType();
-    error ConfigurationMismatch();
-    error InvalidAge();
-    error CountryExcluded();
-    error OFACCheckFailed();
-    error InvalidDisclosures();
+    error InvalidBackend();
+    error ProofAlreadyUsed();
+    error VerificationHasExpired();
+    error AgeRequirementNotMet();
+    error CountryNotAllowed();
+    error OfacScreeningRequired();
+    error InvalidConfiguration();
+    error BackendRateLimited();
 
-    constructor(
-        string memory _appScope,
-        string memory _selfProtocolEndpoint,
-        VerificationConfig memory _config
-    ) {
+    constructor(ProtocolConfig memory _config) {
+        // Set owner
         address owner = 0x4C3F5A84041e562928394D63B3E339Be70dBCcC1;
         _grantRole(DEFAULT_ADMIN_ROLE, owner);
         _grantRole(ADMIN_ROLE, owner);
-        _grantRole(VERIFIER_ROLE, owner);
+        _grantRole(BACKEND_ROLE, owner);
 
-        appScope = _appScope;
-        selfProtocolEndpoint = _selfProtocolEndpoint;
         config = _config;
-
-        // Enable supported attestation types
-        supportedAttestationTypes[PASSPORT_ID] = true;
-        supportedAttestationTypes[EU_ID_CARD] = true;
     }
 
     /**
-     * @notice Verify user with Self Protocol proof and JWT
-     * @param user User address to verify
-     * @param proofData Complete proof data from Self Protocol
-     * @dev This function validates the JWT, verifies the ZK proof, and stores user data
+     * @notice Submit verification result from backend after Self Protocol verification
+     * @param user User address being verified
+     * @param selfProtocolResult Result from SelfBackendVerifier.verify()
+     * @param proofHash Hash of the ZK proof for integrity checking
+     * @dev Called by authorized backend after successful Self Protocol SDK verification
      */
-    function verifyUserWithSelfProtocol(
+    function submitVerification(
         address user,
-        ProofData calldata proofData
-    ) external whenNotPaused onlyRole(VERIFIER_ROLE) nonReentrant {
-        if (userVerifications[user].isVerified) revert UserAlreadyVerified();
-        
-        // Validate JWT token first
-        _validateJWT(proofData.jwtToken, user);
-        
-        // Extract attestation ID from public signals
-        uint256 attestationId = proofData.publicSignals[0];
-        if (!supportedAttestationTypes[attestationId]) {
-            revert UnsupportedAttestationType();
+        VerificationResult calldata selfProtocolResult,
+        bytes32 proofHash
+    ) external onlyRole(BACKEND_ROLE) whenNotPaused nonReentrant {
+        // Security checks
+        if (verifications[user].isVerified) {
+            revert UserAlreadyVerified();
+        }
+        if (usedProofHashes[proofHash]) {
+            revert ProofAlreadyUsed();
+        }
+        if (backendVerificationCount[msg.sender] >= maxVerificationsPerBackend) {
+            revert BackendRateLimited();
         }
 
-        // Verify the zero-knowledge proof
-        bool proofValid = _verifyZKProof(
-            attestationId,
-            proofData.proof,
-            proofData.publicSignals
-        );
-        if (!proofValid) revert InvalidProof();
+        // Validate verification meets requirements
+        _validateVerificationRequirements(selfProtocolResult);
 
-        // Extract user data from public signals and validate against config
-        UserVerification memory verification = _extractAndValidateUserData(
-            attestationId,
-            proofData.publicSignals,
-            proofData.userContextData
-        );
+        // Store verification result
+        verifications[user] = VerificationResult({
+            isVerified: true,
+            verifiedAt: block.timestamp,
+            documentType: selfProtocolResult.documentType,
+            selfProtocolId: selfProtocolResult.selfProtocolId,
+            proofHash: proofHash,
+            disclosures: selfProtocolResult.disclosures,
+            verificationScore: selfProtocolResult.verificationScore,
+            ofacScreeningPassed: selfProtocolResult.ofacScreeningPassed,
+            expiresAt: config.verificationValidityPeriod > 0 
+                ? block.timestamp + config.verificationValidityPeriod 
+                : 0
+        });
 
-        // Generate attestation hash for integrity
-        string memory attestationHash = _generateAttestationHash(
+        // Update mappings and counters
+        selfIdToAddress[selfProtocolResult.selfProtocolId] = user;
+        usedProofHashes[proofHash] = true;
+        verifiedUsers.push(user);
+        totalVerifications++;
+        validVerifications++;
+        backendVerificationCount[msg.sender]++;
+
+        emit UserVerified(
             user,
-            attestationId,
-            proofData.publicSignals
+            selfProtocolResult.documentType,
+            selfProtocolResult.selfProtocolId,
+            selfProtocolResult.verificationScore,
+            block.timestamp
         );
-
-        // Store verification
-        verification.isVerified = true;
-        verification.attestationId = attestationId;
-        verification.attestationHash = attestationHash;
-        verification.verifiedAt = block.timestamp;
-        
-        userVerifications[user] = verification;
-        attestationHashToUser[attestationHash] = user;
-        totalVerifiedUsers++;
-
-        emit ProofSubmitted(user, attestationId, attestationHash);
-        emit JWTValidated(user, _hashString(proofData.jwtToken));
-        emit UserVerified(user, attestationId, attestationHash, block.timestamp);
     }
 
     /**
-     * @notice Validate JWT token from Self Protocol
-     * @param jwtToken JWT token to validate
-     * @param user User address for context
+     * @notice Check if user is currently verified
+     * @param user User address to check
+     * @return isValid True if user has valid verification
      */
-    function _validateJWT(string calldata jwtToken, address user) internal view {
-        // In a real implementation, this would:
-        // 1. Decode the JWT header and payload
-        // 2. Verify the signature against Self Protocol's public key
-        // 3. Check expiration, issuer, audience claims
-        // 4. Validate the scope matches our app scope
-        // 5. Ensure the user context matches
+    function isUserVerified(address user) external view returns (bool) {
+        VerificationResult memory result = verifications[user];
         
-        bytes memory jwtBytes = bytes(jwtToken);
-        if (jwtBytes.length < 10) revert InvalidJWT();
+        if (!result.isVerified) {
+            return false;
+        }
         
-        // Basic validation - in production, implement full JWT verification
-        // This would include signature verification using Self Protocol's public keys
-    }
-
-    /**
-     * @notice Verify zero-knowledge proof using Self Protocol's circuit
-     * @param attestationId Document type ID
-     * @param proof ZK proof array
-     * @param publicSignals Public signals array
-     * @return isValid True if proof is valid
-     */
-    function _verifyZKProof(
-        uint256 attestationId,
-        uint256[] calldata proof,
-        uint256[] calldata publicSignals
-    ) internal view returns (bool) {
-        // In a real implementation, this would:
-        // 1. Load the appropriate verification key for the document type
-        // 2. Use a ZK proof verification library (like groth16)
-        // 3. Verify the proof against the public signals
+        // Check if verification has expired
+        if (result.expiresAt > 0 && block.timestamp > result.expiresAt) {
+            return false;
+        }
         
-        // Basic validation for now
-        if (proof.length < 8) return false; // Groth16 proofs have 8 elements
-        if (publicSignals.length < 10) return false; // Minimum expected signals
-        
-        // Placeholder for real verification logic
         return true;
     }
 
     /**
-     * @notice Extract and validate user data from public signals
-     * @param attestationId Document type ID
-     * @param publicSignals Array of public signals from the proof
-     * @param userContextData Additional user context
-     * @return verification UserVerification struct with extracted data
+     * @notice Get complete verification details for a user
+     * @param user User address
+     * @return result Complete verification result
+     * @return isCurrentlyValid Whether verification is currently valid
      */
-    function _extractAndValidateUserData(
-        uint256 attestationId,
-        uint256[] calldata publicSignals,
-        string calldata userContextData
-    ) internal view returns (UserVerification memory) {
-        UserVerification memory verification;
+    function getVerificationDetails(address user) external view returns (
+        VerificationResult memory result,
+        bool isCurrentlyValid
+    ) {
+        result = verifications[user];
+        isCurrentlyValid = this.isUserVerified(user);
+    }
 
-        // Extract data from public signals (indices based on Self Protocol's circuit)
-        verification.minimumAge = publicSignals[1]; // Age verification result
-        verification.ofacCleared = publicSignals[2] == 1; // OFAC check result
+    /**
+     * @notice Check if user meets specific age requirement
+     * @param user User address
+     * @param minimumAge Minimum age to check
+     * @return meetsAge True if user meets age requirement
+     */
+    function userMeetsAge(address user, uint256 minimumAge) external view returns (bool) {
+        if (!this.isUserVerified(user)) {
+            return false;
+        }
         
-        // Extract nationality (if disclosed)
-        if (config.requireNationality && publicSignals.length > 3) {
-            verification.nationality = _decodeStringFromSignal(publicSignals[3]);
-        }
-        
-        // Extract gender (if disclosed)
-        if (config.requireGender && publicSignals.length > 4) {
-            verification.gender = _decodeStringFromSignal(publicSignals[4]);
-        }
-
-        // Extract other fields based on configuration
-        if (config.requireName && publicSignals.length > 5) {
-            verification.name = _decodeStringFromSignal(publicSignals[5]);
-        }
-
-        if (config.requireDateOfBirth && publicSignals.length > 6) {
-            verification.dateOfBirth = publicSignals[6];
-        }
-
-        if (config.requirePassportNumber && publicSignals.length > 7) {
-            verification.passportNumber = _decodeStringFromSignal(publicSignals[7]);
-        }
-
-        if (config.requireExpiryDate && publicSignals.length > 8) {
-            verification.expiryDate = publicSignals[8];
-        }
-
-        // Validate against configuration
-        if (verification.minimumAge < config.minimumAge) revert InvalidAge();
-        if (config.ofacRequired && !verification.ofacCleared) revert OFACCheckFailed();
-        
-        // Check excluded countries
-        for (uint256 i = 0; i < config.excludedCountries.length; i++) {
-            if (keccak256(bytes(verification.nationality)) == 
-                keccak256(bytes(config.excludedCountries[i]))) {
-                revert CountryExcluded();
-            }
-        }
-
-        return verification;
+        VerificationResult memory result = verifications[user];
+        return result.disclosures.ageVerified && 
+               result.disclosures.minimumAge >= minimumAge;
     }
 
     /**
-     * @notice Generate attestation hash for integrity verification
+     * @notice Get user's nationality (if disclosed)
      * @param user User address
-     * @param attestationId Document type ID
-     * @param publicSignals Public signals array
-     * @return hash Attestation hash string
-     */
-    function _generateAttestationHash(
-        address user,
-        uint256 attestationId,
-        uint256[] calldata publicSignals
-    ) internal pure returns (string memory) {
-        bytes32 hash = keccak256(abi.encodePacked(
-            user,
-            attestationId,
-            publicSignals
-        ));
-        return _bytes32ToString(hash);
-    }
-
-    /**
-     * @notice Decode string from signal (simplified)
-     * @param signal Signal to decode
-     * @return Decoded string
-     */
-    function _decodeStringFromSignal(uint256 signal) internal pure returns (string memory) {
-        // In real implementation, this would properly decode the packed string data
-        // from the circuit's output format
-        bytes memory result = new bytes(32);
-        assembly {
-            mstore(add(result, 32), signal)
-        }
-        return string(result);
-    }
-
-    /**
-     * @notice Convert bytes32 to string
-     * @param _bytes32 Bytes32 to convert
-     * @return String representation
-     */
-    function _bytes32ToString(bytes32 _bytes32) internal pure returns (string memory) {
-        uint8 i = 0;
-        while(i < 32 && _bytes32[i] != 0) {
-            i++;
-        }
-        bytes memory bytesArray = new bytes(i);
-        for (i = 0; i < 32 && _bytes32[i] != 0; i++) {
-            bytesArray[i] = _bytes32[i];
-        }
-        return string(bytesArray);
-    }
-
-    /**
-     * @notice Hash string for privacy
-     * @param input String to hash
-     * @return Hash of the string
-     */
-    function _hashString(string calldata input) internal pure returns (string memory) {
-        return _bytes32ToString(keccak256(bytes(input)));
-    }
-
-    /**
-     * @notice Check if user is verified
-     * @param user User address
-     * @return verified True if user is verified
-     */
-    function isUserVerified(address user) external view returns (bool) {
-        return userVerifications[user].isVerified;
-    }
-
-    /**
-     * @notice Check if user is verified (alias for compatibility)
-     * @param user User address
-     * @return verified True if user is verified
-     */
-    function isVerifiedHuman(address user) external view returns (bool) {
-        return userVerifications[user].isVerified;
-    }
-
-    /**
-     * @notice Get user verification details
-     * @param user User address
-     * @return verification Complete verification data
-     */
-    function getUserVerification(address user) 
-        external view returns (UserVerification memory) {
-        return userVerifications[user];
-    }
-
-    /**
-     * @notice Check if user meets age requirement
-     * @param user User address
-     * @return meetsAge True if user meets minimum age
-     */
-    function userMeetsAgeRequirement(address user) external view returns (bool) {
-        if (!userVerifications[user].isVerified) return false;
-        return userVerifications[user].minimumAge >= config.minimumAge;
-    }
-
-    /**
-     * @notice Get user's disclosed nationality
-     * @param user User address
-     * @return nationality User's nationality if disclosed
+     * @return nationality User's nationality or empty string
      */
     function getUserNationality(address user) external view returns (string memory) {
-        require(userVerifications[user].isVerified, "User not verified");
-        return userVerifications[user].nationality;
+        if (!this.isUserVerified(user)) {
+            return "";
+        }
+        return verifications[user].disclosures.nationality;
     }
 
     /**
-     * @notice Update verification configuration
-     * @param newConfig New configuration
+     * @notice Check if user passed OFAC screening
+     * @param user User address  
+     * @return passed True if user passed OFAC screening
      */
-    function updateConfiguration(VerificationConfig calldata newConfig) 
-        external onlyRole(ADMIN_ROLE) {
-        config = newConfig;
-        emit ConfigurationUpdated(msg.sender);
+    function userPassedOfacScreening(address user) external view returns (bool) {
+        if (!this.isUserVerified(user)) {
+            return false;
+        }
+        return verifications[user].ofacScreeningPassed;
     }
 
     /**
-     * @notice Update app scope
-     * @param newScope New scope string
+     * @notice Get verification score for user
+     * @param user User address
+     * @return score Verification quality score from Self Protocol
      */
-    function updateAppScope(string calldata newScope) external onlyRole(ADMIN_ROLE) {
-        require(bytes(newScope).length <= 30, "Scope too long");
-        appScope = newScope;
+    function getVerificationScore(address user) external view returns (uint256) {
+        if (!this.isUserVerified(user)) {
+            return 0;
+        }
+        return verifications[user].verificationScore;
     }
 
     /**
-     * @notice Add supported attestation type
-     * @param attestationId Attestation type ID to support
+     * @notice Update verification score (for score improvements over time)
+     * @param user User address
+     * @param newScore New verification score
      */
-    function addSupportedAttestationType(uint256 attestationId) 
-        external onlyRole(ADMIN_ROLE) {
-        supportedAttestationTypes[attestationId] = true;
+    function updateVerificationScore(
+        address user,
+        uint256 newScore
+    ) external onlyRole(BACKEND_ROLE) {
+        if (!verifications[user].isVerified) {
+            revert UserNotVerified();
+        }
+        
+        verifications[user].verificationScore = newScore;
+        emit VerificationUpdated(user, newScore);
     }
 
     /**
-     * @notice Revoke user verification
-     * @param user User to revoke
+     * @notice Expire verification (called when verification period ends)
+     * @param user User address
+     */
+    function expireVerification(address user) external onlyRole(BACKEND_ROLE) {
+        VerificationResult storage result = verifications[user];
+        
+        if (!result.isVerified) {
+            revert UserNotVerified();
+        }
+        
+        if (result.expiresAt > 0 && block.timestamp > result.expiresAt) {
+            result.isVerified = false;
+            validVerifications--;
+            emit VerificationExpired(user, block.timestamp);
+        }
+    }
+
+    /**
+     * @notice Revoke user verification (admin only)
+     * @param user User address
      * @param reason Reason for revocation
      */
-    function revokeVerification(address user, string calldata reason) 
-        external onlyRole(ADMIN_ROLE) {
-        if (!userVerifications[user].isVerified) revert UserNotVerified();
+    function revokeVerification(
+        address user,
+        string calldata reason
+    ) external onlyRole(ADMIN_ROLE) {
+        VerificationResult storage result = verifications[user];
         
-        string memory attestationHash = userVerifications[user].attestationHash;
+        if (!result.isVerified) {
+            revert UserNotVerified();
+        }
         
-        // Clear verification data
-        delete userVerifications[user];
-        delete attestationHashToUser[attestationHash];
-        totalVerifiedUsers--;
+        // Clean up mappings
+        delete selfIdToAddress[result.selfProtocolId];
+        delete usedProofHashes[result.proofHash];
+        
+        // Mark as not verified
+        result.isVerified = false;
+        validVerifications--;
         
         emit VerificationRevoked(user, reason);
     }
 
     /**
-     * @notice Pause contract
+     * @notice Batch check verification status
+     * @param users Array of user addresses
+     * @return statuses Array of verification statuses
      */
-    function pause() external onlyRole(ADMIN_ROLE) {
-        _pause();
-    }
-
-    /**
-     * @notice Unpause contract  
-     */
-    function unpause() external onlyRole(ADMIN_ROLE) {
-        _unpause();
+    function batchCheckVerification(
+        address[] calldata users
+    ) external view returns (bool[] memory statuses) {
+        statuses = new bool[](users.length);
+        for (uint256 i = 0; i < users.length; i++) {
+            statuses[i] = this.isUserVerified(users[i]);
+        }
     }
 
     /**
      * @notice Get verification statistics
-     * @return totalUsers Total verified users
-     * @return passportUsers Users verified with passport
-     * @return euIdUsers Users verified with EU ID
+     * @return total Total verifications ever submitted
+     * @return valid Currently valid verifications
+     * @return passportVerifications Verifications using passports
+     * @return euIdVerifications Verifications using EU ID cards
      */
     function getVerificationStats() external view returns (
-        uint256 totalUsers,
-        uint256 passportUsers, 
-        uint256 euIdUsers
+        uint256 total,
+        uint256 valid,
+        uint256 passportVerifications,
+        uint256 euIdVerifications
     ) {
-        // In a real implementation, you'd track these separately
-        totalUsers = totalVerifiedUsers;
-        // These would require additional tracking mappings
-        passportUsers = 0;
-        euIdUsers = 0;
+        total = totalVerifications;
+        valid = validVerifications;
+        
+        // Count by document type
+        for (uint256 i = 0; i < verifiedUsers.length; i++) {
+            address user = verifiedUsers[i];
+            VerificationResult memory result = verifications[user];
+            
+            if (this.isUserVerified(user)) {
+                if (result.documentType == PASSPORT_DOC) {
+                    passportVerifications++;
+                } else if (result.documentType == EU_ID_CARD) {
+                    euIdVerifications++;
+                }
+            }
+        }
     }
 
     /**
-     * @notice Batch verify users (for admin operations)
-     * @param users Array of users to verify
-     * @param proofDataArray Array of proof data
+     * @notice Internal function to validate verification meets requirements
      */
-    function batchVerifyUsers(
-        address[] calldata users,
-        ProofData[] calldata proofDataArray
-    ) external whenNotPaused onlyRole(VERIFIER_ROLE) nonReentrant {
-        require(users.length == proofDataArray.length, "Array length mismatch");
-        require(users.length <= 50, "Batch too large"); // Gas limit protection
+    function _validateVerificationRequirements(
+        VerificationResult calldata result
+    ) internal view {
+        // Check age requirement
+        if (result.disclosures.ageVerified && 
+            result.disclosures.minimumAge < config.minimumAge) {
+            revert AgeRequirementNotMet();
+        }
         
-        for (uint256 i = 0; i < users.length; i++) {
-            if (!userVerifications[users[i]].isVerified) {
-                // Internal call to avoid reentrancy issues
-                this.verifyUserWithSelfProtocol(users[i], proofDataArray[i]);
+        // Check OFAC requirement
+        if (config.requireOfacScreening && !result.ofacScreeningPassed) {
+            revert OfacScreeningRequired();
+        }
+        
+        // Check country restrictions
+        if (bytes(result.disclosures.nationality).length > 0) {
+            for (uint256 i = 0; i < config.excludedCountries.length; i++) {
+                if (keccak256(bytes(result.disclosures.nationality)) == 
+                    keccak256(bytes(config.excludedCountries[i]))) {
+                    revert CountryNotAllowed();
+                }
             }
         }
+        
+        // Check required disclosures
+        if (config.requireNationalityDisclosure && 
+            bytes(result.disclosures.nationality).length == 0) {
+            revert InvalidConfiguration();
+        }
+    }
+
+    // Admin functions
+    function updateConfig(ProtocolConfig calldata newConfig) 
+        external onlyRole(ADMIN_ROLE) {
+        config = newConfig;
+        emit ConfigUpdated(newConfig.minimumAge, newConfig.requireOfacScreening);
+    }
+
+    function authorizeBackend(address backend, bool authorized) 
+        external onlyRole(ADMIN_ROLE) {
+        authorizedBackends[backend] = authorized;
+        if (authorized) {
+            _grantRole(BACKEND_ROLE, backend);
+        } else {
+            _revokeRole(BACKEND_ROLE, backend);
+        }
+        emit BackendAuthorized(backend, authorized);
+    }
+
+    function setBackendRateLimit(uint256 newLimit) 
+        external onlyRole(ADMIN_ROLE) {
+        maxVerificationsPerBackend = newLimit;
+    }
+
+    function pause() external onlyRole(ADMIN_ROLE) {
+        _pause();
+    }
+
+    function unpause() external onlyRole(ADMIN_ROLE) {
+        _unpause();
     }
 }

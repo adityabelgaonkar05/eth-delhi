@@ -12,7 +12,25 @@ describe("BadgeManager", function () {
     const SelfProtocol = await ethers.getContractFactory(
       "SelfProtocolIntegration"
     );
-    const selfProtocol = await SelfProtocol.deploy();
+    
+    // Define verification config
+    const verificationConfig = {
+      minimumAge: 18,
+      ofacRequired: true,
+      excludedCountries: ["CN", "IR", "KP"],
+      requireNationality: true,
+      requireGender: false,
+      requireName: true,
+      requireDateOfBirth: true,
+      requirePassportNumber: true,
+      requireExpiryDate: true
+    };
+
+    const selfProtocol = await SelfProtocol.deploy(
+      "cryptoverse-app",
+      "https://developer.selfprotocol.com",
+      verificationConfig
+    );
 
     // Deploy CryptoVerseToken
     const CryptoVerseToken = await ethers.getContractFactory(

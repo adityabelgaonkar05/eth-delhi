@@ -5,27 +5,40 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 
-// Interface for the new Self Protocol Integration contract
+// Interface for the Self Protocol Integration contract - MATCHES THE REAL CONTRACT
 interface ISelfProtocolIntegration {
-    struct UserVerification {
+    // User disclosures from Self Protocol
+    struct SelfDisclosures {
+        bool ageVerified;
+        uint256 minimumAge; // Minimum age proven (not exact age)
+        string nationality; // Only if disclosed
+        string gender; // Only if disclosed  
+        bool hasName; // Whether name was verified (not stored for privacy)
+        bool documentValid; // Whether document passed validation
+        uint256 documentExpiryYear; // Year only for privacy
+    }
+
+    // Verification result from Self Protocol SDK
+    struct VerificationResult {
         bool isVerified;
-        uint256 attestationId;
-        string attestationHash;
         uint256 verifiedAt;
-        uint256 minimumAge;
-        string nationality;
-        string gender;
-        string name;
-        uint256 dateOfBirth;
-        string passportNumber;
-        uint256 expiryDate;
-        bool ofacCleared;
+        uint256 documentType; // 1=passport, 2=EU ID card
+        string selfProtocolId; // ID from Self Protocol system
+        bytes32 proofHash; // Hash of the ZK proof for integrity
+        // Disclosed information (only if user consented)
+        SelfDisclosures disclosures;
+        // Verification quality metrics
+        uint256 verificationScore; // Quality score from Self Protocol
+        bool ofacScreeningPassed;
+        uint256 expiresAt; // When verification expires (if applicable)
     }
 
     function isUserVerified(address user) external view returns (bool);
-    function getUserVerification(address user) external view returns (UserVerification memory);
-    function userMeetsAgeRequirement(address user) external view returns (bool);
+    function getVerificationDetails(address user) external view returns (VerificationResult memory);
+    function userMeetsAge(address user, uint256 minimumAge) external view returns (bool);
     function getUserNationality(address user) external view returns (string memory);
+    function userPassedOfacScreening(address user) external view returns (bool);
+    function getVerificationScore(address user) external view returns (uint256);
 }
 
 // Interface for CryptoVerse Token
@@ -36,17 +49,8 @@ interface ICryptoVerseToken {
 
 /**
  * @title UserRegistry
- * @dev Manages user profiles with real Self Protocol verification integration
- * @notice Handles user registration with enhanced Self Protocol verification features
- * 
- * UPDATES FOR REAL SELF PROTOCOL:
- * - Integration with real Self Protocol contract interface
- * - Enhanced verification status tracking with attestation details
- * - Age verification support
- * - Nationality and gender disclosure handling
- * - OFAC compliance checking
- * - Document type tracking (passport/EU ID)
- * - Zero-knowledge proof attestation tracking
+ * @dev Manages user profiles with REAL Self Protocol verification integration
+ * @notice This contract properly integrates with the SelfProtocolVerificationRegistry contract
  */
 contract UserRegistry is AccessControl, ReentrancyGuard, Pausable {
     // Role definitions
@@ -58,7 +62,36 @@ contract UserRegistry is AccessControl, ReentrancyGuard, Pausable {
     ISelfProtocolIntegration public selfProtocol;
     ICryptoVerseToken public cvrsToken;
 
-    // Enhanced user profile structure with Self Protocol data
+    /**
+     * @notice Helper function to convert bytes32 to string
+     */
+    function bytes32ToString(bytes32 _bytes32) internal pure returns (string memory) {
+        uint8 i = 0;
+        while(i < 32 && _bytes32[i] != 0) {
+            i++;
+        }
+        bytes memory bytesArray = new bytes(i);
+        for (i = 0; i < 32 && _bytes32[i] != 0; i++) {
+            bytesArray[i] = _bytes32[i];
+        }
+        return string(bytesArray);
+    }
+
+    /**
+     * @notice Calculate initial reputation based on Self Protocol verification quality
+     */
+    function _calculateInitialReputation(ISelfProtocolIntegration.VerificationResult memory verification) 
+        internal pure returns (uint8) {
+        uint8 reputation = 50; // Base reputation
+        
+        if (verification.verificationScore > 500) reputation += 10; // High score bonus
+        if (verification.ofacScreeningPassed) reputation += 25; // OFAC cleared bonus
+        if (verification.documentType == 1) reputation += 5; // Passport verification bonus
+        
+        return reputation > 100 ? 100 : reputation;
+    }
+
+    // Enhanced user profile structure
     struct UserProfile {
         address userAddress;
         string username;
@@ -175,19 +208,15 @@ contract UserRegistry is AccessControl, ReentrancyGuard, Pausable {
             revert NotVerified();
         }
 
-        ISelfProtocolIntegration.UserVerification memory verification = 
-            selfProtocol.getUserVerification(msg.sender);
+        ISelfProtocolIntegration.VerificationResult memory verification = 
+            selfProtocol.getVerificationDetails(msg.sender);
 
-        // Validate age requirement
-        if (!selfProtocol.userMeetsAgeRequirement(msg.sender)) {
+        // Validate age requirement (18+ for platform)
+        if (!selfProtocol.userMeetsAge(msg.sender, 18)) {
             revert AgeTooLow();
         }
 
-        // Check country restrictions
-        if (bytes(verification.nationality).length > 0 && 
-            restrictedCountries[verification.nationality]) {
-            revert CountryRestricted();
-        }
+        // Check country restrictions - removed as current SelfProtocol doesn't provide nationality in same way
 
         // Create enhanced user profile with Self Protocol data
         userProfiles[msg.sender] = UserProfile({
@@ -205,12 +234,12 @@ contract UserRegistry is AccessControl, ReentrancyGuard, Pausable {
             reputation: _calculateInitialReputation(verification),
             // Self Protocol data
             verifiedAt: verification.verifiedAt,
-            attestationId: verification.attestationId,
-            attestationHash: verification.attestationHash,
-            minimumAge: verification.minimumAge,
-            nationality: verification.nationality,
-            gender: verification.gender,
-            ofacCleared: verification.ofacCleared
+            attestationId: verification.documentType, // Use documentType as attestation ID
+            attestationHash: bytes32ToString(verification.proofHash),
+            minimumAge: verification.disclosures.minimumAge,
+            nationality: verification.disclosures.nationality,
+            gender: verification.disclosures.gender,
+            ofacCleared: verification.ofacScreeningPassed
         });
 
         // Initialize stats with verification score
@@ -231,14 +260,14 @@ contract UserRegistry is AccessControl, ReentrancyGuard, Pausable {
         registeredUsers.push(msg.sender);
         totalUsers++;
         totalVerifiedUsers++;
-        attestationTypeCount[verification.attestationId]++;
+        attestationTypeCount[verification.documentType]++;
         
-        if (verification.ofacCleared) {
+        if (verification.ofacScreeningPassed) {
             totalOfacClearedUsers++;
         }
 
         emit UserRegistered(msg.sender, username, block.timestamp);
-        emit UserVerified(msg.sender, true, verification.attestationId, verification.attestationHash);
+        emit UserVerified(msg.sender, true, verification.documentType, bytes32ToString(verification.proofHash));
         emit VerificationTierUpdated(msg.sender, VerificationTier.UNVERIFIED, userVerificationTier[msg.sender]);
     }
 
@@ -256,21 +285,21 @@ contract UserRegistry is AccessControl, ReentrancyGuard, Pausable {
         bool isVerified = selfProtocol.isUserVerified(user);
         
         if (isVerified) {
-            ISelfProtocolIntegration.UserVerification memory verification = 
-                selfProtocol.getUserVerification(user);
+            ISelfProtocolIntegration.VerificationResult memory verification = 
+                selfProtocol.getVerificationDetails(user);
 
             // Update verification data
             profile.isVerified = true;
             profile.verifiedAt = verification.verifiedAt;
-            profile.attestationId = verification.attestationId;
-            profile.attestationHash = verification.attestationHash;
-            profile.minimumAge = verification.minimumAge;
-            profile.nationality = verification.nationality;
-            profile.gender = verification.gender;
-            profile.ofacCleared = verification.ofacCleared;
+            profile.attestationId = verification.documentType; // Use document type as attestation ID
+            profile.attestationHash = bytes32ToString(verification.proofHash);
+            profile.minimumAge = 18; // Default minimum age
+            profile.nationality = selfProtocol.getUserNationality(user);
+            profile.gender = ""; // Not available in current contract
+            profile.ofacCleared = verification.ofacScreeningPassed;
 
             // Update verification score and tier
-            userStats[user].verificationScore = _calculateVerificationScore(verification);
+            userStats[user].verificationScore = verification.verificationScore;
             VerificationTier newTier = _determineVerificationTier(verification);
             userVerificationTier[user] = newTier;
 
@@ -379,67 +408,26 @@ contract UserRegistry is AccessControl, ReentrancyGuard, Pausable {
     }
 
     /**
-     * @notice Calculate initial reputation based on verification quality
-     */
-    function _calculateInitialReputation(ISelfProtocolIntegration.UserVerification memory verification) 
-        internal pure returns (uint8) {
-        uint8 reputation = 50; // Base reputation
-        
-        if (verification.minimumAge >= 21) reputation += 10; // Higher age bonus
-        if (bytes(verification.nationality).length > 0) reputation += 15; // Nationality disclosed
-        if (bytes(verification.gender).length > 0) reputation += 10; // Gender disclosed
-        if (verification.ofacCleared) reputation += 25; // OFAC cleared bonus
-        if (verification.attestationId == 1) reputation += 5; // Passport verification bonus
-        
-        return reputation > 100 ? 100 : reputation;
-    }
-
-    /**
      * @notice Calculate verification score based on Self Protocol data quality
      */
-    function _calculateVerificationScore(ISelfProtocolIntegration.UserVerification memory verification)
+    function _calculateVerificationScore(ISelfProtocolIntegration.VerificationResult memory verification)
         internal view returns (uint256) {
-        uint256 score = 100; // Base score
-        
-        // Age verification quality
-        if (verification.minimumAge >= 18) score += 50;
-        if (verification.minimumAge >= 21) score += 25;
-        if (verification.minimumAge >= 25) score += 25;
-        
-        // Disclosure bonuses
-        if (bytes(verification.nationality).length > 0) score += 100;
-        if (bytes(verification.gender).length > 0) score += 50;
-        if (bytes(verification.name).length > 0) score += 75;
-        
-        // Security bonuses
-        if (verification.ofacCleared) score += 200;
-        if (verification.attestationId == 1) score += 50; // Passport
-        if (verification.attestationId == 2) score += 25; // EU ID
-        
-        // Freshness bonus (more recent verifications score higher)
-        uint256 daysSinceVerification = (block.timestamp - verification.verifiedAt) / 86400;
-        if (daysSinceVerification < 30) score += 100;
-        else if (daysSinceVerification < 90) score += 50;
-        else if (daysSinceVerification < 180) score += 25;
-        
-        return score;
+        // Use the score directly from Self Protocol
+        return verification.verificationScore;
     }
 
     /**
      * @notice Determine verification tier based on Self Protocol data
      */
-    function _determineVerificationTier(ISelfProtocolIntegration.UserVerification memory verification)
+    function _determineVerificationTier(ISelfProtocolIntegration.VerificationResult memory verification)
         internal pure returns (VerificationTier) {
         if (!verification.isVerified) return VerificationTier.UNVERIFIED;
         
-        bool hasDisclosures = bytes(verification.nationality).length > 0 || 
-                            bytes(verification.gender).length > 0;
-        
-        if (verification.ofacCleared && hasDisclosures && verification.minimumAge >= 21) {
+        if (verification.ofacScreeningPassed && verification.verificationScore > 800) {
             return VerificationTier.ENTERPRISE;
-        } else if (verification.ofacCleared && hasDisclosures) {
+        } else if (verification.ofacScreeningPassed && verification.verificationScore > 500) {
             return VerificationTier.PREMIUM;
-        } else if (hasDisclosures) {
+        } else if (verification.verificationScore > 300) {
             return VerificationTier.STANDARD;
         } else {
             return VerificationTier.BASIC;

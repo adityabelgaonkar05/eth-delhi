@@ -66,21 +66,15 @@ async function main() {
   const SelfProtocolIntegration = await ethers.getContractFactory(
     "SelfProtocolIntegration"
   );
-  const selfProtocolIntegration = await SelfProtocolIntegration.deploy(
-    "CryptoVerse",
-    "https://self-protocol-endpoint.com",
-    {
-      minimumAge: 18,
-      ofacRequired: true,
-      excludedCountries: [],
-      requireNationality: false,
-      requireGender: false,
-      requireName: false,
-      requireDateOfBirth: false,
-      requirePassportNumber: false,
-      requireExpiryDate: false,
-    }
-  );
+  const selfProtocolIntegration = await SelfProtocolIntegration.deploy({
+    appScope: "CryptoVerse",
+    minimumAge: 18,
+    requireOfacScreening: true,
+    excludedCountries: [],
+    verificationValidityPeriod: 31536000, // 1 year
+    requireNationalityDisclosure: false,
+    requireGenderDisclosure: false
+  });
   await selfProtocolIntegration.waitForDeployment();
   const selfProtocolIntegrationAddress =
     await selfProtocolIntegration.getAddress();
@@ -160,14 +154,7 @@ async function main() {
     console.log("🔄 Continuing with other contracts...");
   }
 
-  // 8. EventNFTWithWalrus
-  const EventWithNFT = await ethers.getContractFactory("EventNFTWithWalrus");
-  const eventwithNFT = await EventWithNFT.deploy(walrusStorageAddress);
-  await eventwithNFT.waitForDeployment();
-  const eventWithNFTAddress = await eventwithNFT.getAddress();
-  saveContractData("EventNFTWithWalrus", eventWithNFTAddress, eventwithNFT);
-
-  // 9. PremiereAttendanceBadge
+  // 8. PremiereAttendanceBadge
   const PremiereAttendanceBadge = await ethers.getContractFactory(
     "PremiereAttendanceBadge"
   );
@@ -252,26 +239,7 @@ async function main() {
     reputationAirdropEscrow
   );
 
-  // 15. EventManagerWithWalrus
-  const EventManagerWithWalrus = await ethers.getContractFactory(
-    "EventManagerWithWalrus"
-  );
-  const eventManagerWithWalrus = await EventManagerWithWalrus.deploy(
-    userRegistryAddress,
-    selfProtocolIntegrationAddress,
-    eventWithNFTAddress,
-    walrusStorageAddress
-  );
-  await eventManagerWithWalrus.waitForDeployment();
-  const eventManagerWithWalrusAddress =
-    await eventManagerWithWalrus.getAddress();
-  saveContractData(
-    "EventManagerWithWalrus",
-    eventManagerWithWalrusAddress,
-    eventManagerWithWalrus
-  );
-
-  // 16. LeaderboardManager
+  // 15. LeaderboardManager
   const LeaderboardManager = await ethers.getContractFactory(
     "LeaderboardManager"
   );
@@ -343,7 +311,6 @@ async function main() {
       name: "CryptoVerseDeploymentFactory",
       address: cryptoVerseDeploymentFactoryAddress,
     },
-    { name: "EventNFTWithWalrus", address: eventWithNFTAddress },
     {
       name: "PremiereAttendanceBadge",
       address: premiereAttendanceBadgeAddress,
@@ -356,7 +323,6 @@ async function main() {
       name: "ReputationAirdropEscrow",
       address: reputationAirdropEscrowAddress,
     },
-    { name: "EventManagerWithWalrus", address: eventManagerWithWalrusAddress },
     { name: "LeaderboardManager", address: leaderboardAddress },
     {
       name: "CryptoVerseBusinessDashboard",

@@ -22,7 +22,25 @@ describe("BlogManagerWithWalrus", function () {
     const SelfProtocolIntegration = await ethers.getContractFactory(
       "SelfProtocolIntegration"
     );
-    const selfProtocol = await SelfProtocolIntegration.deploy();
+    
+    // Define verification config
+    const verificationConfig = {
+      minimumAge: 18,
+      ofacRequired: true,
+      excludedCountries: ["CN", "IR", "KP"],
+      requireNationality: true,
+      requireGender: false,
+      requireName: true,
+      requireDateOfBirth: true,
+      requirePassportNumber: true,
+      requireExpiryDate: true
+    };
+
+    const selfProtocol = await SelfProtocolIntegration.deploy(
+      "cryptoverse-app",
+      "https://developer.selfprotocol.com",
+      verificationConfig
+    );
 
     // Deploy CryptoVerseToken (no arguments needed for UserRegistry test)
     const CryptoVerseToken = await ethers.getContractFactory(

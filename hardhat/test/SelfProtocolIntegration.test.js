@@ -10,11 +10,29 @@ describe("SelfProtocolIntegration", function () {
     const SelfProtocol = await ethers.getContractFactory(
       "SelfProtocolIntegration"
     );
-    const selfProtocol = await SelfProtocol.deploy();
+    
+    // Define verification config
+    const verificationConfig = {
+      minimumAge: 18,
+      ofacRequired: true,
+      excludedCountries: ["CN", "IR", "KP"],
+      requireNationality: true,
+      requireGender: false,
+      requireName: true,
+      requireDateOfBirth: true,
+      requirePassportNumber: true,
+      requireExpiryDate: true
+    };
 
-    // Grant backend role to backend1
+    const selfProtocol = await SelfProtocol.deploy(
+      "cryptoverse-app",
+      "https://developer.selfprotocol.com",
+      verificationConfig
+    );
+
+    // Grant verifier role to backend1
     await selfProtocol.grantRole(
-      await selfProtocol.BACKEND_ROLE(),
+      await selfProtocol.VERIFIER_ROLE(),
       backend1.address
     );
 

@@ -7,6 +7,7 @@ const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db");
 const selfAuthRoutes = require("./routes/auth/selfAuth");
 const adminRoutes = require("./routes/auth/admin");
+const WalrusUserService = require("./services/WalrusUserService");
 const app = express();
 const server = http.createServer(app);
 
@@ -67,6 +68,10 @@ app.use(cookieParser());
 //using routes
 app.use("/api", indexRoutes);
 
+// Initialize Walrus service
+const walrusService = new WalrusUserService();
+console.log("🦭 Walrus User Service initialized");
+
 // Store connected players by room
 const playersByRoom = new Map();
 
@@ -75,6 +80,9 @@ const gameStateByRoom = new Map();
 
 // Store chat messages by room (keep last 50 messages per room)
 const chatMessagesByRoom = new Map();
+
+// User profile blob IDs mapping (address -> blobId)
+const userProfileBlobIds = new Map();
 
 // Initialize room if it doesn't exist
 const initializeRoom = (room) => {
@@ -370,6 +378,181 @@ io.on("connection", (socket) => {
       }
     }
   });
+
+  // Handle user profile updates to Walrus
+  socket.on("updateUserProfile", async (data) => {
+    try {
+      console.log(`🦭 Updating user profile for ${socket.id}:`, data);
+      
+      const { userAddress, profileData } = data;
+      
+      if (!userAddress || !profileData) {
+        socket.emit("profileError", { message: "Missing user address or profile data" });
+        return;
+      }
+
+      // Get current blob ID if exists
+      const currentBlobId = userProfileBlobIds.get(userAddress.toLowerCase());
+      
+      // Store/update profile on Walrus
+      const newBlobId = await walrusService.updateUserProfile(
+        userAddress, 
+        currentBlobId, 
+        profileData
+      );
+      
+      // Update blob ID mapping
+      userProfileBlobIds.set(userAddress.toLowerCase(), newBlobId);
+      
+      // Update player data in room
+      const roomPlayers = playersByRoom.get(currentRoom);
+      if (roomPlayers && roomPlayers.has(socket.id)) {
+        const player = roomPlayers.get(socket.id);
+        player.walletAddress = userAddress;
+        player.username = profileData.username || player.username;
+        player.walrusBlobId = newBlobId;
+      }
+      
+      socket.emit("profileUpdated", { 
+        blobId: newBlobId, 
+        message: "Profile updated successfully" 
+      });
+      
+      console.log(`✅ User profile updated on Walrus: ${newBlobId}`);
+      
+    } catch (error) {
+      console.error(`❌ Error updating user profile:`, error);
+      socket.emit("profileError", { 
+        message: `Failed to update profile: ${error.message}` 
+      });
+    }
+  });
+
+  // Handle player search by username
+  socket.on("searchPlayers", async (data) => {
+    try {
+      console.log(`🔍 Searching players for ${socket.id}:`, data);
+      
+      const { searchTerm, useContractFallback = true } = data;
+      
+      if (!searchTerm || searchTerm.trim().length < 2) {
+        socket.emit("searchResults", { results: [], message: "Search term too short" });
+        return;
+      }
+      
+      let results = [];
+      let searchMethod = "walrus";
+      
+      try {
+        // First, try Walrus search with timeout
+        const walrusResults = await walrusService.searchUsersByUsername(searchTerm.trim());
+        results = walrusResults;
+        
+        if (results.length === 0) {
+          searchMethod = "cache_empty";
+        }
+        
+      } catch (error) {
+        console.warn(`⚠️ Walrus search failed: ${error.message}`);
+        searchMethod = "walrus_failed";
+        
+        if (useContractFallback) {
+          // TODO: Implement contract-based search as fallback
+          // For now, search connected players
+          searchMethod = "fallback_connected";
+          results = searchConnectedPlayers(searchTerm);
+        }
+      }
+      
+      socket.emit("searchResults", { 
+        results, 
+        searchMethod, 
+        searchTerm,
+        message: `Found ${results.length} players`
+      });
+      
+      console.log(`🔍 Search completed: ${results.length} results via ${searchMethod}`);
+      
+    } catch (error) {
+      console.error(`❌ Error searching players:`, error);
+      socket.emit("searchError", { 
+        message: `Search failed: ${error.message}` 
+      });
+    }
+  });
+
+  // Handle getting user profile from Walrus
+  socket.on("getUserProfile", async (data) => {
+    try {
+      console.log(`📄 Getting user profile for ${socket.id}:`, data);
+      
+      const { userAddress, blobId } = data;
+      
+      let targetBlobId = blobId;
+      if (!targetBlobId && userAddress) {
+        targetBlobId = userProfileBlobIds.get(userAddress.toLowerCase());
+      }
+      
+      if (!targetBlobId) {
+        socket.emit("profileError", { message: "No profile blob ID found" });
+        return;
+      }
+      
+      // Try to get from cache first
+      const cachedProfile = walrusService.getCachedProfile(userAddress);
+      if (cachedProfile) {
+        socket.emit("profileData", {
+          profile: cachedProfile.data,
+          blobId: cachedProfile.blobId,
+          source: "cache"
+        });
+        return;
+      }
+      
+      // Fetch from Walrus with 10s timeout
+      const profileData = await walrusService.getUserProfile(targetBlobId, 10000);
+      
+      socket.emit("profileData", {
+        profile: profileData,
+        blobId: targetBlobId,
+        source: "walrus"
+      });
+      
+      console.log(`✅ User profile retrieved from Walrus`);
+      
+    } catch (error) {
+      console.error(`❌ Error getting user profile:`, error);
+      
+      // If Walrus fails, could fall back to contracts here
+      socket.emit("profileError", { 
+        message: `Failed to get profile: ${error.message}`,
+        useContractFallback: true
+      });
+    }
+  });
+
+  // Helper function to search connected players
+  function searchConnectedPlayers(searchTerm) {
+    const results = [];
+    const searchLower = searchTerm.toLowerCase();
+    
+    for (const [room, roomPlayers] of playersByRoom.entries()) {
+      roomPlayers.forEach((player, playerId) => {
+        const username = player.username || `Player-${playerId.slice(-4)}`;
+        if (username.toLowerCase().includes(searchLower)) {
+          results.push({
+            userAddress: player.walletAddress,
+            username: username,
+            isOnline: true,
+            room: room,
+            source: "connected"
+          });
+        }
+      });
+    }
+    
+    return results;
+  }
 
   // Handle player disconnect
   socket.on("disconnect", () => {

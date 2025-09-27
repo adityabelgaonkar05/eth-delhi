@@ -11,7 +11,7 @@ import {
   library_l_New_Layer_4, 
   library_l_New_Layer_5, 
   library_l_New_Layer_6 
-} from '../game/data/libraryData'
+} from '../game/data/libraryDataNew'
 import { loadImage } from '../game/utils/gameUtils'
 
 const Library = () => {
@@ -245,9 +245,9 @@ const Library = () => {
 
     try {
       const dpr = window.devicePixelRatio || 1
-      // Library map is 20 tiles wide × 22 tiles high, each tile is 16px
-      canvas.width = (20 * 16) * dpr  // 320px
-      canvas.height = (22 * 16) * dpr // 352px
+      // Library map is 40 tiles wide × 20 tiles high, each tile is 16px
+      canvas.width = (40 * 16) * dpr  // 640px
+      canvas.height = (20 * 16) * dpr // 320px
 
       // Create collision blocks for library
       const blockSize = 16
@@ -270,7 +270,7 @@ const Library = () => {
 
       // Create player (library starting position)
       playerRef.current = new Player({
-        x: 100,
+        x: 250,
         y: 200,
         size: 15,
       })
@@ -479,8 +479,8 @@ const Library = () => {
             border: '2px solid #fff',
             backgroundColor: '#16213e',
             display: isLoading || error ? 'none' : 'block',
-            width: '320px',
-            height: '352px'
+            width: '640px',
+            height: '320px'
           }}
         />
         <div style={{ 
@@ -497,8 +497,8 @@ const Library = () => {
             display: 'flex', 
             justifyContent: 'center', 
             alignItems: 'center', 
-            height: '352px',
-            width: '320px',
+            height: '320px',
+            width: '640px',
             fontSize: '18px',
             color: 'red',
             border: '2px solid #fff',
@@ -513,8 +513,8 @@ const Library = () => {
             display: 'flex', 
             justifyContent: 'center', 
             alignItems: 'center', 
-            height: '352px',
-            width: '320px',
+            height: '320px',
+            width: '640px',
             fontSize: '18px',
             color: 'white',
             border: '2px solid #fff',

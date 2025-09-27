@@ -27,6 +27,20 @@ const GameChat = ({ room = "main", username = "Anonymous", isVisible = true, soc
     messageTimeoutsRef.current.set(messageId, timeout);
   }, []);
 
+  // Show welcome message with commands
+  useEffect(() => {
+    if (isVisible) {
+      const welcomeMessage = {
+        id: Date.now() + Math.random(),
+        username: 'System',
+        message: 'Commands: /pc <player_name> <message> - Send private message',
+        timestamp: new Date().toISOString(),
+        isSystemMessage: true
+      };
+      addMessage(welcomeMessage);
+    }
+  }, [isVisible, addMessage]);
+
   // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
@@ -43,6 +57,12 @@ const GameChat = ({ room = "main", username = "Anonymous", isVisible = true, soc
     // Set up chat event listeners
     socket.on('chatMessage', (message) => {
       console.log('💬 Received chat message:', message);
+      addMessage(message);
+    });
+
+    // Listen for private messages
+    socket.on('privateMessage', (message) => {
+      console.log('💌 Received private message:', message);
       addMessage(message);
     });
 
@@ -72,6 +92,7 @@ const GameChat = ({ room = "main", username = "Anonymous", isVisible = true, soc
     // Clean up listeners on unmount
     return () => {
       socket.off('chatMessage');
+      socket.off('privateMessage');
       socket.off('chatHistory'); 
       socket.off('chatError');
     };
@@ -95,6 +116,18 @@ const GameChat = ({ room = "main", username = "Anonymous", isVisible = true, soc
   // Handle input changes
   const handleInputChange = (e) => {
     setCurrentMessage(e.target.value);
+  };
+
+  // Check if current message is a command and needs help
+  const getCommandHint = () => {
+    const msg = currentMessage.trim();
+    if (msg === '/pc' || msg === '/pc ') {
+      return 'Usage: /pc <player_name> <message>';
+    }
+    if (msg.startsWith('/pc ') && msg.split(' ').length === 2) {
+      return 'Type your private message after the player name';
+    }
+    return null;
   };
 
   // Handle key presses
@@ -169,12 +202,52 @@ const GameChat = ({ room = "main", username = "Anonymous", isVisible = true, soc
                 animation: 'fadeInUp 0.3s ease-out'
               }}
             >
-              {/* Check if it's a system message (like "Herobrine joined the game") */}
+              {/* Check if it's a system message */}
               {msg.isSystemMessage ? (
                 <span className="text-yellow-400">
                   {msg.message}
                 </span>
+              ) : msg.isPrivate ? (
+                /* Private message formatting */
+                <div 
+                  className="border-l-2 pl-2 py-1"
+                  style={{
+                    borderColor: msg.isSenderConfirmation ? '#10B981' : '#8B5CF6',
+                    backgroundColor: msg.isSenderConfirmation ? 'rgba(16, 185, 129, 0.1)' : 'rgba(139, 92, 246, 0.1)'
+                  }}
+                >
+                  {msg.isSenderConfirmation ? (
+                    <>
+                      <span className="text-green-400 text-sm">→ To </span>
+                      <span 
+                        className="font-bold text-sm"
+                        style={{ color: getUsernameColor(msg.targetUsername) }}
+                      >
+                        {msg.targetUsername}
+                      </span>
+                      <span className="text-green-400 text-sm">: </span>
+                      <span className="text-white text-sm italic">
+                        {msg.message}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-purple-400 text-sm">← From </span>
+                      <span 
+                        className="font-bold text-sm"
+                        style={{ color: msg.playerColor || getUsernameColor(msg.username) }}
+                      >
+                        {msg.username}
+                      </span>
+                      <span className="text-purple-400 text-sm">: </span>
+                      <span className="text-white text-sm italic">
+                        {msg.message}
+                      </span>
+                    </>
+                  )}
+                </div>
               ) : (
+                /* Regular message formatting */
                 <>
                   <span className="text-white">&lt;</span>
                   <span 
@@ -237,6 +310,19 @@ const GameChat = ({ room = "main", username = "Anonymous", isVisible = true, soc
               />
             </div>
           </form>
+          
+          {/* Command Hint */}
+          {getCommandHint() && (
+            <div 
+              className="mt-1 px-2 py-1 rounded text-xs"
+              style={{
+                backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                color: 'white'
+              }}
+            >
+              💡 {getCommandHint()}
+            </div>
+          )}
         </div>
       )}
 

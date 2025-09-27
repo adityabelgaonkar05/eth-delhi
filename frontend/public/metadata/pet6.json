@@ -1,0 +1,28 @@
+{
+  "name": "Phoenix Rising",
+  "description": "A reborn bird of eternal flame, its feathers burn with digital fire that never consumes. This epic phoenix rises from the ashes of deleted code to soar through cyberspace.",
+  "image": "http://localhost:5173/images/pet6.webp",
+  "external_url": "http://localhost:5173/pets",
+  "attributes": [
+    {
+      "trait_type": "Rarity",
+      "value": "Epic"
+    },
+    {
+      "trait_type": "Type",
+      "value": "Phoenix"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Fire"
+    },
+    {
+      "trait_type": "Tier",
+      "value": "EPIC"
+    },
+    {
+      "trait_type": "Price",
+      "value": "500 CVRS"
+    }
+  ]
+}

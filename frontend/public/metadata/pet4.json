@@ -1,0 +1,28 @@
+{
+  "name": "Thunder Wolf",
+  "description": "A fierce lupine guardian whose howl can summon digital lightning storms. This rare wolf is both protector and hunter in the CryptoVerse wilderness.",
+  "image": "http://localhost:5173/images/pet4.webp",
+  "external_url": "http://localhost:5173/pets",
+  "attributes": [
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Type",
+      "value": "Wolf"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Thunder"
+    },
+    {
+      "trait_type": "Tier",
+      "value": "RARE"
+    },
+    {
+      "trait_type": "Price",
+      "value": "250 CVRS"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "name": "Mystic Mare",
+  "description": "A magical horse from the digital realm, its mane shimmers with starlight and its hooves spark with ethereal energy. A rare companion for brave adventurers.",
+  "image": "http://localhost:5173/images/pet3.webp",
+  "external_url": "http://localhost:5173/pets",
+  "attributes": [
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Type",
+      "value": "Horse"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Mystic"
+    },
+    {
+      "trait_type": "Tier",
+      "value": "RARE"
+    },
+    {
+      "trait_type": "Price",
+      "value": "250 CVRS"
+    }
+  ]
+}

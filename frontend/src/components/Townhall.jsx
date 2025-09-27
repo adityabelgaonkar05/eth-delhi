@@ -4,6 +4,8 @@ import Player from '../game/classes/Player'
 import MultiPlayer from '../game/classes/MultiPlayer'
 import CollisionBlock from '../game/classes/CollisionBlock'
 import GameChat from './GameChat'
+import TokenBalance from './TokenBalance'
+import PlayerStatus from './PlayerStatus'
 import { 
   townhallCollisions,
   townhall_l_New_Layer_1,
@@ -45,8 +47,11 @@ const Townhall = () => {
   const [hasShownExitPrompt, setHasShownExitPrompt] = useState(false)
   const [exitPromptCooldown, setExitPromptCooldown] = useState(false)
   const [exitCooldownTimeLeft, setExitCooldownTimeLeft] = useState(0)
+  const [isHoldingExit, setIsHoldingExit] = useState(false)
+  const [holdProgress, setHoldProgress] = useState(0)
   const exitCooldownTimeoutRef = useRef(null)
   const exitCooldownIntervalRef = useRef(null)
+  const holdIntervalRef = useRef(null)
 
   console.log('Townhall state:', { isLoading, error, connected, playerCount })
 
@@ -211,8 +216,38 @@ const Townhall = () => {
   const handleStayInTownhall = useCallback(() => {
     console.log('handleStayInTownhall called - starting cooldown')
     setShowExitPrompt(false)
+    setIsHoldingExit(false)
+    setHoldProgress(0)
+    if (holdIntervalRef.current) {
+      clearInterval(holdIntervalRef.current)
+    }
     startExitCooldown()
   }, [startExitCooldown])
+
+  // Handle hold button functionality
+  const handleHoldStart = useCallback(() => {
+    setIsHoldingExit(true)
+    setHoldProgress(0)
+    
+    holdIntervalRef.current = setInterval(() => {
+      setHoldProgress(prev => {
+        if (prev >= 100) {
+          // Hold complete - exit to main
+          handleExitToMain()
+          return 100
+        }
+        return prev + 2 // 2% per 10ms = 100% in 500ms
+      })
+    }, 10)
+  }, [])
+
+  const handleHoldEnd = useCallback(() => {
+    setIsHoldingExit(false)
+    setHoldProgress(0)
+    if (holdIntervalRef.current) {
+      clearInterval(holdIntervalRef.current)
+    }
+  }, [])
 
   // Layer data and tileset configuration for townhall
   const layersData = {
@@ -535,6 +570,9 @@ const Townhall = () => {
       if (exitCooldownIntervalRef.current) {
         clearInterval(exitCooldownIntervalRef.current)
       }
+      if (holdIntervalRef.current) {
+        clearInterval(holdIntervalRef.current)
+      }
     }
   }, [])
 
@@ -561,19 +599,64 @@ const Townhall = () => {
       position: 'relative'
     }}>
       <div>
-        {/* Connection status */}
+        {/* Player Status */}
+        <PlayerStatus />
+
+        {/* Token Balance */}
+        <TokenBalance />
+
+        {/* Connection status - Bottom Right */}
         <div style={{
           position: 'absolute',
-          top: '10px',
-          left: '10px',
-          color: 'white',
-          background: 'rgba(0,0,0,0.7)',
-          padding: '10px',
-          borderRadius: '5px',
-          fontSize: '14px'
+          bottom: '80px',
+          right: '32px',
+          fontFamily: 'monospace',
+          fontSize: '11px',
+          lineHeight: '1.1',
+          backgroundColor: '#2a1810',
+          border: '3px solid #8b4513',
+          borderRadius: '0',
+          boxShadow: '6px 6px 0px #1a0f08, inset 2px 2px 0px #d2b48c, inset -2px -2px 0px #654321',
+          width: '160px',
+          height: '70px',
+          padding: '10px 12px',
+          imageRendering: 'pixelated',
+          textShadow: '2px 2px 0px #1a0f08',
+          textAlign: 'center',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          transform: 'scale(1)',
+          transformOrigin: 'bottom right'
         }}>
-          <div>🏛️ Townhall Status: {connected ? '🟢 Connected' : '🔴 Disconnected'}</div>
-          <div>Players: {playerCount}</div>
+          {/* Medieval decorative border pattern */}
+          <div style={{
+            position: 'absolute',
+            top: '2px',
+            left: '2px',
+            right: '2px',
+            height: '2px',
+            background: 'linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)',
+            imageRendering: 'pixelated'
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: '2px',
+            left: '2px',
+            right: '2px',
+            height: '2px',
+            background: 'linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)',
+            imageRendering: 'pixelated'
+          }} />
+          
+          <div style={{ color: '#d2b48c', marginBottom: '4px', fontWeight: 'bold' }}>🏛️ TOWNHALL STATUS</div>
+          <div style={{ color: connected ? '#44ff44' : '#ff4444', fontWeight: 'bold', fontSize: '12px', marginBottom: '2px' }}>
+            {connected ? 'CONNECTED' : 'DISCONNECTED'}
+          </div>
+          <div style={{ color: '#ffd700', fontWeight: 'bold', fontSize: '12px' }}>
+            PLAYERS: {playerCount}
+          </div>
         </div>
 
         {/* Player coordinates */}
@@ -609,14 +692,6 @@ const Townhall = () => {
             imageRendering: 'pixelated'
           }}
         />
-        <div style={{ 
-          color: 'white', 
-          textAlign: 'center', 
-          marginTop: '10px',
-          display: isLoading || error ? 'none' : 'block'
-        }}>
-          🏛️ Townhall • Use WASD or Arrow Keys to move • Multiplayer Mode
-        </div>
         
         {error && (
           <div style={{ 
@@ -689,18 +764,22 @@ const Townhall = () => {
                 lineHeight: '1.5'
               }}>
                 You've found the exit portal!<br/>
-                Would you like to return to the main island?
+                Hold the button to return to the main island.
               </p>
               
               <div style={{
                 display: 'flex',
-                gap: '15px',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                marginBottom: '20px'
               }}>
                 <button
-                  onClick={handleExitToMain}
+                  onMouseDown={handleHoldStart}
+                  onMouseUp={handleHoldEnd}
+                  onMouseLeave={handleHoldEnd}
+                  onTouchStart={handleHoldStart}
+                  onTouchEnd={handleHoldEnd}
                   style={{
-                    backgroundColor: '#FF6B35',
+                    backgroundColor: isHoldingExit ? '#E55A2B' : '#FF6B35',
                     color: 'white',
                     border: 'none',
                     padding: '12px 24px',
@@ -709,32 +788,29 @@ const Townhall = () => {
                     cursor: 'pointer',
                     fontFamily: 'monospace',
                     fontWeight: 'bold',
-                    transition: 'background-color 0.3s'
+                    transition: 'background-color 0.1s',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    minWidth: '200px',
+                    height: '50px'
                   }}
-                  onMouseOver={(e) => e.target.style.backgroundColor = '#E55A2B'}
-                  onMouseOut={(e) => e.target.style.backgroundColor = '#FF6B35'}
                 >
-                  Exit to Main Island
-                </button>
-                
-                <button
-                  onClick={handleStayInTownhall}
-                  style={{
-                    backgroundColor: '#666',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    cursor: 'pointer',
-                    fontFamily: 'monospace',
-                    fontWeight: 'bold',
-                    transition: 'background-color 0.3s'
-                  }}
-                  onMouseOver={(e) => e.target.style.backgroundColor = '#555'}
-                  onMouseOut={(e) => e.target.style.backgroundColor = '#666'}
-                >
-                  Stay in Townhall
+                  {/* Progress bar overlay */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    height: '100%',
+                    width: `${holdProgress}%`,
+                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                    transition: 'width 0.1s linear',
+                    borderRadius: '8px'
+                  }} />
+                  
+                  {/* Button text */}
+                  <span style={{ position: 'relative', zIndex: 1 }}>
+                    {isHoldingExit ? `Exiting... ${Math.round(holdProgress)}%` : 'Hold to Exit'}
+                  </span>
                 </button>
               </div>
               

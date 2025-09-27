@@ -17,6 +17,7 @@ import Library from "./components/Library";
 import Townhall from "./components/Townhall";
 import Workwithus from "./components/Workwithus";
 import ChatTest from "./components/ChatTest";
+import PetNFTShop from "./components/PetNFTShop";
 import OnboardingPage from "./components/OnboardingPage";
 import "./App.css";
 import { WalletProvider } from "./context/WalletContext";

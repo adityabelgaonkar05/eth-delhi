@@ -23,6 +23,7 @@ import UserRegistryABI from "../contractData/UserRegistry.json";
 import VideoPremiereManagerABI from "../contractData/VideoPremiereManager.json";
 import WalrusOracleABI from "../contractData/WalrusOracle.json";
 import WalrusStorageABI from "../contractData/WalrusStorage.json";
+import CryptoVersePetNFTABI from "../contractData/CryptoVersePetNFT.json";
 
 export const ContractContext = createContext();
 
@@ -111,6 +112,12 @@ const CONTRACT_CONFIGS = {
     address: WalrusStorageABI.address,
     name: "Walrus Storage",
     type: "Storage",
+  },
+  CryptoVersePetNFT: {
+    abi: CryptoVersePetNFTABI.abi,
+    address: CryptoVersePetNFTABI.address,
+    name: "CryptoVerse Pet NFT",
+    type: "ERC721",
   },
 };
 
@@ -536,5 +543,11 @@ export const useWalrusOracle = () => {
 export const useWalrusStorage = () => {
   const { getContract, isLoading } = useContracts();
   const contract = getContract("WalrusStorage");
+  return { contract, isLoading };
+};
+
+export const useCryptoVersePetNFT = () => {
+  const { getContract, isLoading } = useContracts();
+  const contract = getContract("CryptoVersePetNFT");
   return { contract, isLoading };
 };

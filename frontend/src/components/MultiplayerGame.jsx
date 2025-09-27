@@ -7,6 +7,7 @@ import CollisionBlock from '../game/classes/CollisionBlock'
 import Sprite from '../game/classes/Sprite'
 import GameChat from './GameChat'
 import TokenBalance from "./TokenBalance";
+import PlayerStatus from './PlayerStatus'
 import { 
   collisions, 
   l_New_Layer_1, 
@@ -55,24 +56,33 @@ const MultiplayerGame = () => {
   const [hasShownLibraryPrompt, setHasShownLibraryPrompt] = useState(false)
   const [libraryPromptCooldown, setLibraryPromptCooldown] = useState(false)
   const [cooldownTimeLeft, setCooldownTimeLeft] = useState(0)
+  const [isHoldingLibrary, setIsHoldingLibrary] = useState(false)
+  const [libraryHoldProgress, setLibraryHoldProgress] = useState(0)
   const cooldownTimeoutRef = useRef(null)
   const cooldownIntervalRef = useRef(null)
+  const libraryHoldIntervalRef = useRef(null)
 
   // Cinema room states
   const [showCinemaPrompt, setShowCinemaPrompt] = useState(false)
   const [hasShownCinemaPrompt, setHasShownCinemaPrompt] = useState(false)
   const [cinemaPromptCooldown, setCinemaPromptCooldown] = useState(false)
   const [cinemaCooldownTimeLeft, setCinemaCooldownTimeLeft] = useState(0)
+  const [isHoldingCinema, setIsHoldingCinema] = useState(false)
+  const [cinemaHoldProgress, setCinemaHoldProgress] = useState(0)
   const cinemaCooldownTimeoutRef = useRef(null)
   const cinemaCooldownIntervalRef = useRef(null)
+  const cinemaHoldIntervalRef = useRef(null)
 
   // Townhall room states
   const [showTownhallPrompt, setShowTownhallPrompt] = useState(false)
   const [hasShownTownhallPrompt, setHasShownTownhallPrompt] = useState(false)
   const [townhallPromptCooldown, setTownhallPromptCooldown] = useState(false)
   const [townhallCooldownTimeLeft, setTownhallCooldownTimeLeft] = useState(0)
+  const [isHoldingTownhall, setIsHoldingTownhall] = useState(false)
+  const [townhallHoldProgress, setTownhallHoldProgress] = useState(0)
   const townhallCooldownTimeoutRef = useRef(null)
   const townhallCooldownIntervalRef = useRef(null)
+  const townhallHoldIntervalRef = useRef(null)
 
   console.log("MultiplayerGame state:", {
     isLoading,
@@ -196,6 +206,11 @@ const MultiplayerGame = () => {
   const handleStayInGame = useCallback(() => {
     console.log('handleStayInGame called - starting cooldown')
     setShowLibraryPrompt(false)
+    setIsHoldingLibrary(false)
+    setLibraryHoldProgress(0)
+    if (libraryHoldIntervalRef.current) {
+      clearInterval(libraryHoldIntervalRef.current)
+    }
     startCooldown()
   }, [startCooldown])
 
@@ -209,6 +224,11 @@ const MultiplayerGame = () => {
   const handleStayInGameCinema = useCallback(() => {
     console.log('handleStayInGameCinema called - starting cooldown')
     setShowCinemaPrompt(false)
+    setIsHoldingCinema(false)
+    setCinemaHoldProgress(0)
+    if (cinemaHoldIntervalRef.current) {
+      clearInterval(cinemaHoldIntervalRef.current)
+    }
     startCinemaCooldown()
   }, [startCinemaCooldown])
 
@@ -222,8 +242,88 @@ const MultiplayerGame = () => {
   const handleStayInGameTownhall = useCallback(() => {
     console.log('handleStayInGameTownhall called - starting cooldown')
     setShowTownhallPrompt(false)
+    setIsHoldingTownhall(false)
+    setTownhallHoldProgress(0)
+    if (townhallHoldIntervalRef.current) {
+      clearInterval(townhallHoldIntervalRef.current)
+    }
     startTownhallCooldown()
   }, [startTownhallCooldown])
+
+  // Handle hold button functionality for Library
+  const handleLibraryHoldStart = useCallback(() => {
+    setIsHoldingLibrary(true)
+    setLibraryHoldProgress(0)
+    
+    libraryHoldIntervalRef.current = setInterval(() => {
+      setLibraryHoldProgress(prev => {
+        if (prev >= 100) {
+          // Hold complete - go to library
+          handleGoToLibrary()
+          return 100
+        }
+        return prev + 2 // 2% per 10ms = 100% in 500ms
+      })
+    }, 10)
+  }, [])
+
+  const handleLibraryHoldEnd = useCallback(() => {
+    setIsHoldingLibrary(false)
+    setLibraryHoldProgress(0)
+    if (libraryHoldIntervalRef.current) {
+      clearInterval(libraryHoldIntervalRef.current)
+    }
+  }, [])
+
+  // Handle hold button functionality for Cinema
+  const handleCinemaHoldStart = useCallback(() => {
+    setIsHoldingCinema(true)
+    setCinemaHoldProgress(0)
+    
+    cinemaHoldIntervalRef.current = setInterval(() => {
+      setCinemaHoldProgress(prev => {
+        if (prev >= 100) {
+          // Hold complete - go to cinema
+          handleGoToCinema()
+          return 100
+        }
+        return prev + 2 // 2% per 10ms = 100% in 500ms
+      })
+    }, 10)
+  }, [])
+
+  const handleCinemaHoldEnd = useCallback(() => {
+    setIsHoldingCinema(false)
+    setCinemaHoldProgress(0)
+    if (cinemaHoldIntervalRef.current) {
+      clearInterval(cinemaHoldIntervalRef.current)
+    }
+  }, [])
+
+  // Handle hold button functionality for Townhall
+  const handleTownhallHoldStart = useCallback(() => {
+    setIsHoldingTownhall(true)
+    setTownhallHoldProgress(0)
+    
+    townhallHoldIntervalRef.current = setInterval(() => {
+      setTownhallHoldProgress(prev => {
+        if (prev >= 100) {
+          // Hold complete - go to townhall
+          handleGoToTownhall()
+          return 100
+        }
+        return prev + 2 // 2% per 10ms = 100% in 500ms
+      })
+    }, 10)
+  }, [])
+
+  const handleTownhallHoldEnd = useCallback(() => {
+    setIsHoldingTownhall(false)
+    setTownhallHoldProgress(0)
+    if (townhallHoldIntervalRef.current) {
+      clearInterval(townhallHoldIntervalRef.current)
+    }
+  }, [])
 
   // Layer data and tileset configuration
   const layersData = {
@@ -793,6 +893,28 @@ const MultiplayerGame = () => {
       if (cooldownIntervalRef.current) {
         clearInterval(cooldownIntervalRef.current)
       }
+      if (cinemaCooldownTimeoutRef.current) {
+        clearTimeout(cinemaCooldownTimeoutRef.current)
+      }
+      if (cinemaCooldownIntervalRef.current) {
+        clearInterval(cinemaCooldownIntervalRef.current)
+      }
+      if (townhallCooldownTimeoutRef.current) {
+        clearTimeout(townhallCooldownTimeoutRef.current)
+      }
+      if (townhallCooldownIntervalRef.current) {
+        clearInterval(townhallCooldownIntervalRef.current)
+      }
+      // Cleanup hold intervals
+      if (libraryHoldIntervalRef.current) {
+        clearInterval(libraryHoldIntervalRef.current)
+      }
+      if (cinemaHoldIntervalRef.current) {
+        clearInterval(cinemaHoldIntervalRef.current)
+      }
+      if (townhallHoldIntervalRef.current) {
+        clearInterval(townhallHoldIntervalRef.current)
+      }
     }
   }, [])
 
@@ -821,24 +943,66 @@ const MultiplayerGame = () => {
       }}
     >
       <div>
+        {/* Player Status */}
+        <PlayerStatus />
+
         {/* Token Balance */}
         <TokenBalance />
 
-        {/* Connection status */}
+        {/* Connection status - Bottom Right */}
         <div
           style={{
             position: "absolute",
-            top: "10px",
-            left: "10px",
-            color: "white",
-            background: "rgba(0,0,0,0.7)",
-            padding: "10px",
-            borderRadius: "5px",
-            fontSize: "14px",
+            bottom: "80px",
+            right: "32px",
+            fontFamily: "monospace",
+            fontSize: "11px",
+            lineHeight: "1.1",
+            backgroundColor: "#2a1810",
+            border: "3px solid #8b4513",
+            borderRadius: "0",
+            boxShadow: "6px 6px 0px #1a0f08, inset 2px 2px 0px #d2b48c, inset -2px -2px 0px #654321",
+            width: "160px",
+            height: "70px",
+            padding: "10px 12px",
+            imageRendering: "pixelated",
+            textShadow: "2px 2px 0px #1a0f08",
+            textAlign: "center",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            transform: "scale(1)",
+            transformOrigin: "bottom right"
           }}
         >
-          <div>Status: {connected ? "🟢 Connected" : "🔴 Disconnected"}</div>
-          <div>Players: {playerCount}</div>
+          {/* Medieval decorative border pattern */}
+          <div style={{
+            position: "absolute",
+            top: "2px",
+            left: "2px",
+            right: "2px",
+            height: "2px",
+            background: "linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)",
+            imageRendering: "pixelated"
+          }} />
+          <div style={{
+            position: "absolute",
+            bottom: "2px",
+            left: "2px",
+            right: "2px",
+            height: "2px",
+            background: "linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)",
+            imageRendering: "pixelated"
+          }} />
+          
+          <div style={{ color: "#d2b48c", marginBottom: "4px", fontWeight: "bold" }}>⚔️ STATUS ⚔️</div>
+          <div style={{ color: connected ? "#44ff44" : "#ff4444", fontWeight: "bold", fontSize: "12px", marginBottom: "2px" }}>
+            {connected ? "CONNECTED" : "DISCONNECTED"}
+          </div>
+          <div style={{ color: "#ffd700", fontWeight: "bold", fontSize: "12px" }}>
+            PLAYERS: {playerCount}
+          </div>
         </div>
 
         {/* Player coordinates */}
@@ -886,16 +1050,6 @@ const MultiplayerGame = () => {
             imageRendering: "pixelated",
           }}
         />
-        <div
-          style={{
-            color: "white",
-            textAlign: "center",
-            marginTop: "10px",
-            display: isLoading || error ? "none" : "block",
-          }}
-        >
-          Use WASD or Arrow Keys to move • Multiplayer Mode
-        </div>
 
         {error && (
           <div
@@ -972,18 +1126,22 @@ const MultiplayerGame = () => {
                 lineHeight: '1.5'
               }}>
                 You've discovered the library entrance!<br/>
-                Would you like to enter the library?
+                Hold the button to enter the library.
               </p>
               
               <div style={{
                 display: 'flex',
-                gap: '15px',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                marginBottom: '20px'
               }}>
                 <button
-                  onClick={handleGoToLibrary}
+                  onMouseDown={handleLibraryHoldStart}
+                  onMouseUp={handleLibraryHoldEnd}
+                  onMouseLeave={handleLibraryHoldEnd}
+                  onTouchStart={handleLibraryHoldStart}
+                  onTouchEnd={handleLibraryHoldEnd}
                   style={{
-                    backgroundColor: '#4CAF50',
+                    backgroundColor: isHoldingLibrary ? '#45a049' : '#4CAF50',
                     color: 'white',
                     border: 'none',
                     padding: '12px 24px',
@@ -992,32 +1150,29 @@ const MultiplayerGame = () => {
                     cursor: 'pointer',
                     fontFamily: 'monospace',
                     fontWeight: 'bold',
-                    transition: 'background-color 0.3s'
+                    transition: 'background-color 0.1s',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    minWidth: '200px',
+                    height: '50px'
                   }}
-                  onMouseOver={(e) => e.target.style.backgroundColor = '#45a049'}
-                  onMouseOut={(e) => e.target.style.backgroundColor = '#4CAF50'}
                 >
-                  Enter Library
-                </button>
-                
-                <button
-                  onClick={handleStayInGame}
-                  style={{
-                    backgroundColor: '#666',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    cursor: 'pointer',
-                    fontFamily: 'monospace',
-                    fontWeight: 'bold',
-                    transition: 'background-color 0.3s'
-                  }}
-                  onMouseOver={(e) => e.target.style.backgroundColor = '#555'}
-                  onMouseOut={(e) => e.target.style.backgroundColor = '#666'}
-                >
-                  Stay in Game
+                  {/* Progress bar overlay */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    height: '100%',
+                    width: `${libraryHoldProgress}%`,
+                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                    transition: 'width 0.1s linear',
+                    borderRadius: '8px'
+                  }} />
+                  
+                  {/* Button text */}
+                  <span style={{ position: 'relative', zIndex: 1 }}>
+                    {isHoldingLibrary ? `Entering... ${Math.round(libraryHoldProgress)}%` : 'Hold to Enter Library'}
+                  </span>
                 </button>
               </div>
               
@@ -1072,18 +1227,22 @@ const MultiplayerGame = () => {
                 lineHeight: '1.5'
               }}>
                 You've discovered the cinema entrance!<br/>
-                Would you like to enter the cinema?
+                Hold the button to enter the cinema.
               </p>
               
               <div style={{
                 display: 'flex',
-                gap: '15px',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                marginBottom: '20px'
               }}>
                 <button
-                  onClick={handleGoToCinema}
+                  onMouseDown={handleCinemaHoldStart}
+                  onMouseUp={handleCinemaHoldEnd}
+                  onMouseLeave={handleCinemaHoldEnd}
+                  onTouchStart={handleCinemaHoldStart}
+                  onTouchEnd={handleCinemaHoldEnd}
                   style={{
-                    backgroundColor: '#4CAF50',
+                    backgroundColor: isHoldingCinema ? '#45a049' : '#4CAF50',
                     color: 'white',
                     border: 'none',
                     padding: '12px 24px',
@@ -1092,32 +1251,29 @@ const MultiplayerGame = () => {
                     cursor: 'pointer',
                     fontFamily: 'monospace',
                     fontWeight: 'bold',
-                    transition: 'background-color 0.3s'
+                    transition: 'background-color 0.1s',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    minWidth: '200px',
+                    height: '50px'
                   }}
-                  onMouseOver={(e) => e.target.style.backgroundColor = '#45a049'}
-                  onMouseOut={(e) => e.target.style.backgroundColor = '#4CAF50'}
                 >
-                  Enter Cinema
-                </button>
-                
-                <button
-                  onClick={handleStayInGameCinema}
-                  style={{
-                    backgroundColor: '#666',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    cursor: 'pointer',
-                    fontFamily: 'monospace',
-                    fontWeight: 'bold',
-                    transition: 'background-color 0.3s'
-                  }}
-                  onMouseOver={(e) => e.target.style.backgroundColor = '#555'}
-                  onMouseOut={(e) => e.target.style.backgroundColor = '#666'}
-                >
-                  Stay in Game
+                  {/* Progress bar overlay */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    height: '100%',
+                    width: `${cinemaHoldProgress}%`,
+                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                    transition: 'width 0.1s linear',
+                    borderRadius: '8px'
+                  }} />
+                  
+                  {/* Button text */}
+                  <span style={{ position: 'relative', zIndex: 1 }}>
+                    {isHoldingCinema ? `Entering... ${Math.round(cinemaHoldProgress)}%` : 'Hold to Enter Cinema'}
+                  </span>
                 </button>
               </div>
               
@@ -1172,18 +1328,22 @@ const MultiplayerGame = () => {
                 lineHeight: '1.5'
               }}>
                 You've discovered the townhall entrance!<br/>
-                Would you like to enter the townhall?
+                Hold the button to enter the townhall.
               </p>
               
               <div style={{
                 display: 'flex',
-                gap: '15px',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                marginBottom: '20px'
               }}>
                 <button
-                  onClick={handleGoToTownhall}
+                  onMouseDown={handleTownhallHoldStart}
+                  onMouseUp={handleTownhallHoldEnd}
+                  onMouseLeave={handleTownhallHoldEnd}
+                  onTouchStart={handleTownhallHoldStart}
+                  onTouchEnd={handleTownhallHoldEnd}
                   style={{
-                    backgroundColor: '#4CAF50',
+                    backgroundColor: isHoldingTownhall ? '#45a049' : '#4CAF50',
                     color: 'white',
                     border: 'none',
                     padding: '12px 24px',
@@ -1192,32 +1352,29 @@ const MultiplayerGame = () => {
                     cursor: 'pointer',
                     fontFamily: 'monospace',
                     fontWeight: 'bold',
-                    transition: 'background-color 0.3s'
+                    transition: 'background-color 0.1s',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    minWidth: '200px',
+                    height: '50px'
                   }}
-                  onMouseOver={(e) => e.target.style.backgroundColor = '#45a049'}
-                  onMouseOut={(e) => e.target.style.backgroundColor = '#4CAF50'}
                 >
-                  Enter Townhall
-                </button>
-                
-                <button
-                  onClick={handleStayInGameTownhall}
-                  style={{
-                    backgroundColor: '#666',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    cursor: 'pointer',
-                    fontFamily: 'monospace',
-                    fontWeight: 'bold',
-                    transition: 'background-color 0.3s'
-                  }}
-                  onMouseOver={(e) => e.target.style.backgroundColor = '#555'}
-                  onMouseOut={(e) => e.target.style.backgroundColor = '#666'}
-                >
-                  Stay in Game
+                  {/* Progress bar overlay */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    height: '100%',
+                    width: `${townhallHoldProgress}%`,
+                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                    transition: 'width 0.1s linear',
+                    borderRadius: '8px'
+                  }} />
+                  
+                  {/* Button text */}
+                  <span style={{ position: 'relative', zIndex: 1 }}>
+                    {isHoldingTownhall ? `Entering... ${Math.round(townhallHoldProgress)}%` : 'Hold to Enter Townhall'}
+                  </span>
                 </button>
               </div>
               

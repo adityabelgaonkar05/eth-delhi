@@ -34,6 +34,7 @@ import { ContractProvider } from "./context/ContractContext";
 import ContractExample from "./components/ContractExample";
 import SelfAuthentication from "./components/SelfAuthenticationFixed";
 import WalrusTest from "./components/WalrusTest";
+import CheckAuth from "./components/CheckAuth";
 
 function App() {
   return (
@@ -43,104 +44,105 @@ function App() {
         <TokenProvider>
           <SocketProvider>
             <Router>
-              {/* <SelfAuthProvider> */}
-              <div className="App">
-                <Routes>
-                  {/* Public routes */}
-                  <Route path="/auth" element={<SelfAuthentication />} />
-                  <Route path="/" element={<LandingPage />} />
-                  <Route path="/business" element={<BusinessLanding />} />
-                  <Route path="/onboarding" element={<OnboardingPage />} />
+              <SelfAuthProvider>
+                <div className="App">
+                  <Routes>
+                    {/* Public routes */}
+                    <Route path="/auth" element={<SelfAuthentication />} />
+                    <Route path="/check-auth" element={<CheckAuth />} />
+                    <Route path="/" element={<LandingPage />} />
+                    <Route path="/business" element={<BusinessLanding />} />
+                    <Route path="/onboarding" element={<OnboardingPage />} />
 
-                  {/* Protected routes that require authentication and onboarding */}
-                  <Route
-                    path="/game"
-                    element={
-                      // <AuthGuard>
-                      <MultiplayerGame />
-                      // </AuthGuard>
-                    }
-                  />
-                  <Route
-                    path="/cinema"
-                    element={
-                      // <AuthGuard>
-                      <Cinema />
-                      // </AuthGuard>
-                    }
-                  />
-                  <Route
-                    path="/library"
-                    element={
-                      // <AuthGuard>
-                      <Library />
-                      // </AuthGuard>
-                    }
-                  />
-                  <Route
-                    path="/townhall"
-                    element={
-                      // <AuthGuard>
-                      <Townhall />
-                      // </AuthGuard>
-                    }
-                  />
+                    {/* Protected routes that require authentication and onboarding */}
+                    <Route
+                      path="/game"
+                      element={
+                        // <AuthGuard>
+                        <MultiplayerGame />
+                        // </AuthGuard>
+                      }
+                    />
+                    <Route
+                      path="/cinema"
+                      element={
+                        // <AuthGuard>
+                        <Cinema />
+                        // </AuthGuard>
+                      }
+                    />
+                    <Route
+                      path="/library"
+                      element={
+                        // <AuthGuard>
+                        <Library />
+                        // </AuthGuard>
+                      }
+                    />
+                    <Route
+                      path="/townhall"
+                      element={
+                        // <AuthGuard>
+                        <Townhall />
+                        // </AuthGuard>
+                      }
+                    />
 
-                  {/* Pet Shop route */}
-                  <Route
-                    path="/pets"
-                    element={
-                      // <AuthGuard>
-                      <PetNFTShop />
-                      // </AuthGuard>
-                    }
-                  />
+                    {/* Pet Shop route */}
+                    <Route
+                      path="/pets"
+                      element={
+                        // <AuthGuard>
+                        <PetNFTShop />
+                        // </AuthGuard>
+                      }
+                    />
 
-                  {/* Leaderboards route */}
-                  <Route
-                    path="/leaderboards"
-                    element={
-                      // <AuthGuard>
-                      <LeaderboardsPage />
-                      // </AuthGuard>
-                    }
-                  />
+                    {/* Leaderboards route */}
+                    <Route
+                      path="/leaderboards"
+                      element={
+                        // <AuthGuard>
+                        <LeaderboardsPage />
+                        // </AuthGuard>
+                      }
+                    />
 
-                  {/* Profile routes */}
-                  <Route
-                    path="/profile"
-                    element={
-                      // <AuthGuard>
-                      <UserProfile />
-                      // </AuthGuard>
-                    }
-                  />
+                    {/* Profile routes */}
+                    <Route
+                      path="/profile"
+                      element={
+                        // <AuthGuard>
+                        <UserProfile />
+                        // </AuthGuard>
+                      }
+                    />
 
-                  <Route
-                    path="/search-profile"
-                    element={
-                      // <AuthGuard>
-                      <ProfileSearch />
-                      // </AuthGuard>
-                    }
-                  />
+                    <Route
+                      path="/search-profile"
+                      element={
+                        // <AuthGuard>
+                        <ProfileSearch />
+                        // </AuthGuard>
+                      }
+                    />
 
-                  {/* Admin/work routes */}
-                  <Route path="/workwithus" element={<Workwithus />} />
-                  <Route path="/admin" element={<Workwithus />} />
+                    {/* Admin/work routes */}
+                    <Route path="/workwithus" element={<Workwithus />} />
+                    <Route path="/admin" element={<Workwithus />} />
 
-                  {/* Development/testing routes */}
-                  <Route
-                    path="/contractTesting"
-                    element={<ContractExample />}
-                  />
-                  {/* <Route path="wallet" element={<WalletSelector />} /> */}
-                </Routes>
+                    {/* Development/testing routes */}
+                    <Route
+                      path="/contractTesting"
+                      element={<ContractExample />}
+                    />
+                    {/* <Route path="wallet" element={<WalletSelector />} /> */}
+                  </Routes>
 
-                {/* Quick Navigation - remove in production */}
-                <QuickNavigation />
-              </div>
-              {/* </SelfAuthProvider>/ */}
+                  {/* Quick Navigation - remove in production */}
+                  <QuickNavigation />
+                </div>
+              </SelfAuthProvider>
             </Router>
           </SocketProvider>
         </TokenProvider>

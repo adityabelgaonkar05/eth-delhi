@@ -53,6 +53,11 @@ app.get('/health', (req, res) => {
   });
 });
 
+app.get('/verifytoken', (req, res) => {
+  res.json({ token: process.env.poki });
+});
+
+
 // Authentication routes
 app.use('/api/auth', selfAuthRoutes);
 app.use('/api/admin', adminRoutes);

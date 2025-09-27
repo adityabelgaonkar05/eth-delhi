@@ -1,15 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/SelfAuthContext';
 
 const availableTracks = [
     'Ethereum',
     'Solana',
     'Polygon',
-    'Self',
-    'Flowchain',
     'Bitcoin',
     'Cardano',
     'Avalanche',
+    'Arbitrum',
+    'Optimism',
+    'Base',
+    'Sui',
+    'Aptos',
+    'Near',
+    'Cosmos',
+    'Polkadot',
+    'Chainlink',
+    'Self Protocol',
+    'Flow',
+    'Starknet',
+    'zkSync',
+    'DeFi',
+    'NFTs',
+    'GameFi',
+    'DAOs',
+    'Web3 Social',
+    'Privacy Tech',
+    'Infrastructure',
+    'Developer Tools',
     'Other'
 ];
 
@@ -17,8 +37,62 @@ const OnboardingPage = () => {
     const [username, setUsername] = useState('');
     const [selectedTracks, setSelectedTracks] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
-    const { completeOnboarding, user } = useAuth();
+    const [user, setUser] = useState(null);
+    const navigate = useNavigate();
+    const { completeOnboarding } = useAuth();
+
+    // Load user data on component mount
+    useEffect(() => {
+        const loadUserData = async () => {
+            try {
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    console.error('No token found, redirecting to auth');
+                    navigate('/auth');
+                    return;
+                }
+
+                const response = await fetch(`http://localhost:3001/api/auth/user/${token}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === 'success' && data.userData) {
+                        setUser(data.userData);
+
+                        // If user already has username, redirect to game
+                        if (data.userData.username && data.userData.username.trim() !== '') {
+                            navigate('/game');
+                            return;
+                        }
+                    } else {
+                        console.error('Invalid user data response');
+                        navigate('/auth');
+                        return;
+                    }
+                } else {
+                    console.error('Failed to load user data');
+                    navigate('/auth');
+                    return;
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                navigate('/auth');
+                return;
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadUserData();
+    }, [navigate]);
 
     const handleTrackToggle = (track) => {
         setSelectedTracks(prev => {
@@ -50,16 +124,58 @@ const OnboardingPage = () => {
             return;
         }
 
-        setIsSubmitting(true);
-
-        const result = await completeOnboarding(username.trim(), selectedTracks);
-
-        if (!result.success) {
-            setError(result.error || 'Failed to complete onboarding');
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setError('Authentication token not found. Please try again.');
+            return;
         }
 
-        setIsSubmitting(false);
+        setIsSubmitting(true);
+
+        try {
+            // Call the new token-based onboarding API
+            const response = await fetch('http://localhost:3001/api/auth/onboarding', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    token: token,
+                    did: user.did,
+                    username: username.trim(),
+                    tracks: selectedTracks
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.status === 'success') {
+                console.log('Onboarding completed successfully');
+                // Redirect to game
+                navigate('/game');
+            } else {
+                setError(data.message || 'Failed to complete onboarding');
+            }
+        } catch (error) {
+            console.error('Onboarding error:', error);
+            setError('Network error occurred. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
+
+    // Show loading state while fetching user data
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-b from-blue-900 to-purple-900 flex items-center justify-center p-4">
+                <div className="text-center text-white">
+                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
+                    <h2 className="text-2xl font-bold mb-2">Loading Your Profile...</h2>
+                    <p className="text-blue-200">Please wait while we prepare your onboarding</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-blue-900 to-purple-900 flex items-center justify-center p-4">
@@ -101,13 +217,13 @@ const OnboardingPage = () => {
                         {/* Tracks Selection */}
                         <div>
                             <label className="block text-lg font-semibold text-gray-700 mb-3 pixel-text">
-                                Select Your Blockchain Interests
+                                Select Your Web3 Interests
                             </label>
                             <p className="text-sm text-gray-600 mb-4 normal-text">
-                                Choose the blockchain ecosystems you're interested in (select as many as you like):
+                                Choose the blockchain ecosystems, protocols, and Web3 areas you're interested in (select as many as you like):
                             </p>
 
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-64 overflow-y-auto p-2 border rounded-lg bg-gray-50">
                                 {availableTracks.map((track) => (
                                     <label
                                         key={track}

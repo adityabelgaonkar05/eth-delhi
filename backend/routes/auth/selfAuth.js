@@ -152,6 +152,8 @@ router.post('/verify', async (req, res) => {
             // New user - create with DID as unique identifier
             isNewUser = true;
             needsOnboarding = true;
+
+            try {
             
             user = new User({
                 did: did, // Self.xyz DID as the unique identifier
@@ -173,13 +175,22 @@ router.post('/verify', async (req, res) => {
             });
             await user.save();
             
-            console.log('New user created:', {
-                did: user.did,
-                userId: user._id,
-                needsOnboarding: true
-            });
-        }
-        
+                console.log('New user created:', {
+                    did: user.did,
+                    userId: user._id,
+                    needsOnboarding: true
+                });
+                // End of try block for new user creation
+            } catch (error) {
+                console.error('user exists:');
+                return res.status(214).json({
+                    status: "error",
+                    result: false,
+                    reason: "Failed to create new user"
+                });
+            }
+        } // <-- Add this closing brace to properly close the 'else' block
+    
         // Store verification result in session storage for frontend polling
         if (sessionId) {
             verificationSessions.set(sessionId, {
@@ -307,7 +318,7 @@ router.get('/status/:did', async (req, res) => {
     }
 });
 
-// Complete user onboarding
+// Complete user onboarding (DID-based - legacy)
 router.post('/onboarding', async (req, res) => {
     try {
         const { did, username, tracks } = req.body;
@@ -379,6 +390,102 @@ router.post('/onboarding', async (req, res) => {
 
     } catch (error) {
         console.error('Onboarding error:', error);
+        
+        if (error.code === 11000) {
+            // Duplicate key error (username already exists)
+            return res.status(400).json({
+                status: 'fail',
+                message: 'Username already taken. Please choose a different username.'
+            });
+        }
+        
+        return res.status(500).json({
+            status: 'error',
+            message: 'Failed to complete onboarding'
+        });
+    }
+});
+
+// Complete user onboarding (Token-based - new method)
+router.post('/onboarding-token', async (req, res) => {
+    try {
+        const { token, username, tracks } = req.body;
+
+        // Validate required fields
+        if (!token || !username || !Array.isArray(tracks)) {
+            return res.status(400).json({
+                status: 'fail',
+                message: 'Token, username, and tracks array are required'
+            });
+        }
+
+        // Find user by MongoDB _id (token)
+        const user = await User.findById(token);
+        
+        if (!user) {
+            return res.status(404).json({
+                status: 'fail',
+                message: 'User not found. Invalid token.'
+            });
+        }
+
+        // Check if username is already taken by another user
+        const existingUsernameUser = await User.findOne({ 
+            username: username.toLowerCase(),
+            _id: { $ne: user._id } // Exclude current user
+        });
+
+        if (existingUsernameUser) {
+            return res.status(400).json({
+                status: 'fail',
+                message: 'Username already taken. Please choose a different username.'
+            });
+        }
+
+        // Update user with onboarding data
+        user.username = username.toLowerCase();
+        user.tracks = tracks;
+        user.onboardingCompleted = true;
+        user.onboardingDate = new Date();
+        user.gameData.lastActive = new Date();
+        await user.save();
+
+        console.log('User onboarding completed (token-based):', {
+            userId: user._id.toString(),
+            did: user.did,
+            username: user.username,
+            tracks: user.tracks
+        });
+
+        return res.status(200).json({
+            status: 'success',
+            message: 'Onboarding completed successfully',
+            userData: {
+                id: user._id.toString(),
+                did: user.did,
+                nationality: user.nationality,
+                gender: user.gender,
+                name: user.name,
+                username: user.username,
+                tracks: user.tracks,
+                reputation: user.reputation,
+                badges: user.badges,
+                nfts: user.nfts,
+                isVerified: user.isVerified,
+                onboardingCompleted: user.onboardingCompleted,
+                gameData: user.gameData
+            }
+        });
+
+    } catch (error) {
+        console.error('Token-based onboarding error:', error);
+        
+        if (error.name === 'CastError') {
+            return res.status(400).json({
+                status: 'fail',
+                message: 'Invalid token format'
+            });
+        }
         
         if (error.code === 11000) {
             // Duplicate key error (username already exists)

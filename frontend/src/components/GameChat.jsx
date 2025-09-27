@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { io } from 'socket.io-client';
+import { getUsernameColor } from '../utils/colorUtils';
 
-const GameChat = ({ room = "main", username = "Anonymous", isVisible = true }) => {
-  const [socket, setSocket] = useState(null);
+const GameChat = ({ room = "main", username = "Anonymous", isVisible = true, socket = null }) => {
+  // Remove local socket state since we're using the passed socket
   const [messages, setMessages] = useState([]);
   const [currentMessage, setCurrentMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -27,6 +27,20 @@ const GameChat = ({ room = "main", username = "Anonymous", isVisible = true }) =
     messageTimeoutsRef.current.set(messageId, timeout);
   }, []);
 
+  // Show welcome message with commands
+  useEffect(() => {
+    if (isVisible) {
+      const welcomeMessage = {
+        id: Date.now() + Math.random(),
+        username: 'System',
+        message: 'Commands: /pc <player_name> <message> - Send private message',
+        timestamp: new Date().toISOString(),
+        isSystemMessage: true
+      };
+      addMessage(welcomeMessage);
+    }
+  }, [isVisible, addMessage]);
+
   // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
@@ -34,29 +48,26 @@ const GameChat = ({ room = "main", username = "Anonymous", isVisible = true }) =
     };
   }, []);
 
-  // Initialize socket connection
+    // Initialize chat listeners on the existing socket
   useEffect(() => {
-    if (!isVisible) return;
+    if (!isVisible || !socket) return;
     
-    const newSocket = io('http://localhost:3001');
-    setSocket(newSocket);
+    console.log("Setting up chat listeners on existing socket:", socket.id);
 
-    // Join the room (this registers the player in the game)
-    newSocket.emit('joinRoom', room);
-    
-    // Wait a moment then request chat history
-    setTimeout(() => {
-      newSocket.emit('getChatHistory', room);
-    }, 1000);
-
-    // Listen for chat messages
-    newSocket.on('chatMessage', (message) => {
+    // Set up chat event listeners
+    socket.on('chatMessage', (message) => {
       console.log('💬 Received chat message:', message);
       addMessage(message);
     });
 
+    // Listen for private messages
+    socket.on('privateMessage', (message) => {
+      console.log('💌 Received private message:', message);
+      addMessage(message);
+    });
+
     // Listen for chat history (only show recent messages)
-    newSocket.on('chatHistory', (history) => {
+    socket.on('chatHistory', (history) => {
       console.log('📜 Received chat history:', history);
       // Only show last 5 messages from history
       const recentHistory = history.slice(-5);
@@ -64,32 +75,28 @@ const GameChat = ({ room = "main", username = "Anonymous", isVisible = true }) =
     });
 
     // Listen for chat errors
-    newSocket.on('chatError', (error) => {
+    socket.on('chatError', (error) => {
       console.error('💬 Chat error:', error);
       setChatError(error.message);
       setTimeout(() => setChatError(''), 5000);
     });
 
-    // Handle connection events
-    newSocket.on('connect', () => {
-      console.log('🔗 Connected to chat server');
-      setIsConnected(true);
-    });
+    // Handle connection events - socket is already connected
+    setIsConnected(socket.connected);
 
-    newSocket.on('disconnect', () => {
-      console.log('❌ Disconnected from chat server');
-      setIsConnected(false);
-    });
+    // Wait a moment then request chat history
+    setTimeout(() => {
+      socket.emit('getChatHistory', room);
+    }, 1000);
 
-    newSocket.on('connect_error', (error) => {
-      console.error('🚫 Socket connection error:', error);
-      setIsConnected(false);
-    });
-
+    // Clean up listeners on unmount
     return () => {
-      newSocket.close();
+      socket.off('chatMessage');
+      socket.off('privateMessage');
+      socket.off('chatHistory'); 
+      socket.off('chatError');
     };
-  }, [room, isVisible]);
+  }, [room, isVisible, socket, addMessage]);
 
   // Handle sending messages
   const sendMessage = useCallback((e) => {
@@ -109,6 +116,18 @@ const GameChat = ({ room = "main", username = "Anonymous", isVisible = true }) =
   // Handle input changes
   const handleInputChange = (e) => {
     setCurrentMessage(e.target.value);
+  };
+
+  // Check if current message is a command and needs help
+  const getCommandHint = () => {
+    const msg = currentMessage.trim();
+    if (msg === '/pc' || msg === '/pc ') {
+      return 'Usage: /pc <player_name> <message>';
+    }
+    if (msg.startsWith('/pc ') && msg.split(' ').length === 2) {
+      return 'Type your private message after the player name';
+    }
+    return null;
   };
 
   // Handle key presses
@@ -183,17 +202,57 @@ const GameChat = ({ room = "main", username = "Anonymous", isVisible = true }) =
                 animation: 'fadeInUp 0.3s ease-out'
               }}
             >
-              {/* Check if it's a system message (like "Herobrine joined the game") */}
+              {/* Check if it's a system message */}
               {msg.isSystemMessage ? (
                 <span className="text-yellow-400">
                   {msg.message}
                 </span>
+              ) : msg.isPrivate ? (
+                /* Private message formatting */
+                <div 
+                  className="border-l-2 pl-2 py-1"
+                  style={{
+                    borderColor: msg.isSenderConfirmation ? '#10B981' : '#8B5CF6',
+                    backgroundColor: msg.isSenderConfirmation ? 'rgba(16, 185, 129, 0.1)' : 'rgba(139, 92, 246, 0.1)'
+                  }}
+                >
+                  {msg.isSenderConfirmation ? (
+                    <>
+                      <span className="text-green-400 text-sm">→ To </span>
+                      <span 
+                        className="font-bold text-sm"
+                        style={{ color: getUsernameColor(msg.targetUsername) }}
+                      >
+                        {msg.targetUsername}
+                      </span>
+                      <span className="text-green-400 text-sm">: </span>
+                      <span className="text-white text-sm italic">
+                        {msg.message}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-purple-400 text-sm">← From </span>
+                      <span 
+                        className="font-bold text-sm"
+                        style={{ color: msg.playerColor || getUsernameColor(msg.username) }}
+                      >
+                        {msg.username}
+                      </span>
+                      <span className="text-purple-400 text-sm">: </span>
+                      <span className="text-white text-sm italic">
+                        {msg.message}
+                      </span>
+                    </>
+                  )}
+                </div>
               ) : (
+                /* Regular message formatting */
                 <>
                   <span className="text-white">&lt;</span>
                   <span 
                     className="font-bold"
-                    style={{ color: msg.playerColor || '#FFFFFF' }}
+                    style={{ color: msg.playerColor || getUsernameColor(msg.username) }}
                   >
                     {msg.username}
                   </span>
@@ -220,6 +279,13 @@ const GameChat = ({ room = "main", username = "Anonymous", isVisible = true }) =
                 border: '1px solid rgba(255, 255, 255, 0.1)'
               }}
             >
+              <span className="text-white text-base mr-1">&lt;</span>
+              <span 
+                className="font-bold text-base mr-1"
+                style={{ color: getUsernameColor(username) }}
+              >
+                {username}
+              </span>
               <span className="text-white text-base mr-2">&gt;</span>
               <input
                 ref={inputRef}
@@ -244,6 +310,19 @@ const GameChat = ({ room = "main", username = "Anonymous", isVisible = true }) =
               />
             </div>
           </form>
+          
+          {/* Command Hint */}
+          {getCommandHint() && (
+            <div 
+              className="mt-1 px-2 py-1 rounded text-xs"
+              style={{
+                backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                color: 'white'
+              }}
+            >
+              💡 {getCommandHint()}
+            </div>
+          )}
         </div>
       )}
 

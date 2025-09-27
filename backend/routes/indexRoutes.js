@@ -1,6 +1,6 @@
 const express = require("express");
 const authRoutes = require("./authRoutes");
-const walrusRoutes = require("./walrusRoutes");
+// const walrusRoutes = require("./walrusRoutes");
 const dashboardRoutes = require("./dashboardRoutes");
 const repRoutes = require("./repRoutes");
 

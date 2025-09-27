@@ -6,7 +6,8 @@ const SelfAuthentication = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [SelfComponents, setSelfComponents] = useState(null);
-    const { handleSelfVerificationSuccess, handleSelfVerificationError, error: authError } = useAuth();
+    const [isVerificationPending, setIsVerificationPending] = useState(false);
+    const { handleSelfVerificationSuccess, handleSelfVerificationError, handleVerificationComplete, error: authError } = useAuth();
 
     // Dynamically import Self components to avoid import issues
     useEffect(() => {
@@ -50,14 +51,19 @@ const SelfAuthentication = () => {
                     return;
                 }
 
-                // Generate a proper Ethereum address format
+                // Generate a session ID for this verification attempt
+                const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+                // Generate a proper Ethereum address format (required by Self Protocol)
                 const randomHex = Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
                 const userId = `0x${randomHex}`;
 
                 console.log('Initializing Self app with endpoint:', endpoint);
+                console.log('Using sessionId:', sessionId);
                 console.log('Using userId:', userId);
-                console.log('UserId length:', userId.length);
-                console.log('UserId format valid:', userId.startsWith('0x') && userId.length === 42);
+
+                // Store session ID for polling
+                localStorage.setItem('self_session_id', sessionId);
 
                 const app = new SelfComponents.SelfAppBuilder({
                     version: 2,
@@ -71,7 +77,8 @@ const SelfAuthentication = () => {
                     userDefinedData: JSON.stringify({
                         action: 'game_access',
                         timestamp: Date.now(),
-                        game: 'cryptoverse'
+                        game: 'cryptoverse',
+                        sessionId: sessionId
                     }),
                     disclosures: {
                         // Verification requirements - be more lenient for testing
@@ -99,13 +106,87 @@ const SelfAuthentication = () => {
 
     const handleSuccessfulVerification = async () => {
         try {
-            console.log('Self verification successful!');
+            console.log('Self verification successful! Waiting for backend processing...');
 
-            if (selfApp?.userId) {
-                handleSelfVerificationSuccess(selfApp.userId);
-            } else {
-                handleSelfVerificationError('Verification succeeded but user ID not available');
+            // Get the session ID we stored earlier
+            const sessionId = localStorage.getItem('self_session_id');
+            if (!sessionId) {
+                handleSelfVerificationError('Session ID not found. Please refresh and try again.');
+                return;
             }
+
+            // Poll the backend to check for completed verification using session ID
+            let attempts = 0;
+            const maxAttempts = 15; // Increased for more patient polling
+            const pollInterval = 2000; // 2 seconds
+
+            const pollForVerification = async () => {
+                attempts++;
+                console.log(`Polling session ${sessionId}, attempt ${attempts}/${maxAttempts}`);
+
+                try {
+                    const response = await fetch(`http://localhost:3001/api/auth/session/${sessionId}`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+
+                        if (data.status === 'success') {
+                            // Verification completed successfully
+                            console.log('Verification completed! Session data:', data);
+
+                            // Clean up session storage
+                            localStorage.removeItem('self_session_id');
+
+                            // Clear pending state
+                            setIsVerificationPending(false);
+                            
+                            // Handle complete verification data (includes token, user data, onboarding status)
+                            handleVerificationComplete(data);
+                            return;
+                        } else if (data.status === 'pending') {
+                            // Still processing, continue polling
+                            console.log('Verification still processing...');
+                            // Update loading state or show progress
+                        } else {
+                            // Error occurred
+                            handleSelfVerificationError(data.message || 'Verification failed');
+                            return;
+                        }
+                    }
+
+                    // Continue polling if not successful yet
+                    if (attempts >= maxAttempts) {
+                        setIsVerificationPending(false);
+                        handleSelfVerificationError('Verification timeout. The verification may have succeeded but took too long to process. Please refresh and check your account status.');
+                        return;
+                    }
+
+                    setTimeout(pollForVerification, pollInterval);
+
+                } catch (error) {
+                    console.error('Polling error:', error);
+
+                    if (attempts >= maxAttempts) {
+                        handleSelfVerificationError('Network error during verification check. Please refresh and try again.');
+                        return;
+                    }
+
+                    // Continue polling on network errors
+                    setTimeout(pollForVerification, pollInterval);
+                }
+            };
+
+            // Set verification pending state
+            setIsVerificationPending(true);
+            
+            // Start polling after a short delay to allow backend processing
+            setTimeout(pollForVerification, 1000);
+
         } catch (error) {
             console.error('Post-verification error:', error);
             handleSelfVerificationError('Verification completed but failed to process');
@@ -183,7 +264,13 @@ const SelfAuthentication = () => {
                     Scan the QR code with the Self app to verify your identity and access CryptoVerse Game.
                 </p>
 
-                {selfApp && SelfComponents.SelfQRcodeWrapper ? (
+                {isVerificationPending ? (
+                    <div className="flex flex-col items-center justify-center">
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mb-4"></div>
+                        <p className="text-lg font-semibold text-blue-600">Processing verification...</p>
+                        <p className="text-sm text-gray-500 mt-2">Please wait while we verify your identity</p>
+                    </div>
+                ) : selfApp && SelfComponents.SelfQRcodeWrapper ? (
                     <div className="flex justify-center">
                         <SelfComponents.SelfQRcodeWrapper
                             selfApp={selfApp}

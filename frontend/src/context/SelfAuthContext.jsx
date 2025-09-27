@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import UserOnboarding from '../components/UserOnboarding';
 
 const SelfAuthContext = createContext();
 
@@ -17,6 +18,9 @@ export const SelfAuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showUserOnboarding, setShowUserOnboarding] = useState(false);
+  const [pendingUserData, setPendingUserData] = useState(null);
+  const [userToken, setUserToken] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -75,65 +79,21 @@ export const SelfAuthProvider = ({ children }) => {
     }
   };
 
-  const handleSelfVerificationSuccess = async (userIdentifier) => {
+  const handleSelfVerificationSuccess = async (did) => {
     try {
       setError(null);
-      console.log('Self verification successful for:', userIdentifier);
+      console.log('Self verification successful for DID:', did);
 
-      // store this in local storage for later use
-      localStorage.setItem('self_user_identifier', userIdentifier);
+      // Store DID for reference
+      localStorage.setItem('self_user_did', did);
 
-      // settimeout for 1 second
-      setTimeout(() => {
-      }, 1000);
+      // The DID here is just a completion signal from the frontend polling
+      // The actual user data comes from the session polling response
+      // This is called when session polling finds verification complete
 
-      console.log('Navigating to /check-auth');
+      // No navigation here - the component handles the token and onboarding flow
+      console.log('Verification success handled, token should be stored by component');
 
-      navigate('/check-auth');
-
-      // Give backend time to process the verification
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      // Check verification status to get user data and token
-      const response = await fetch(`${API_URL}/auth/status/${userIdentifier}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-
-        if (data.exists && data.isVerified) {
-          // User exists and is verified, get full user data
-          const userResponse = await fetch(`${API_URL}/auth/user/${data.token}`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
-
-          if (userResponse.ok) {
-            const userData = await userResponse.json();
-            localStorage.setItem('authToken', data.token);
-            setUser(userData.userData);
-
-            // Check if user needs onboarding
-            if (!userData.userData.onboardingCompleted) {
-              navigate('/onboarding');
-            } else {
-              navigate('/game');
-            }
-          } else {
-            setError('Failed to get user data after verification.');
-          }
-        } else {
-          setError('Verification completed but user not found. Please try again.');
-        }
-      } else {
-        setError('Failed to check verification status. Please try again.');
-      }
     } catch (error) {
       console.error('Error handling Self verification:', error);
       setError('Failed to complete authentication. Please try again.');
@@ -159,7 +119,7 @@ export const SelfAuthProvider = ({ children }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userIdentifier: user.userIdentifier,
+          did: user.did,
           username,
           tracks
         }),
@@ -181,10 +141,47 @@ export const SelfAuthProvider = ({ children }) => {
     }
   };
 
+  const handleVerificationComplete = (sessionData) => {
+    console.log('Verification complete with session data:', sessionData);
+
+    // Store the token immediately
+    localStorage.setItem('authToken', sessionData.token);
+    setUserToken(sessionData.token);
+    setPendingUserData(sessionData.userData);
+
+    if (sessionData.needsOnboarding) {
+      // Show step-by-step onboarding modal
+      navigate('/onboarding');
+      // setShowUserOnboarding(true);
+    } else {
+      // User already completed onboarding, set user and navigate to game
+      setUser(sessionData.userData);
+      navigate('/game');
+    }
+  };
+
+  const handleOnboardingComplete = (completedUserData) => {
+    console.log('Onboarding completed:', completedUserData);
+    setUser(completedUserData);
+    setShowUserOnboarding(false);
+    setPendingUserData(null);
+    setUserToken(null);
+    navigate('/game');
+  };
+
+  const handleOnboardingClose = () => {
+    setShowUserOnboarding(false);
+    // Keep token and user data in case they want to complete onboarding later
+  };
+
   const logout = () => {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('self_user_did');
     setUser(null);
     setError(null);
+    setShowUserOnboarding(false);
+    setPendingUserData(null);
+    setUserToken(null);
     navigate('/auth');
   };
 
@@ -194,8 +191,14 @@ export const SelfAuthProvider = ({ children }) => {
     error,
     isAuthenticated: !!user,
     token: localStorage.getItem('authToken'),
+    showUserOnboarding,
+    pendingUserData,
+    userToken,
     handleSelfVerificationSuccess,
     handleSelfVerificationError,
+    handleVerificationComplete,
+    handleOnboardingComplete,
+    handleOnboardingClose,
     completeOnboarding,
     logout,
     checkAuth,
@@ -204,6 +207,16 @@ export const SelfAuthProvider = ({ children }) => {
   return (
     <SelfAuthContext.Provider value={value}>
       {children}
+      {/* Step-by-step User Onboarding Modal */}
+      {showUserOnboarding && (
+        <UserOnboarding
+          isOpen={showUserOnboarding}
+          onClose={handleOnboardingClose}
+          onComplete={handleOnboardingComplete}
+          userToken={userToken}
+          userData={pendingUserData}
+        />
+      )}
     </SelfAuthContext.Provider>
   );
 };

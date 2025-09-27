@@ -1,5 +1,5 @@
 class MultiPlayer {
-  constructor({ id, x, y, size, color = '#4CAF50', isLocal = false }) {
+  constructor({ id, x, y, size, color = '#4CAF50', isLocal = false, username = 'Player', walletAddress = null }) {
     this.id = id
     this.x = x
     this.y = y
@@ -7,10 +7,21 @@ class MultiPlayer {
     this.height = size
     this.color = color
     this.isLocal = isLocal
+    this.username = username
+    this.walletAddress = walletAddress
     this.velocity = { x: 0, y: 0 }
     this.center = {
       x: this.x + this.width / 2,
       y: this.y + this.height / 2,
+    }
+
+    // Click detection properties
+    this.isHovered = false
+    this.clickBounds = {
+      x: this.x - 5,
+      y: this.y - 20, // Include name tag area
+      width: this.width + 10,
+      height: this.height + 25
     }
 
     // Animation properties
@@ -121,6 +132,9 @@ class MultiPlayer {
       x: this.x + this.width / 2,
       y: this.y + this.height / 2,
     }
+
+    // Update click bounds
+    this.updateClickBounds()
   }
 
   updatePosition(x, y) {
@@ -129,6 +143,32 @@ class MultiPlayer {
     this.center = {
       x: this.x + this.width / 2,
       y: this.y + this.height / 2,
+    }
+    this.updateClickBounds()
+  }
+
+  updateClickBounds() {
+    this.clickBounds = {
+      x: this.x - 5,
+      y: this.y - 20, // Include name tag area
+      width: this.width + 10,
+      height: this.height + 25
+    }
+  }
+
+  // Check if a point is within the clickable area
+  containsPoint(x, y) {
+    return x >= this.clickBounds.x &&
+           x <= this.clickBounds.x + this.clickBounds.width &&
+           y >= this.clickBounds.y &&
+           y <= this.clickBounds.y + this.clickBounds.height
+  }
+
+  // Get screen coordinates for name tag positioning
+  getNameTagPosition(camera = { x: 0, y: 0 }) {
+    return {
+      x: this.x + this.width / 2 - camera.x,
+      y: this.y - camera.y
     }
   }
 

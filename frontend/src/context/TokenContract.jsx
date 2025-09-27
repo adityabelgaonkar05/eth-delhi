@@ -14,7 +14,7 @@ import tokenABI from "../contractData/CryptoVerseToken.json";
 export const TokenContext = createContext();
 
 const RPC =
-  import.meta.env.VITE_FLOW_RPC || "https://rest-testnet.onflow.org/v1";
+  import.meta.env.VITE_FLOW_RPC || "https://testnet.evm.nodes.onflow.org";
 const CHAINID = 545;
 
 const contractABI = tokenABI.abi;

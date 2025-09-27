@@ -193,6 +193,12 @@ io.on("connection", (socket) => {
   socket.on("sendChatMessage", (data) => {
     console.log(`Received chat message from ${socket.id}:`, data);
     
+    // Check if it's a private message command
+    if (data.message.trim().startsWith('/pc ')) {
+      handlePrivateMessage(socket, data);
+      return;
+    }
+    
     const room = data.room || currentRoom;
     const roomPlayers = playersByRoom.get(room);
     const roomMessages = chatMessagesByRoom.get(room);
@@ -230,6 +236,91 @@ io.on("connection", (socket) => {
     io.to(room).emit("chatMessage", chatMessage);
     console.log(`Chat message broadcasted to room ${room}: ${chatMessage.username}: ${chatMessage.message}`);
   });
+
+  // Handle private messages
+  function handlePrivateMessage(socket, data) {
+    const room = data.room || currentRoom;
+    const roomPlayers = playersByRoom.get(room);
+
+    // Only allow private messages from registered players
+    if (!roomPlayers || !roomPlayers.has(socket.id)) {
+      console.log(`Private message rejected - player ${socket.id} not registered in room ${room}`);
+      socket.emit("chatError", { message: "You must be registered in the game to use chat" });
+      return;
+    }
+
+    // Parse the private message command: /pc <username> <message>
+    const messageContent = data.message.trim().substring(4); // Remove '/pc '
+    const spaceIndex = messageContent.indexOf(' ');
+    
+    if (spaceIndex === -1) {
+      socket.emit("chatError", { message: "Usage: /pc <player_name> <message>" });
+      return;
+    }
+
+    const targetUsername = messageContent.substring(0, spaceIndex).trim();
+    const privateMessage = messageContent.substring(spaceIndex + 1).trim();
+
+    if (!targetUsername || !privateMessage) {
+      socket.emit("chatError", { message: "Usage: /pc <player_name> <message>" });
+      return;
+    }
+
+    // Find the target player in the same room
+    let targetSocketId = null;
+    let targetPlayer = null;
+
+    roomPlayers.forEach((player, socketId) => {
+      const playerUsername = player.username || `Player-${socketId.slice(-4)}`;
+      if (playerUsername.toLowerCase() === targetUsername.toLowerCase()) {
+        targetSocketId = socketId;
+        targetPlayer = player;
+      }
+    });
+
+    if (!targetSocketId) {
+      socket.emit("chatError", { 
+        message: `Player "${targetUsername}" not found in this room.` 
+      });
+      return;
+    }
+
+    if (targetSocketId === socket.id) {
+      socket.emit("chatError", { 
+        message: "You cannot send a private message to yourself!" 
+      });
+      return;
+    }
+
+    const senderPlayer = roomPlayers.get(socket.id);
+    const senderUsername = data.username || `Player-${socket.id.slice(-4)}`;
+
+    // Create private message object
+    const privateChatMessage = {
+      id: Date.now() + Math.random(),
+      playerId: socket.id,
+      playerColor: senderPlayer.color,
+      username: senderUsername,
+      message: privateMessage,
+      timestamp: new Date().toISOString(),
+      room: room,
+      isPrivate: true,
+      targetUsername: targetPlayer.username || `Player-${targetSocketId.slice(-4)}`,
+      targetPlayerId: targetSocketId
+    };
+
+    // Send to target player
+    io.to(targetSocketId).emit("privateMessage", privateChatMessage);
+    
+    // Send confirmation to sender
+    const senderConfirmation = {
+      ...privateChatMessage,
+      isSenderConfirmation: true
+    };
+    socket.emit("privateMessage", senderConfirmation);
+
+    console.log(`Private message sent from ${senderUsername} to ${targetPlayer.username || targetSocketId}: ${privateMessage}`);
+  }
 
   // Send chat history when player joins room
   socket.on("getChatHistory", (room) => {

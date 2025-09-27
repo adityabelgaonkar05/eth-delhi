@@ -9,6 +9,9 @@ const User = require('../../models/User');
 
 const router = express.Router();
 
+// In-memory storage for verification sessions (use Redis in production)
+const verificationSessions = new Map();
+
 // Create allowed attestation IDs map (accepting all document types)
 const AllIds = new Map([
     [ATTESTATION_ID.PASSPORT, true],
@@ -32,10 +35,11 @@ const selfBackendVerifier = new SelfBackendVerifier(
     'hex' // user identifier type - using hex for blockchain addresses
 );
 
-// Function to generate persistent unique identifier from DID
-function generateUniqueIdentifier(verification) {
+// Function to extract DID from Self.xyz verification payload
+function extractDIDFromVerification(verification) {
     try {
-        // Extract DID from verification payload
+        // Extract DID from Self.xyz verification payload
+        // The DID is the persistent unique identifier for each human
         const did = verification.subject?.id || verification.userData?.userIdentifier;
         
         if (!did) {
@@ -44,14 +48,11 @@ function generateUniqueIdentifier(verification) {
         
         console.log('Extracted DID:', did);
         
-        // Generate SHA256 hash for privacy and persistence
-        const uniqueIdentifier = crypto.createHash('sha256').update(did).digest('hex');
-        
-        console.log('Generated unique identifier:', uniqueIdentifier);
-        
-        return uniqueIdentifier;
+        // Return the raw DID as the unique identifier
+        // Optionally hash for privacy: crypto.createHash('sha256').update(did).digest('hex')
+        return did;
     } catch (error) {
-        console.error('Error generating unique identifier:', error);
+        console.error('Error extracting DID from verification:', error);
         throw error;
     }
 }
@@ -96,24 +97,41 @@ router.post('/verify', async (req, res) => {
             });
         }
 
-        // Generate persistent unique identifier from DID
-        const userIdentifier = generateUniqueIdentifier(result);
+        // Extract DID from Self.xyz verification payload
+        const did = extractDIDFromVerification(result);
         
-        // Extract other user data from Self verification
-        const { userDefinedData } = result.userData;
-        const { nationality, gender, name } = result.discloseOutput;    
+        // Extract user data from Self verification
+        const { userDefinedData } = result.userData || {};
+        const { nationality, gender, name } = result.discloseOutput || {};
+        const claims = result.subject?.claims || {};
+        
+        // Extract session ID from userDefinedData for session tracking
+        let sessionId = null;
+        try {
+            const parsedUserData = JSON.parse(userDefinedData || '{}');
+            sessionId = parsedUserData.sessionId;
+        } catch (e) {
+            console.log('Could not parse userDefinedData for session ID');
+        }
 
-        console.log('Self verification successful for userIdentifier:', userIdentifier);
+        console.log('Self verification successful for DID:', did);
+        if (sessionId) {
+            console.log('Session ID:', sessionId);
+        }
 
-        // Check if user already exists (1:1 mapping with Self identity)
-        let user = await User.findOne({ userIdentifier });
+        // Check if user already exists (1:1 mapping with Self DID)
+        let user = await User.findOne({ did: did });
         let isNewUser = false;
         let needsOnboarding = false;
+
+        console.log('did:', did);
+        // console.log('user did:', user.did);
         
         if (user) {
             // Existing user - update verification data and login
             user.isVerified = true;
             user.verificationDate = new Date();
+            user.claims = claims;
             user.nationality = nationality || user.nationality;
             user.gender = gender || user.gender;
             user.name = name || user.name || 'Anonymous';
@@ -126,33 +144,77 @@ router.post('/verify', async (req, res) => {
             needsOnboarding = !user.onboardingCompleted;
             
             console.log('Existing user login:', {
-                userIdentifier: user.userIdentifier,
+                did: user.did,
                 needsOnboarding,
                 onboardingCompleted: user.onboardingCompleted
             });
         } else {
-            // New user - create with verification data, needs onboarding
+            // New user - create with DID as unique identifier
             isNewUser = true;
             needsOnboarding = true;
             
             user = new User({
-                userIdentifier, // This is now the SHA256 hash of the DID
+                did: did, // Self.xyz DID as the unique identifier
                 isVerified: true,
                 verificationDate: new Date(),
+                claims: claims,
                 nationality,
                 gender,
                 name: name || 'Anonymous',
                 attestationId,
                 userDefinedData,
+                
+                // Default values for reputation system
+                reputation: 0,
+                badges: [],
+                nfts: [],
+                
                 onboardingCompleted: false
             });
             await user.save();
             
             console.log('New user created:', {
-                userIdentifier: user.userIdentifier,
+                did: user.did,
                 userId: user._id,
                 needsOnboarding: true
             });
+        }
+        
+        // Store verification result in session storage for frontend polling
+        if (sessionId) {
+            verificationSessions.set(sessionId, {
+                did: user.did,
+                token: user._id.toString(),
+                isNewUser,
+                needsOnboarding,
+                userData: {
+                    id: user._id.toString(),
+                    did: user.did,
+                    userDefinedData: user.userDefinedData,
+                    nationality: user.nationality,
+                    gender: user.gender,
+                    name: user.name,
+                    username: user.username,
+                    tracks: user.tracks,
+                    reputation: user.reputation,
+                    badges: user.badges,
+                    nfts: user.nfts,
+                    isVerified: user.isVerified,
+                    verificationDate: user.verificationDate,
+                    onboardingCompleted: user.onboardingCompleted,
+                    gameData: user.gameData,
+                    claims: user.claims
+                },
+                timestamp: Date.now()
+            });
+            
+            // Clean up old sessions (older than 1 hour)
+            const oneHourAgo = Date.now() - (60 * 60 * 1000);
+            for (const [key, value] of verificationSessions.entries()) {
+                if (value.timestamp < oneHourAgo) {
+                    verificationSessions.delete(key);
+                }
+            }
         }
 
         return res.status(200).json({
@@ -163,17 +225,24 @@ router.post('/verify', async (req, res) => {
             token: user._id.toString(), // MongoDB ID as auth token
             userData: {
                 id: user._id.toString(),
-                userIdentifier: user.userIdentifier,
+                did: user.did,
                 userDefinedData: user.userDefinedData,
                 nationality: user.nationality,
                 gender: user.gender,
                 name: user.name,
                 username: user.username,
                 tracks: user.tracks,
+                
+                // Reputation system
+                reputation: user.reputation,
+                badges: user.badges,
+                nfts: user.nfts,
+                
                 isVerified: user.isVerified,
                 verificationDate: user.verificationDate,
                 onboardingCompleted: user.onboardingCompleted,
-                gameData: user.gameData
+                gameData: user.gameData,
+                claims: user.claims
             }
         });
 
@@ -198,12 +267,12 @@ router.post('/verify', async (req, res) => {
     }
 });
 
-// Check user verification status
-router.get('/status/:userIdentifier', async (req, res) => {
+// Check user verification status by DID
+router.get('/status/:did', async (req, res) => {
     try {
-        const { userIdentifier } = req.params;
+        const { did } = req.params;
         
-        const user = await User.findOne({ userIdentifier });
+        const user = await User.findOne({ did });
         
         if (!user) {
             return res.json({
@@ -216,10 +285,15 @@ router.get('/status/:userIdentifier', async (req, res) => {
             isVerified: user.isVerified,
             exists: true,
             userData: user.isVerified ? {
-                userIdentifier: user.userIdentifier,
+                did: user.did,
                 nationality: user.nationality,
                 gender: user.gender,
                 name: user.name,
+                username: user.username,
+                tracks: user.tracks,
+                reputation: user.reputation,
+                badges: user.badges,
+                nfts: user.nfts,
                 verificationDate: user.verificationDate,
                 gameData: user.gameData
             } : null
@@ -236,20 +310,20 @@ router.get('/status/:userIdentifier', async (req, res) => {
 // Complete user onboarding
 router.post('/onboarding', async (req, res) => {
     try {
-        const { userIdentifier, username, tracks } = req.body;
+        const { did, username, tracks } = req.body;
 
         // Validate required fields
-        if (!userIdentifier || !username || !Array.isArray(tracks)) {
+        if (!did || !username || !Array.isArray(tracks)) {
             return res.status(400).json({
                 status: 'fail',
-                message: 'userIdentifier, username, and tracks array are required'
+                message: 'DID, username, and tracks array are required'
             });
         }
 
         // Check if username is already taken
         const existingUsernameUser = await User.findOne({ 
             username: username.toLowerCase(),
-            userIdentifier: { $ne: userIdentifier } // Exclude current user
+            did: { $ne: did } // Exclude current user
         });
 
         if (existingUsernameUser) {
@@ -259,8 +333,8 @@ router.post('/onboarding', async (req, res) => {
             });
         }
 
-        // Find user by userIdentifier and update onboarding info
-        const user = await User.findOne({ userIdentifier });
+        // Find user by DID and update onboarding info
+        const user = await User.findOne({ did });
         
         if (!user) {
             return res.status(404).json({
@@ -278,7 +352,7 @@ router.post('/onboarding', async (req, res) => {
         await user.save();
 
         console.log('User onboarding completed:', {
-            userIdentifier: user.userIdentifier,
+            did: user.did,
             username: user.username,
             tracks: user.tracks
         });
@@ -288,12 +362,15 @@ router.post('/onboarding', async (req, res) => {
             message: 'Onboarding completed successfully',
             userData: {
                 id: user._id.toString(),
-                userIdentifier: user.userIdentifier,
+                did: user.did,
                 nationality: user.nationality,
                 gender: user.gender,
                 name: user.name,
                 username: user.username,
                 tracks: user.tracks,
+                reputation: user.reputation,
+                badges: user.badges,
+                nfts: user.nfts,
                 isVerified: user.isVerified,
                 onboardingCompleted: user.onboardingCompleted,
                 gameData: user.gameData
@@ -340,12 +417,15 @@ router.get('/user/:token', async (req, res) => {
             status: 'success',
             userData: {
                 id: user._id.toString(),
-                userIdentifier: user.userIdentifier,
+                did: user.did,
                 nationality: user.nationality,
                 gender: user.gender,
                 name: user.name,
                 username: user.username,
                 tracks: user.tracks,
+                reputation: user.reputation,
+                badges: user.badges,
+                nfts: user.nfts,
                 isVerified: user.isVerified,
                 onboardingCompleted: user.onboardingCompleted,
                 gameData: user.gameData
@@ -365,6 +445,46 @@ router.get('/user/:token', async (req, res) => {
         return res.status(500).json({
             status: 'error',
             message: 'Failed to get user'
+        });
+    }
+});
+
+// Check verification status by session ID (for polling)
+router.get('/session/:sessionId', async (req, res) => {
+    try {
+        const { sessionId } = req.params;
+        
+        if (!sessionId) {
+            return res.status(400).json({
+                status: 'fail',
+                message: 'Session ID is required'
+            });
+        }
+        
+        const sessionData = verificationSessions.get(sessionId);
+        
+        if (!sessionData) {
+            return res.json({
+                status: 'pending',
+                message: 'Verification still processing or session not found'
+            });
+        }
+        
+        // Return the verification result
+        return res.json({
+            status: 'success',
+            did: sessionData.did,
+            token: sessionData.token,
+            isNewUser: sessionData.isNewUser,
+            needsOnboarding: sessionData.needsOnboarding,
+            userData: sessionData.userData
+        });
+        
+    } catch (error) {
+        console.error('Session check error:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Failed to check session status'
         });
     }
 });

@@ -19,8 +19,11 @@ import Workwithus from "./components/Workwithus";
 import ChatTest from "./components/ChatTest";
 import PetNFTShop from "./components/PetNFTShop";
 import LeaderboardsPage from "./components/LeaderboardsPage";
+import UserProfile from "./components/UserProfile";
+import ProfileSearch from "./components/ProfileSearch";
 import QuickNavigation from "./components/QuickNavigation";
 import OnboardingPage from "./components/OnboardingPage";
+import UserOnboarding from "./components/UserOnboarding";
 import "./App.css";
 import { WalletProvider } from "./context/WalletContext";
 import WalletSelector from "./components/WalletSelector";
@@ -32,74 +35,87 @@ import WalrusTest from "./components/WalrusTest";
 
 function App() {
   return (
-    <AuthProvider>
-      <WalletProvider>
-        <ContractProvider>
-          <TokenProvider>
-            <Router>
-              <SelfAuthProvider>
-                <div className="App">
-                  <Routes>
-                    {/* Public routes */}
-                    <Route path="/auth" element={<SelfAuthentication />} />
-                    <Route path="/" element={<LandingPage />} />
-                    <Route path="/business" element={<BusinessLanding />} />
-                    <Route path="/onboarding" element={<OnboardingPage />} />
+    // <AuthProvider> currently commented out for testing purposes
+    <WalletProvider>
+      <ContractProvider>
+        <TokenProvider>
+          <Router>
+            <SelfAuthProvider>
+              <div className="App">
+                <Routes>
+                  {/* Public routes */}
+                  <Route path="/auth" element={<SelfAuthentication />} />
+                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/business" element={<BusinessLanding />} />
+                  <Route path="/onboarding" element={<OnboardingPage />} />
 
-                    {/* Protected routes that require authentication and onboarding */}
-                    <Route path="/game" element={
-                      <AuthGuard>
-                        <MultiplayerGame />
-                      </AuthGuard>
-                    } />
-                    <Route path="/cinema" element={
-                      <AuthGuard>
-                        <Cinema />
-                      </AuthGuard>
-                    } />
-                    <Route path="/library" element={
-                      <AuthGuard>
-                        <Library />
-                      </AuthGuard>
-                    } />
-                    <Route path="/townhall" element={
-                      <AuthGuard>
-                        <Townhall />
-                      </AuthGuard>
-                    } />
+                  {/* Protected routes that require authentication and onboarding */}
+                  <Route path="/game" element={
+                    // <AuthGuard>
+                    <MultiplayerGame />
+                    // </AuthGuard>
+                  } />
+                  <Route path="/cinema" element={
+                    // <AuthGuard>
+                    <Cinema />
+                    // </AuthGuard>
+                  } />
+                  <Route path="/library" element={
+                    // <AuthGuard>
+                    <Library />
+                    // </AuthGuard>
+                  } />
+                  <Route path="/townhall" element={
+                    // <AuthGuard>
+                    <Townhall />
+                    // </AuthGuard>
+                  } />
 
-                    {/* Pet Shop route */}
-                    <Route path="/pets" element={
-                      <AuthGuard>
-                        <PetNFTShop />
-                      </AuthGuard>
-                    } />
+                  {/* Pet Shop route */}
+                  <Route path="/pets" element={
+                    // <AuthGuard>
+                    <PetNFTShop />
+                    // </AuthGuard>
+                  } />
 
-                    {/* Leaderboards route */}
-                    <Route path="/leaderboards" element={
-                      <AuthGuard>
-                        <LeaderboardsPage />
-                      </AuthGuard>
-                    } />
+                  {/* Leaderboards route */}
+                  <Route path="/leaderboards" element={
+                    // <AuthGuard>
+                    <LeaderboardsPage />
+                    // </AuthGuard>
+                  } />
 
-                    {/* Admin/work routes */}
-                    <Route path="/workwithus" element={<Workwithus />} />
-                    <Route path="/admin" element={<Workwithus />} />
+                  {/* Profile routes */}
+                  <Route path="/profile" element={
+                    // <AuthGuard>
+                    <UserProfile />
+                    // </AuthGuard>
+                  } />
 
-                    {/* Development/testing routes */}
-                    <Route path="/contractTesting" element={<ContractExample />} />
-                    {/* <Route path="wallet" element={<WalletSelector />} /> */}
-                  </Routes>
-                  
-                  {/* Quick Navigation - remove in production */}
-                  <QuickNavigation />
-                </div>
-              </SelfAuthProvider>
-            </Router>
-          </TokenProvider>
-        </ContractProvider>
-      </WalletProvider>
-    </AuthProvider>
+                  <Route path="/search-profile" element={
+                    // <AuthGuard>
+                    <ProfileSearch />
+                    // </AuthGuard>
+                  } />
+
+                  {/* Admin/work routes */}
+                  <Route path="/workwithus" element={<Workwithus />} />
+                  <Route path="/admin" element={<Workwithus />} />
+
+                  {/* Development/testing routes */}
+                  <Route path="/contractTesting" element={<ContractExample />} />
+                  {/* <Route path="wallet" element={<WalletSelector />} /> */}
+                </Routes>
+
+                {/* Quick Navigation - remove in production */}
+                <QuickNavigation />
+              </div>
+            </SelfAuthProvider>
+          </Router>
+        </TokenProvider>
+      </ContractProvider>
+    </WalletProvider>
+    // </AuthProvider >
   );
 }
 

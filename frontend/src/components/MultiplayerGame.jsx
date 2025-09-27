@@ -8,6 +8,9 @@ import Sprite from '../game/classes/Sprite'
 import GameChat from './GameChat'
 import TokenBalance from "./TokenBalance";
 import PlayerStatus from './PlayerStatus'
+import PlayerNameTag from './PlayerNameTag'
+import PlayerProfileModal from './PlayerProfileModal'
+import { getUsernameColor } from '../utils/colorUtils'
 import { 
   collisions, 
   l_New_Layer_1, 
@@ -51,6 +54,11 @@ const MultiplayerGame = () => {
   const [error, setError] = useState(null)
   const [connected, setConnected] = useState(false)
   const [playerCount, setPlayerCount] = useState(0)
+
+  // Player profile modal state
+  const [selectedPlayer, setSelectedPlayer] = useState(null)
+  const [showPlayerModal, setShowPlayerModal] = useState(false)
+  const [hoveredPlayer, setHoveredPlayer] = useState(null)
   const [playerCoords, setPlayerCoords] = useState({ x: 0, y: 0 })
   const [showLibraryPrompt, setShowLibraryPrompt] = useState(false)
   const [hasShownLibraryPrompt, setHasShownLibraryPrompt] = useState(false)
@@ -434,6 +442,13 @@ const MultiplayerGame = () => {
   // Initialize Socket.IO connection
   const initializeSocket = useCallback(() => {
     console.log("Initializing socket connection...");
+    
+    // Disconnect existing socket if it exists
+    if (socketRef.current) {
+      console.log("Disconnecting existing socket...");
+      socketRef.current.disconnect();
+    }
+    
     const socket = io("http://localhost:3001");
     socketRef.current = socket;
 
@@ -455,13 +470,17 @@ const MultiplayerGame = () => {
       // Create other players
       Object.entries(gameState.players).forEach(([playerId, playerData]) => {
         if (playerId !== socket.id) {
+          const username = playerData.username || 'Anonymous';
+          const userColor = getUsernameColor(username);
           const otherPlayer = new MultiPlayer({
             id: playerId,
             x: playerData.x,
             y: playerData.y,
             size: playerData.size,
-            color: playerData.color,
+            color: userColor,
             isLocal: false,
+            username: username,
+            walletAddress: playerData.walletAddress || null
           });
           otherPlayer.updateSprite(
             playerData.facing,
@@ -477,13 +496,17 @@ const MultiplayerGame = () => {
 
     socket.on("playerJoined", (playerData) => {
       console.log("Player joined:", playerData);
+      const username = playerData.username || 'Anonymous';
+      const userColor = getUsernameColor(username);
       const newPlayer = new MultiPlayer({
         id: playerData.id,
         x: playerData.x,
         y: playerData.y,
         size: playerData.size,
-        color: playerData.color,
+        color: userColor,
         isLocal: false,
+        username: username,
+        walletAddress: playerData.walletAddress || null
       });
       otherPlayersRef.current.set(playerData.id, newPlayer);
       setPlayerCount((prev) => prev + 1);
@@ -513,6 +536,62 @@ const MultiplayerGame = () => {
     return socket;
   }, []);
 
+  // Handle canvas clicks for player interaction
+  const handleCanvasClick = useCallback((event) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    // Check if click is on any other player
+    otherPlayersRef.current.forEach((player, playerId) => {
+      if (player.containsPoint(x, y)) {
+        console.log(`Clicked on player: ${player.username} (${playerId})`);
+        setSelectedPlayer({
+          id: playerId,
+          username: player.username || 'Anonymous',
+          address: player.walletAddress,
+          color: player.color
+        });
+        setShowPlayerModal(true);
+      }
+    });
+  }, []);
+
+  // Handle canvas mouse move for hover effects
+  const handleCanvasMouseMove = useCallback((event) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    let foundHover = null;
+    
+    // Check if mouse is over any other player
+    otherPlayersRef.current.forEach((player, playerId) => {
+      if (player.containsPoint(x, y)) {
+        foundHover = {
+          id: playerId,
+          username: player.username || 'Anonymous',
+          x: player.x + player.width / 2,
+          y: player.y,
+          color: player.color
+        };
+        canvas.style.cursor = 'pointer';
+      }
+    });
+
+    if (!foundHover) {
+      canvas.style.cursor = 'default';
+    }
+
+    setHoveredPlayer(foundHover);
+  }, []);
+
   // Initialize game objects
   const initializeGame = useCallback(async () => {
     console.log("initializeGame function called!");
@@ -532,6 +611,11 @@ const MultiplayerGame = () => {
       // Main map is 40 tiles wide × 20 tiles high, each tile is 16px
       canvas.width = 40 * 16 * dpr; // 640px
       canvas.height = 20 * 16 * dpr; // 320px
+
+      // Set up canvas event listeners for player interaction
+      canvas.addEventListener('click', handleCanvasClick);
+      canvas.addEventListener('mousemove', handleCanvasMouseMove);
+      canvas.style.cursor = 'default';
 
       // Create collision blocks
       const blockSize = 16;
@@ -757,9 +841,11 @@ const MultiplayerGame = () => {
     ctx.fillRect(258, 219, 13, 10) // Highlight the townhall entrance area (X: 253-265, Y: 219-229)
     
     // Draw local player
-    playerRef.current.draw(ctx);
+    if (playerRef.current) {
+      playerRef.current.draw(ctx);
+    }
 
-    // Draw other players
+    // Draw other players  
     otherPlayersRef.current.forEach((player) => {
       player.draw(ctx);
     });
@@ -868,6 +954,7 @@ const MultiplayerGame = () => {
   // Initialize game on component mount
   useEffect(() => {
     console.log("MultiplayerGame useEffect triggered - initializing game...");
+    
     const init = async () => {
       try {
         await initializeGame();
@@ -885,6 +972,12 @@ const MultiplayerGame = () => {
       }
       if (socketRef.current) {
         socketRef.current.disconnect();
+      }
+      // Cleanup canvas event listeners
+      const canvas = canvasRef.current;
+      if (canvas) {
+        canvas.removeEventListener('click', handleCanvasClick);
+        canvas.removeEventListener('mousemove', handleCanvasMouseMove);
       }
       // Cleanup cooldown timeout and interval
       if (cooldownTimeoutRef.current) {
@@ -1005,35 +1098,62 @@ const MultiplayerGame = () => {
           </div>
         </div>
 
-        {/* Player coordinates */}
+        {/* Player coordinates - positioned below TokenBalance */}
         <div
           style={{
             position: "absolute",
-            bottom: "10px",
-            right: "10px",
-            color: "white",
-            background: "rgba(0,0,0,0.7)",
-            padding: "8px",
-            borderRadius: "5px",
-            fontSize: "12px",
+            top: "108px", // 32px (TokenBalance top) + 60px (TokenBalance height) + 16px (gap)
+            right: "32px", // Same right position as TokenBalance
             fontFamily: "monospace",
+            fontSize: "11px",
+            lineHeight: "1.1",
+            backgroundColor: "#2a1810",
+            border: "3px solid #8b4513",
+            borderRadius: "0",
+            boxShadow: "6px 6px 0px #1a0f08, inset 2px 2px 0px #d2b48c, inset -2px -2px 0px #654321",
+            width: "160px",
+            height: "50px",
+            padding: "8px 12px",
+            imageRendering: "pixelated",
+            textShadow: "2px 2px 0px #1a0f08",
+            textAlign: "center",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            transform: "scale(1)",
+            transformOrigin: "top right"
           }}
         >
-          <div>X: {Math.round(playerCoords.x)}</div>
-          <div>Y: {Math.round(playerCoords.y)}</div>
-          {libraryPromptCooldown && (
-            <div style={{ color: '#ff6b6b', fontSize: '10px', marginTop: '2px' }}>
-              Library cooldown: {cooldownTimeLeft}s
-            </div>
-          )}
-          {cinemaPromptCooldown && (
-            <div style={{ color: '#ff6b6b', fontSize: '10px', marginTop: '2px' }}>
-              Cinema cooldown: {cinemaCooldownTimeLeft}s
-            </div>
-          )}
-          {townhallPromptCooldown && (
-            <div style={{ color: '#ff6b6b', fontSize: '10px', marginTop: '2px' }}>
-              Townhall cooldown: {townhallCooldownTimeLeft}s
+          {/* Medieval decorative border pattern */}
+          <div style={{
+            position: "absolute",
+            top: "2px",
+            left: "2px",
+            right: "2px",
+            height: "2px",
+            background: "linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)",
+            imageRendering: "pixelated"
+          }} />
+          <div style={{
+            position: "absolute",
+            bottom: "2px",
+            left: "2px",
+            right: "2px",
+            height: "2px",
+            background: "linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)",
+            imageRendering: "pixelated"
+          }} />
+          
+          <div style={{ color: "#d2b48c", marginBottom: "4px", fontWeight: "bold" }}>📍 COORDS 📍</div>
+          <div style={{ color: "#44ff44", fontWeight: "bold", fontSize: "10px" }}>
+            X: {Math.round(playerCoords.x)} Y: {Math.round(playerCoords.y)}
+          </div>
+          {(libraryPromptCooldown || cinemaPromptCooldown || townhallPromptCooldown) && (
+            <div style={{ color: '#ff6b6b', fontSize: '8px', marginTop: '2px' }}>
+              {libraryPromptCooldown && `Library: ${cooldownTimeLeft}s`}
+              {cinemaPromptCooldown && `Cinema: ${cinemaCooldownTimeLeft}s`}
+              {townhallPromptCooldown && `Townhall: ${townhallCooldownTimeLeft}s`}
             </div>
           )}
         </div>
@@ -1396,6 +1516,38 @@ const MultiplayerGame = () => {
         room="main"
         username="Player"
         isVisible={true}
+        socket={socketRef.current}
+      />
+
+      {/* Player Name Tags */}
+      {hoveredPlayer && (
+        <PlayerNameTag
+          username={hoveredPlayer.username}
+          x={hoveredPlayer.x}
+          y={hoveredPlayer.y}
+          isVisible={true}
+          onClick={() => {
+            setSelectedPlayer({
+              id: hoveredPlayer.id,
+              username: hoveredPlayer.username,
+              address: null, // Will be fetched in modal
+              color: hoveredPlayer.color
+            });
+            setShowPlayerModal(true);
+          }}
+          userColor={hoveredPlayer.color}
+        />
+      )}
+
+      {/* Player Profile Modal */}
+      <PlayerProfileModal
+        isOpen={showPlayerModal}
+        onClose={() => {
+          setShowPlayerModal(false);
+          setSelectedPlayer(null);
+        }}
+        playerData={selectedPlayer}
+        userColor={selectedPlayer?.color}
       />
     </div>
   );

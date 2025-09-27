@@ -2,6 +2,7 @@ const express = require("express");
 const authRoutes = require("./authRoutes");
 const walrusRoutes = require("./walrusRoutes");
 const dashboardRoutes = require("./dashboardRoutes");
+const repRoutes = require("./repRoutes");
 
 const indexRouter = express.Router();
 
@@ -9,10 +10,13 @@ const indexRouter = express.Router();
 indexRouter.use("/auth", authRoutes);
 
 // Walrus storage routes (primary for hackathon)
-indexRouter.use("/walrus", walrusRoutes);
+// indexRouter.use("/walrus", walrusRoutes);
 
 // Dashboard routes
 indexRouter.use("/dashboard", dashboardRoutes);
+
+//reputation system related routes
+indexRouter.use("/rep", repRoutes);
 
 // Health check route
 indexRouter.get("/health", (req, res) => {

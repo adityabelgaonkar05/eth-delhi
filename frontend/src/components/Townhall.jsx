@@ -12,7 +12,7 @@ import {
   townhall_l_New_Layer_4,
   townhall_l_New_Layer_6,
   townhall_l_New_Layer_7,
-} from '../game/data/townhallData'
+} from '../game/data/townhallDataNew'
 import { loadImage } from '../game/utils/gameUtils'
 
 const Townhall = () => {
@@ -248,9 +248,9 @@ const Townhall = () => {
 
     try {
       const dpr = window.devicePixelRatio || 1
-      // Townhall map is 20 tiles wide × 22 tiles high, each tile is 16px
-      canvas.width = (20 * 16) * dpr  // 320px
-      canvas.height = (22 * 16) * dpr // 352px
+      // Townhall map is 40 tiles wide × 20 tiles high, each tile is 16px
+      canvas.width = (40 * 16) * dpr  // 640px
+      canvas.height = (20 * 16) * dpr // 320px
 
       // Create collision blocks for townhall
       const blockSize = 16
@@ -273,7 +273,7 @@ const Townhall = () => {
 
       // Create player (townhall starting position)
       playerRef.current = new Player({
-        x: 150,
+        x: 300,
         y: 250,
         size: 15,
       })
@@ -482,8 +482,8 @@ const Townhall = () => {
             border: '2px solid #fff',
             backgroundColor: '#16213e',
             display: isLoading || error ? 'none' : 'block',
-            width: '320px',
-            height: '352px'
+            width: '640px',
+            height: '320px'
           }}
         />
         <div style={{ 
@@ -500,8 +500,8 @@ const Townhall = () => {
             display: 'flex', 
             justifyContent: 'center', 
             alignItems: 'center', 
-            height: '352px',
-            width: '320px',
+            height: '320px',
+            width: '640px',
             fontSize: '18px',
             color: 'red',
             border: '2px solid #fff',
@@ -516,8 +516,8 @@ const Townhall = () => {
             display: 'flex', 
             justifyContent: 'center', 
             alignItems: 'center', 
-            height: '352px',
-            width: '320px',
+            height: '320px',
+            width: '640px',
             fontSize: '18px',
             color: 'white',
             border: '2px solid #fff',

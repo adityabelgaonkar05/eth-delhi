@@ -73,6 +73,9 @@ const playersByRoom = new Map();
 // Game state by room
 const gameStateByRoom = new Map();
 
+// Store chat messages by room (keep last 50 messages per room)
+const chatMessagesByRoom = new Map();
+
 // Initialize room if it doesn't exist
 const initializeRoom = (room) => {
   if (!playersByRoom.has(room)) {
@@ -83,6 +86,9 @@ const initializeRoom = (room) => {
       players: {},
       lastUpdate: Date.now(),
     });
+  }
+  if (!chatMessagesByRoom.has(room)) {
+    chatMessagesByRoom.set(room, []);
   }
 };
 
@@ -180,6 +186,71 @@ io.on("connection", (socket) => {
           ...data,
         });
       }
+    }
+  });
+
+  // Handle chat messages
+  socket.on("sendChatMessage", (data) => {
+    console.log(`Received chat message from ${socket.id}:`, data);
+    
+    const room = data.room || currentRoom;
+    const roomPlayers = playersByRoom.get(room);
+    const roomMessages = chatMessagesByRoom.get(room);
+
+    // Only allow chat from registered players
+    if (!roomPlayers || !roomPlayers.has(socket.id)) {
+      console.log(`Chat message rejected - player ${socket.id} not registered in room ${room}`);
+      socket.emit("chatError", { message: "You must be registered in the game to use chat" });
+      return;
+    }
+
+    // Initialize room if it doesn't exist
+    initializeRoom(room);
+    
+    const updatedRoomMessages = chatMessagesByRoom.get(room);
+    const player = roomPlayers.get(socket.id);
+
+    const chatMessage = {
+      id: Date.now() + Math.random(), // Unique ID
+      playerId: socket.id,
+      playerColor: player.color,
+      username: data.username || `Player-${socket.id.slice(-4)}`,
+      message: data.message.trim(),
+      timestamp: new Date().toISOString(),
+      room: room
+    };
+
+    // Add message to room history (keep last 50 messages)
+    updatedRoomMessages.push(chatMessage);
+    if (updatedRoomMessages.length > 50) {
+      updatedRoomMessages.shift(); // Remove oldest message
+    }
+
+    // Broadcast message to all players in the room
+    io.to(room).emit("chatMessage", chatMessage);
+    console.log(`Chat message broadcasted to room ${room}: ${chatMessage.username}: ${chatMessage.message}`);
+  });
+
+  // Send chat history when player joins room
+  socket.on("getChatHistory", (room) => {
+    const targetRoom = room || currentRoom;
+    const roomPlayers = playersByRoom.get(targetRoom);
+    
+    // Only send chat history to registered players
+    if (!roomPlayers || !roomPlayers.has(socket.id)) {
+      console.log(`Chat history request rejected - player ${socket.id} not registered in room ${targetRoom}`);
+      return;
+    }
+    
+    console.log(`Sending chat history for room ${targetRoom} to ${socket.id}`);
+    
+    // Initialize room if it doesn't exist
+    initializeRoom(targetRoom);
+    
+    const roomMessages = chatMessagesByRoom.get(targetRoom);
+    if (roomMessages) {
+      socket.emit("chatHistory", roomMessages);
+      console.log(`Sent ${roomMessages.length} messages to ${socket.id}`);
     }
   });
 

@@ -14,6 +14,7 @@ import Cinema from "./components/Cinema";
 import Library from "./components/Library";
 import Townhall from "./components/Townhall";
 import Workwithus from "./components/Workwithus";
+import ChatTest from "./components/ChatTest";
 import "./App.css";
 import { WalletProvider } from "./context/WalletContext";
 import { AuthProvider } from "./context/AuthContext";

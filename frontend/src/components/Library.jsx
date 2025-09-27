@@ -3,6 +3,7 @@ import { io } from 'socket.io-client'
 import Player from '../game/classes/Player'
 import MultiPlayer from '../game/classes/MultiPlayer'
 import CollisionBlock from '../game/classes/CollisionBlock'
+import GameChat from './GameChat'
 import { 
   libraryCollisions,
   library_l_New_Layer_2, 
@@ -746,6 +747,13 @@ const Library = () => {
           </div>
         )}
       </div>
+
+      {/* Game Chat */}
+      <GameChat
+        room="library"
+        username="Reader"
+        isVisible={true}
+      />
     </div>
   )
 }

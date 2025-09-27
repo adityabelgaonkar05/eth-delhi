@@ -1,28 +1,29 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from 'react-router-dom'
-import { io } from "socket.io-client";
-import Player from "../game/classes/Player";
-import MultiPlayer from "../game/classes/MultiPlayer";
-import CollisionBlock from "../game/classes/CollisionBlock";
-import Sprite from "../game/classes/Sprite";
+import { io } from 'socket.io-client'
+import Player from '../game/classes/Player'
+import MultiPlayer from '../game/classes/MultiPlayer'
+import CollisionBlock from '../game/classes/CollisionBlock'
+import Sprite from '../game/classes/Sprite'
+import GameChat from './GameChat'
 import TokenBalance from "./TokenBalance";
-import {
-  collisions,
-  l_New_Layer_1,
-  l_New_Layer_2,
-  l_New_Layer_3,
-  l_New_Layer_4,
-  l_New_Layer_5,
-  l_New_Layer_6,
-  l_New_Layer_7,
-  l_New_Layer_8,
-  l_New_Layer_9,
-  l_New_Layer_10,
-  l_New_Layer_11,
-  l_New_Layer_12,
-  l_New_Layer_13,
-} from "../game/data/gameData";
-import { loadImage } from "../game/utils/gameUtils";
+import { 
+  collisions, 
+  l_New_Layer_1, 
+  l_New_Layer_2, 
+  l_New_Layer_3, 
+  l_New_Layer_4, 
+  l_New_Layer_5, 
+  l_New_Layer_6, 
+  l_New_Layer_7, 
+  l_New_Layer_8, 
+  l_New_Layer_9, 
+  l_New_Layer_10, 
+  l_New_Layer_11, 
+  l_New_Layer_12, 
+  l_New_Layer_13 
+} from '../game/data/gameData'
+import { loadImage } from '../game/utils/gameUtils'
 
 const MultiplayerGame = () => {
   console.log("MultiplayerGame component rendering...");
@@ -1232,6 +1233,13 @@ const MultiplayerGame = () => {
           </div>
         )}
       </div>
+
+      {/* Game Chat */}
+      <GameChat
+        room="main"
+        username="Player"
+        isVisible={true}
+      />
     </div>
   );
 };

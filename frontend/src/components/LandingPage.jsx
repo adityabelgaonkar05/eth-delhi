@@ -5,11 +5,20 @@ import bgMiddle from "../assets/bg-middle.png";
 import bgEnd from "../assets/bg-end.png";
 import bgFooter from "../assets/bg-footer.png";
 import logoCryptoverse from "../assets/logo-cryptoverse.png";
+import { useWallet } from "../context/WalletContext";
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const { fetchWallet } = useWallet();
 
   const handleGameClick = () => {
+    navigate("/game");
+  };
+
+  const handleNavigateGame = async () => {
+    console.log("Connecting to wallet...");
+    await fetchWallet();
+    console.log("Wallet connected...");
     navigate("/game");
   };
 
@@ -81,7 +90,7 @@ const LandingPage = () => {
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
             <button
               className="arcade-button pixel-text text-lg px-8 py-4"
-              onClick={() => navigate("/game")}
+              onClick={() => handleNavigateGame()}
             >
               ENTER WORLD
             </button>

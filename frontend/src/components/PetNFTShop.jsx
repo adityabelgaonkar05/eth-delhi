@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { ethers } from "ethers";
 import { useWallet } from "../context/WalletContext";
 import {
-  useContracts,
   useCryptoVersePetNFT,
   useCryptoVerseToken,
 } from "../context/ContractContext";
@@ -11,8 +10,7 @@ import {
 import walrusData from "../contractData/WalrusVerifiedUpload.json";
 
 const PetNFTShop = () => {
-  const { account, signer } = useWallet();
-  const { contracts } = useContracts();
+  const { fetchWallet, account, signer, isConnecting } = useWallet();
   const { contract: petNFTContract } = useCryptoVersePetNFT();
   const { contract: cvrsTokenContract } = useCryptoVerseToken();
   const [pets, setPets] = useState([]);
@@ -21,7 +19,9 @@ const PetNFTShop = () => {
   const [purchasing, setPurchasing] = useState(null);
   const [cvrsBalance, setCvrsBalance] = useState("0");
   const [cvrsAllowance, setCvrsAllowance] = useState("0");
-  const [needsApproval, setNeedsApproval] = useState(false);
+  const [, setNeedsApproval] = useState(false);
+  const [error, setError] = useState(null);
+  const [walletConnected, setWalletConnected] = useState(false);
 
   const tierColors = {
     0: {
@@ -61,43 +61,85 @@ const PetNFTShop = () => {
     return acc;
   }, {});
 
-  useEffect(() => {
-    if (petNFTContract && cvrsTokenContract && account) {
-      loadPetData();
-      loadUserData();
-    }
-  }, [petNFTContract, cvrsTokenContract, account]);
-
-  const loadPetData = async () => {
+  const loadPetData = useCallback(async () => {
+    console.log("Loading pet data");
     try {
+      setError(null);
+
       // Get available pets
       const [tokenIds, availablePets] = await petNFTContract.getAvailablePets();
+
+      if (!tokenIds || tokenIds.length === 0) {
+        console.log("No pets available");
+        setPets([]);
+        setLoading(false);
+        return;
+      }
 
       const petData = await Promise.all(
         tokenIds.map(async (tokenId, index) => {
           const pet = availablePets[index];
           return {
             tokenId: tokenId.toString(),
-            name: pet.name,
-            description: pet.description,
-            tier: pet.tier,
-            price: ethers.formatEther(pet.price),
-            isForSale: pet.isForSale,
-            image: petImages[tokenId.toString()],
+            name: pet.name || `Pet #${tokenId}`,
+            description: pet.description || "A digital companion",
+            tier: pet.tier || 0,
+            price: ethers.formatEther(pet.price || 0),
+            isForSale: pet.isForSale !== undefined ? pet.isForSale : true,
+            image:
+              petImages[tokenId.toString()] || `/images/pet${tokenId}.webp`,
           };
         })
       );
 
       setPets(petData);
-      setLoading(false);
+      console.log(`Loaded ${petData.length} pets successfully`);
     } catch (error) {
       console.error("Error loading pet data:", error);
-      setLoading(false);
-    }
-  };
+      setError(`Failed to load pets: ${error.message}`);
 
-  const loadUserData = async () => {
+      // Fallback to cached data
+      try {
+        const fallbackPets = walrusData.assets.map((asset) => ({
+          tokenId: asset.petId.toString(),
+          name: asset.name,
+          description: `A ${asset.tier.toLowerCase()} tier companion`,
+          tier:
+            asset.tier === "COMMON"
+              ? 0
+              : asset.tier === "RARE"
+              ? 1
+              : asset.tier === "EPIC"
+              ? 2
+              : 3,
+          price:
+            asset.tier === "COMMON"
+              ? "100"
+              : asset.tier === "RARE"
+              ? "250"
+              : asset.tier === "EPIC"
+              ? "500"
+              : "1000",
+          isForSale: true,
+          image: asset.imageUrl,
+        }));
+        setPets(fallbackPets);
+        setError("Using cached pet data (contract unavailable)");
+      } catch (fallbackError) {
+        console.error("Fallback failed:", fallbackError);
+      }
+    } finally {
+      setLoading(false);
+      console.log("Pet data loading completed");
+    }
+  }, [petNFTContract, petImages]);
+
+  const loadUserData = useCallback(async () => {
     try {
+      if (!account || !cvrsTokenContract || !petNFTContract) {
+        return;
+      }
+
       // Get CVRS balance
       const balance = await cvrsTokenContract.balanceOf(account);
       setCvrsBalance(ethers.formatEther(balance));
@@ -112,21 +154,113 @@ const PetNFTShop = () => {
 
       // Get user's pets
       const userTokens = await petNFTContract.getUserPets(account);
-      const userPetData = await Promise.all(
-        userTokens.map(async (tokenId) => {
-          const pet = await petNFTContract.getPetDetails(tokenId);
-          return {
-            tokenId: tokenId.toString(),
-            name: pet.name,
-            tier: pet.tier,
-            image: petImages[tokenId.toString()],
-          };
-        })
-      );
-
-      setUserPets(userPetData);
+      if (userTokens && userTokens.length > 0) {
+        const userPetData = await Promise.all(
+          userTokens.map(async (tokenId) => {
+            try {
+              const pet = await petNFTContract.getPetDetails(tokenId);
+              return {
+                tokenId: tokenId.toString(),
+                name: pet.name || `Pet #${tokenId}`,
+                tier: pet.tier || 0,
+                image:
+                  petImages[tokenId.toString()] || `/images/pet${tokenId}.webp`,
+              };
+            } catch (error) {
+              console.error(`Error loading pet ${tokenId}:`, error);
+              return null;
+            }
+          })
+        );
+        setUserPets(userPetData.filter((pet) => pet !== null));
+      } else {
+        setUserPets([]);
+      }
     } catch (error) {
       console.error("Error loading user data:", error);
+      // Don't show error for user data, just log it
+    }
+  }, [account, cvrsTokenContract, petNFTContract, petImages]);
+
+  // Check wallet connection and network
+  useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        if (!account) {
+          setWalletConnected(false);
+          setLoading(false);
+          return;
+        }
+
+        setWalletConnected(true);
+
+        // Check if we're on the correct network (Flow testnet)
+        if (window.ethereum) {
+          const chainId = await window.ethereum.request({
+            method: "eth_chainId",
+          });
+          if (chainId !== "0x221") {
+            setError("Please switch to Flow Testnet (Chain ID: 0x221)");
+            setLoading(false);
+            return;
+          }
+        }
+
+        // Load data if contracts are available
+        if (petNFTContract && cvrsTokenContract) {
+          await loadPetData();
+          await loadUserData();
+        } else {
+          setError("Smart contracts not loaded. Please refresh the page.");
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error("Connection check failed:", err);
+        setError("Failed to check wallet connection");
+        setLoading(false);
+      }
+    };
+
+    checkConnection();
+  }, [account, petNFTContract, cvrsTokenContract, loadPetData, loadUserData]);
+
+  // Network switching function
+  const switchToFlowTestnet = async () => {
+    try {
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: "0x221" }],
+      });
+    } catch (switchError) {
+      if (switchError.code === 4902) {
+        // Add the chain if it doesn't exist
+        try {
+          await window.ethereum.request({
+            method: "wallet_addEthereumChain",
+            params: [
+              {
+                chainId: "0x221",
+                chainName: "Flow Testnet",
+                rpcUrls: ["https://testnet.evm.nodes.onflow.org"],
+                nativeCurrency: {
+                  name: "FLOW",
+                  symbol: "FLOW",
+                  decimals: 18,
+                },
+                blockExplorerUrls: ["https://testnet.flowscan.io"],
+              },
+            ],
+          });
+        } catch (addError) {
+          console.error("Failed to add Flow testnet:", addError);
+          alert("Failed to add Flow testnet. Please add it manually.");
+        }
+      } else {
+        console.error("Failed to switch network:", switchError);
+        alert(
+          "Failed to switch network. Please switch to Flow testnet manually."
+        );
+      }
     }
   };
 
@@ -189,7 +323,8 @@ const PetNFTShop = () => {
     }
   };
 
-  if (loading) {
+  // Show wallet connection prompt
+  if (!walletConnected) {
     return (
       <div
         className="flex items-center justify-center min-h-screen"
@@ -202,9 +337,149 @@ const PetNFTShop = () => {
         }}
       >
         <div
-          className="animate-spin rounded-full h-12 w-12 border-b-2"
+          style={{
+            backgroundColor: "#2a1810",
+            border: "3px solid #ffd700",
+            borderRadius: "0",
+            boxShadow: "6px 6px 0px #1a0f08, inset 2px 2px 0px #ffd700",
+            padding: "40px",
+            textAlign: "center",
+            maxWidth: "500px",
+          }}
+        >
+          <h2
+            style={{
+              color: "#ffd700",
+              fontSize: "1.5rem",
+              marginBottom: "20px",
+            }}
+          >
+            🔗 Connect Your Wallet
+          </h2>
+          <p style={{ color: "#d2b48c", marginBottom: "30px" }}>
+            Connect your wallet to view and purchase digital pets
+          </p>
+          <button
+            onClick={fetchWallet}
+            disabled={isConnecting}
+            style={{
+              backgroundColor: isConnecting ? "#666" : "#44ff44",
+              color: "#1a0f08",
+              border: "2px solid #8b4513",
+              padding: "15px 30px",
+              cursor: isConnecting ? "not-allowed" : "pointer",
+              fontFamily: "monospace",
+              fontWeight: "bold",
+              fontSize: "1.1rem",
+              borderRadius: "0",
+              opacity: isConnecting ? 0.6 : 1,
+            }}
+          >
+            {isConnecting ? "Connecting..." : "Connect Wallet"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error && !loading) {
+    return (
+      <div
+        className="flex items-center justify-center min-h-screen"
+        style={{
+          fontFamily: "monospace",
+          backgroundImage: "url(/src/assets/bg-sections.png)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+      >
+        <div
+          style={{
+            backgroundColor: "#2a1810",
+            border: "3px solid #ff6b6b",
+            borderRadius: "0",
+            boxShadow: "6px 6px 0px #1a0f08, inset 2px 2px 0px #ff6b6b",
+            padding: "30px",
+            textAlign: "center",
+            maxWidth: "600px",
+          }}
+        >
+          <h2
+            style={{
+              color: "#ff6b6b",
+              fontSize: "1.5rem",
+              marginBottom: "20px",
+            }}
+          >
+            🚨 Error
+          </h2>
+          <p style={{ color: "#d2b48c", marginBottom: "30px" }}>{error}</p>
+          <div
+            style={{
+              display: "flex",
+              gap: "10px",
+              justifyContent: "center",
+              flexWrap: "wrap",
+            }}
+          >
+            <button
+              onClick={() => window.location.reload()}
+              style={{
+                backgroundColor: "#44ff44",
+                color: "#1a0f08",
+                border: "2px solid #8b4513",
+                padding: "10px 20px",
+                cursor: "pointer",
+                fontFamily: "monospace",
+                fontWeight: "bold",
+              }}
+            >
+              🔄 Refresh
+            </button>
+            {error.includes("Flow Testnet") && (
+              <button
+                onClick={switchToFlowTestnet}
+                style={{
+                  backgroundColor: "#6b6bff",
+                  color: "#ffffff",
+                  border: "2px solid #8b4513",
+                  padding: "10px 20px",
+                  cursor: "pointer",
+                  fontFamily: "monospace",
+                  fontWeight: "bold",
+                }}
+              >
+                🌐 Switch Network
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div
+        className="flex flex-col items-center justify-center min-h-screen"
+        style={{
+          fontFamily: "monospace",
+          backgroundImage: "url(/src/assets/bg-sections.png)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+      >
+        <div
+          className="animate-spin rounded-full h-12 w-12 border-b-2 mb-4"
           style={{ borderColor: "#44ff44" }}
         ></div>
+        <p style={{ color: "#d2b48c", fontSize: "1.2rem" }}>
+          Loading Pet Collection...
+        </p>
       </div>
     );
   }

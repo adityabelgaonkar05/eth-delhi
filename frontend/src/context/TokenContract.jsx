@@ -144,6 +144,16 @@ export const TokenProvider = ({ children }) => {
       }
     } catch (error) {
       console.error("❌ Error in handleUserLeave:", error);
+      // Don't show error to user if they're leaving the page - this is expected
+      if (
+        error.message &&
+        !error.message.includes("User rejected") &&
+        !error.message.includes("User denied")
+      ) {
+        console.warn(
+          "⚠️ Leave token removal failed - user may have navigated away during transaction"
+        );
+      }
     } finally {
       setIsLoading(false);
     }

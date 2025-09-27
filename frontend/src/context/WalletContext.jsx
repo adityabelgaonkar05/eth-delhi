@@ -1,12 +1,5 @@
-// ONLY FOR WALLET TESTING
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { ethers } from "ethers";
-import {
-  createContext,
-  useState,
-  useEffect,
-  useContext,
-  useCallback,
-} from "react";
 
 export const WalletContext = createContext();
 
@@ -14,182 +7,70 @@ export const WalletProvider = ({ children }) => {
   const [account, setAccount] = useState(null);
   const [signer, setSigner] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [availableWallets, setAvailableWallets] = useState([]);
 
-  // Detect available wallets
-  const detectWallets = useCallback(() => {
-    const wallets = [];
-
-    // Check for MetaMask
-    if (window.ethereum?.isMetaMask) {
-      wallets.push({ name: "MetaMask", provider: window.ethereum });
-    }
-
-    // Check for Coinbase Wallet
-    if (window.ethereum?.isCoinbaseWallet) {
-      wallets.push({ name: "Coinbase Wallet", provider: window.ethereum });
-    }
-
-    // Check for Trust Wallet
-    if (window.ethereum?.isTrust) {
-      wallets.push({ name: "Trust Wallet", provider: window.ethereum });
-    }
-
-    // Check for Brave Wallet
-    if (window.ethereum?.isBraveWallet) {
-      wallets.push({ name: "Brave Wallet", provider: window.ethereum });
-    }
-
-    // Check for Rainbow Wallet
-    if (window.ethereum?.isRainbow) {
-      wallets.push({ name: "Rainbow Wallet", provider: window.ethereum });
-    }
-
-    // Generic ethereum provider (fallback)
-    if (window.ethereum && wallets.length === 0) {
-      wallets.push({ name: "Unknown Wallet", provider: window.ethereum });
-    }
-
-    // Check for multiple providers (EIP-5749)
-    if (window.ethereum?.providers?.length > 0) {
-      window.ethereum.providers.forEach((provider) => {
-        if (provider.isMetaMask) wallets.push({ name: "MetaMask", provider });
-        if (provider.isCoinbaseWallet)
-          wallets.push({ name: "Coinbase Wallet", provider });
-        if (provider.isTrust) wallets.push({ name: "Trust Wallet", provider });
-        // Add more as needed
-      });
-    }
-
-    setAvailableWallets(wallets);
-    return wallets;
-  }, []); // Empty dependency array since this function doesn't depend on any props or state
-
-  const fetchWallet = async (selectedProvider = null) => {
+  const fetchWallet = async () => {
     try {
       setIsConnecting(true);
 
-      // Use selected provider or default to window.ethereum
-      const provider = selectedProvider || window.ethereum;
-
-      if (!provider) {
+      // Ensure MetaMask is available
+      if (!window.ethereum || !window.ethereum.isMetaMask) {
         alert(
-          "No Web3 wallet found. Please install MetaMask, Coinbase Wallet, or another Web3 wallet."
+          "MetaMask is not installed. Please install MetaMask and try again."
         );
         return;
       }
 
       // Request account access
-      const accounts = await provider.request({
+      const accounts = await window.ethereum.request({
         method: "eth_requestAccounts",
       });
 
-      setAccount(accounts[0]);
+      if (!accounts || accounts.length === 0) {
+        alert("No accounts found in MetaMask.");
+        return;
+      }
 
-      // Create ethers provider (works with any EIP-1193 compatible wallet)
-      const ethersProvider = new ethers.BrowserProvider(provider);
+      const ethersProvider = new ethers.BrowserProvider(window.ethereum);
       const newSigner = await ethersProvider.getSigner();
+
+      setAccount(accounts[0]);
       setSigner(newSigner);
 
-      console.log("Connected to wallet:", accounts[0]);
-      console.log("Signer set:", newSigner);
+      console.log("Connected to MetaMask:", accounts[0]);
     } catch (err) {
-      console.error("Error connecting to wallet:", err.message);
-      alert(`Failed to connect wallet: ${err.message}`);
+      console.error("Error connecting MetaMask:", err);
+      alert(`Failed to connect MetaMask: ${err?.message || err}`);
     } finally {
       setIsConnecting(false);
     }
   };
 
-  const disconnectWallet = () => {
-    setAccount(null);
-    setSigner(null);
-  };
-
-  const handleAccountsChanged = (accounts) => {
-    if (accounts.length === 0) {
-      disconnectWallet();
-    } else if (accounts[0] !== account) {
-      setAccount(accounts[0]);
-      console.log("Account changed to:", accounts[0]);
-    }
-  };
-
-  const handleChainChanged = (chainId) => {
-    console.log("Chain changed to:", chainId);
-    // Handle chain change gracefully without reloading
-    setAccount(null);
-    setSigner(null);
-    // Optional: You can uncomment the line below if you really need to reload
-    // window.location.reload();
-  };
-
   useEffect(() => {
-    // Detect available wallets
-    detectWallets();
-
-    // Check if already connected (non-intrusive - doesn't prompt user)
-    const checkExistingConnection = async () => {
-      if (window.ethereum) {
-        try {
-          const accounts = await window.ethereum.request({
-            method: "eth_accounts",
-          });
-          if (accounts.length > 0) {
-            setAccount(accounts[0]);
-            const provider = new ethers.BrowserProvider(window.ethereum);
-            const newSigner = await provider.getSigner();
-            setSigner(newSigner);
-            console.log(
-              "Auto-detected existing wallet connection:",
-              accounts[0]
-            );
-          }
-        } catch (err) {
-          console.error("Error checking existing connection:", err);
+    if (window.ethereum?.isMetaMask) {
+      // Auto-update account on change
+      window.ethereum.on("accountsChanged", (accounts) => {
+        if (accounts.length > 0) {
+          setAccount(accounts[0]);
+        } else {
+          setAccount(null);
+          setSigner(null);
         }
-      }
-    };
+      });
 
-    checkExistingConnection();
-
-    // Set up event listeners for any available provider
-    if (window.ethereum) {
-      window.ethereum.on("accountsChanged", handleAccountsChanged);
-      window.ethereum.on("chainChanged", handleChainChanged);
+      // Auto-update on chain change
+      window.ethereum.on("chainChanged", () => {
+        window.location.reload();
+      });
     }
-
-    return () => {
-      if (window.ethereum) {
-        window.ethereum.removeListener(
-          "accountsChanged",
-          handleAccountsChanged
-        );
-        window.ethereum.removeListener("chainChanged", handleChainChanged);
-      }
-    };
   }, []);
 
-  const value = {
-    account,
-    signer,
-    isConnecting,
-    fetchWallet,
-    disconnectWallet,
-    isConnected: !!account,
-    availableWallets,
-  };
-
   return (
-    <WalletContext.Provider value={value}>{children}</WalletContext.Provider>
+    <WalletContext.Provider
+      value={{ account, signer, fetchWallet, isConnecting }}
+    >
+      {children}
+    </WalletContext.Provider>
   );
 };
 
-export const useWallet = () => {
-  const context = useContext(WalletContext);
-  if (!context) {
-    throw new Error("useWallet must be used within a WalletProvider");
-  }
-  return context;
-};
-
+export const useWallet = () => useContext(WalletContext);

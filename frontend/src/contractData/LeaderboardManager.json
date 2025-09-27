@@ -1,0 +1,1210 @@
+{
+  "address": "0x0B306BF915C4d645ff596e518fAf3F9669b97016",
+  "abi": [
+    {
+      "type": "constructor",
+      "stateMutability": "undefined",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "_userRegistry"
+        },
+        {
+          "type": "address",
+          "name": "_cvrsToken"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "AccessControlBadConfirmation",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "AccessControlUnauthorizedAccount",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "account"
+        },
+        {
+          "type": "bytes32",
+          "name": "neededRole"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "EnforcedPause",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "ExpectedPause",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InvalidLeaderboardConfig",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InvalidSeasonConfig",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "LeaderboardNotActive",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "LeaderboardNotFound",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "MaxEntriesReached",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "ReentrancyGuardReentrantCall",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "SeasonNotActive",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "UnauthorizedAccess",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "UpdateTooFrequent",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "UserNotRegistered",
+      "inputs": []
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "GlobalRankingUpdate",
+      "inputs": [
+        {
+          "type": "string",
+          "name": "leaderboardType",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "timestamp",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "LeaderboardCreated",
+      "inputs": [
+        {
+          "type": "string",
+          "name": "leaderboardType",
+          "indexed": true
+        },
+        {
+          "type": "string",
+          "name": "name",
+          "indexed": false
+        },
+        {
+          "type": "uint256",
+          "name": "maxEntries",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "LeaderboardUpdated",
+      "inputs": [
+        {
+          "type": "string",
+          "name": "leaderboardType",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "user",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "newRank",
+          "indexed": false
+        },
+        {
+          "type": "uint256",
+          "name": "score",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "Paused",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "account",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "RoleAdminChanged",
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role",
+          "indexed": true
+        },
+        {
+          "type": "bytes32",
+          "name": "previousAdminRole",
+          "indexed": true
+        },
+        {
+          "type": "bytes32",
+          "name": "newAdminRole",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "RoleGranted",
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "account",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "sender",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "RoleRevoked",
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "account",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "sender",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "SeasonEnded",
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "seasonId",
+          "indexed": true
+        },
+        {
+          "type": "address[]",
+          "name": "topUsers"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "SeasonStarted",
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "seasonId",
+          "indexed": true
+        },
+        {
+          "type": "string",
+          "name": "name",
+          "indexed": false
+        },
+        {
+          "type": "uint256",
+          "name": "startTime",
+          "indexed": false
+        },
+        {
+          "type": "uint256",
+          "name": "endTime",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "Unpaused",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "account",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "UserScoreUpdated",
+      "inputs": [
+        {
+          "type": "string",
+          "name": "leaderboardType",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "user",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "oldScore",
+          "indexed": false
+        },
+        {
+          "type": "uint256",
+          "name": "newScore",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "ADMIN_ROLE",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "bytes32",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "DEFAULT_ADMIN_ROLE",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "bytes32",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "MAX_LEADERBOARD_SIZE",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "MIN_UPDATE_FREQUENCY",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "PLATFORM_ROLE",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "bytes32",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "activeLeaderboards",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "string",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "batchUpdateScores",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_leaderboardType"
+        },
+        {
+          "type": "address[]",
+          "name": "_users"
+        },
+        {
+          "type": "uint256[]",
+          "name": "_scores"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "createLeaderboard",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_type"
+        },
+        {
+          "type": "string",
+          "name": "_name"
+        },
+        {
+          "type": "string",
+          "name": "_description"
+        },
+        {
+          "type": "uint256",
+          "name": "_maxEntries"
+        },
+        {
+          "type": "uint256",
+          "name": "_updateFrequency"
+        },
+        {
+          "type": "bool",
+          "name": "_requiresVerification"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "currentSeasonId",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "cvrsToken",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "deactivateLeaderboard",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_leaderboardType"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "emergencyResetLeaderboard",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_leaderboardType"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "endSeason",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "_seasonId"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "getActiveLeaderboards",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "string[]",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getCurrentSeason",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": "seasonId"
+        },
+        {
+          "type": "string",
+          "name": "name"
+        },
+        {
+          "type": "uint256",
+          "name": "startTime"
+        },
+        {
+          "type": "uint256",
+          "name": "endTime"
+        },
+        {
+          "type": "bool",
+          "name": "isActive"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getLeaderboardConfig",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_leaderboardType"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "tuple",
+          "name": "",
+          "components": [
+            {
+              "type": "string",
+              "name": "name"
+            },
+            {
+              "type": "string",
+              "name": "description"
+            },
+            {
+              "type": "bool",
+              "name": "isActive"
+            },
+            {
+              "type": "uint256",
+              "name": "maxEntries"
+            },
+            {
+              "type": "uint256",
+              "name": "updateFrequency"
+            },
+            {
+              "type": "uint256",
+              "name": "lastGlobalUpdate"
+            },
+            {
+              "type": "bool",
+              "name": "requiresVerification"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getLeaderboardStats",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_leaderboardType"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": "size"
+        },
+        {
+          "type": "uint256",
+          "name": "maxEntries"
+        },
+        {
+          "type": "uint256",
+          "name": "lastUpdate"
+        },
+        {
+          "type": "uint256",
+          "name": "averageScore"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getRoleAdmin",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bytes32",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getTopEntries",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_leaderboardType"
+        },
+        {
+          "type": "uint256",
+          "name": "_limit"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "tuple[]",
+          "name": "",
+          "components": [
+            {
+              "type": "address",
+              "name": "user"
+            },
+            {
+              "type": "uint256",
+              "name": "score"
+            },
+            {
+              "type": "uint256",
+              "name": "lastUpdated"
+            },
+            {
+              "type": "uint256",
+              "name": "rank"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getUserRanking",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_leaderboardType"
+        },
+        {
+          "type": "address",
+          "name": "_user"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": "position"
+        },
+        {
+          "type": "uint256",
+          "name": "score"
+        },
+        {
+          "type": "uint256",
+          "name": "rank"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getUserSeasonScore",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "_seasonId"
+        },
+        {
+          "type": "string",
+          "name": "_leaderboardType"
+        },
+        {
+          "type": "address",
+          "name": "_user"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "grantRole",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role"
+        },
+        {
+          "type": "address",
+          "name": "account"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "hasRole",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role"
+        },
+        {
+          "type": "address",
+          "name": "account"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "leaderboardEntries",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": ""
+        },
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "address",
+          "name": "user"
+        },
+        {
+          "type": "uint256",
+          "name": "score"
+        },
+        {
+          "type": "uint256",
+          "name": "lastUpdated"
+        },
+        {
+          "type": "uint256",
+          "name": "rank"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "leaderboardSizes",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "leaderboardUsers",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": ""
+        },
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "leaderboards",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "string",
+          "name": "name"
+        },
+        {
+          "type": "string",
+          "name": "description"
+        },
+        {
+          "type": "bool",
+          "name": "isActive"
+        },
+        {
+          "type": "uint256",
+          "name": "maxEntries"
+        },
+        {
+          "type": "uint256",
+          "name": "updateFrequency"
+        },
+        {
+          "type": "uint256",
+          "name": "lastGlobalUpdate"
+        },
+        {
+          "type": "bool",
+          "name": "requiresVerification"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "nextSeasonId",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "pause",
+      "constant": false,
+      "payable": false,
+      "inputs": [],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "paused",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "reactivateLeaderboard",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_leaderboardType"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "renounceRole",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role"
+        },
+        {
+          "type": "address",
+          "name": "callerConfirmation"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "revokeRole",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role"
+        },
+        {
+          "type": "address",
+          "name": "account"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "seasons",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": "seasonId"
+        },
+        {
+          "type": "string",
+          "name": "name"
+        },
+        {
+          "type": "uint256",
+          "name": "startTime"
+        },
+        {
+          "type": "uint256",
+          "name": "endTime"
+        },
+        {
+          "type": "bool",
+          "name": "isActive"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "startSeason",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_name"
+        },
+        {
+          "type": "uint256",
+          "name": "_duration"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "supportsInterface",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes4",
+          "name": "interfaceId"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "unpause",
+      "constant": false,
+      "payable": false,
+      "inputs": [],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "updateGlobalRanking",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_leaderboardType"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "updateLeaderboardConfig",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_leaderboardType"
+        },
+        {
+          "type": "uint256",
+          "name": "_maxEntries"
+        },
+        {
+          "type": "uint256",
+          "name": "_updateFrequency"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "updateUserScore",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_leaderboardType"
+        },
+        {
+          "type": "address",
+          "name": "_user"
+        },
+        {
+          "type": "uint256",
+          "name": "_score"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "userPositions",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": ""
+        },
+        {
+          "type": "address",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "userRegistry",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "validLeaderboards",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    }
+  ]
+}

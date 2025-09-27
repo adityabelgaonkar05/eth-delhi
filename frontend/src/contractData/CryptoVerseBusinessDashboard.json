@@ -1,0 +1,1420 @@
+{
+  "address": "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1",
+  "abi": [
+    {
+      "type": "constructor",
+      "stateMutability": "undefined",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "_premiereManager"
+        },
+        {
+          "type": "address",
+          "name": "_escrowManager"
+        },
+        {
+          "type": "address",
+          "name": "_reputationOracle"
+        },
+        {
+          "type": "address",
+          "name": "_attendanceBadge"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "AccessControlBadConfirmation",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "AccessControlUnauthorizedAccount",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "account"
+        },
+        {
+          "type": "bytes32",
+          "name": "neededRole"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "EnforcedPause",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "ExpectedPause",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "ReentrancyGuardReentrantCall",
+      "inputs": []
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "AirdropCampaignCompleted",
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "campaignId",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "totalDistributed",
+          "indexed": false
+        },
+        {
+          "type": "uint256",
+          "name": "claimRate",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "AnalyticsUpdated",
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "premiereId",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "engagementScore",
+          "indexed": false
+        },
+        {
+          "type": "uint256",
+          "name": "attendanceRate",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "BusinessVerificationUpdated",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "organizer",
+          "indexed": true
+        },
+        {
+          "type": "bool",
+          "name": "verified",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "OrganizerRegistered",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "organizer",
+          "indexed": true
+        },
+        {
+          "type": "string",
+          "name": "businessName",
+          "indexed": false
+        },
+        {
+          "type": "bool",
+          "name": "isVerifiedBusiness",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "Paused",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "account",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "PremiereCompleted",
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "premiereId",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "organizer",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "attendeeCount",
+          "indexed": false
+        },
+        {
+          "type": "uint256",
+          "name": "airdropValue",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "RevenueDistributed",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "organizer",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "revenue",
+          "indexed": false
+        },
+        {
+          "type": "uint256",
+          "name": "fees",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "RoleAdminChanged",
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role",
+          "indexed": true
+        },
+        {
+          "type": "bytes32",
+          "name": "previousAdminRole",
+          "indexed": true
+        },
+        {
+          "type": "bytes32",
+          "name": "newAdminRole",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "RoleGranted",
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "account",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "sender",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "RoleRevoked",
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "account",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "sender",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "Unpaused",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "account",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "ADMIN_ROLE",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "bytes32",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "BUSINESS_ADMIN_ROLE",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "bytes32",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "DEFAULT_ADMIN_ROLE",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "bytes32",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "ORGANIZER_ROLE",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "bytes32",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "airdropMetrics",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": "campaignId"
+        },
+        {
+          "type": "uint256",
+          "name": "participationRate"
+        },
+        {
+          "type": "uint256",
+          "name": "claimRate"
+        },
+        {
+          "type": "uint256",
+          "name": "averageReputationScore"
+        },
+        {
+          "type": "uint256",
+          "name": "distributionEfficiency"
+        },
+        {
+          "type": "uint256",
+          "name": "totalValueDistributed"
+        },
+        {
+          "type": "uint256",
+          "name": "costPerParticipant"
+        },
+        {
+          "type": "uint256",
+          "name": "roiMetric"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "allCampaigns",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "allOrganizers",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "allPremieres",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "analyticsUpdateInterval",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "attendanceBadge",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "businessVerificationFee",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "completeAirdropCampaignWithMetrics",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "_campaignId"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "completePremiereWithAnalytics",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "_premiereId"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "emergencyTokenRecovery",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "_token"
+        },
+        {
+          "type": "uint256",
+          "name": "_amount"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "escrowManager",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getAirdropMetrics",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "_campaignId"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "tuple",
+          "name": "",
+          "components": [
+            {
+              "type": "uint256",
+              "name": "campaignId"
+            },
+            {
+              "type": "uint256",
+              "name": "participationRate"
+            },
+            {
+              "type": "uint256",
+              "name": "claimRate"
+            },
+            {
+              "type": "uint256",
+              "name": "averageReputationScore"
+            },
+            {
+              "type": "uint256",
+              "name": "distributionEfficiency"
+            },
+            {
+              "type": "uint256",
+              "name": "totalValueDistributed"
+            },
+            {
+              "type": "uint256",
+              "name": "costPerParticipant"
+            },
+            {
+              "type": "uint256",
+              "name": "roiMetric"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getOrganizerAnalytics",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "_organizer"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "tuple",
+          "name": "profile",
+          "components": [
+            {
+              "type": "address",
+              "name": "organizer"
+            },
+            {
+              "type": "string",
+              "name": "businessName"
+            },
+            {
+              "type": "string",
+              "name": "description"
+            },
+            {
+              "type": "string",
+              "name": "website"
+            },
+            {
+              "type": "string",
+              "name": "contactEmail"
+            },
+            {
+              "type": "bool",
+              "name": "isVerifiedBusiness"
+            },
+            {
+              "type": "uint256",
+              "name": "totalPremieres"
+            },
+            {
+              "type": "uint256",
+              "name": "totalAttendees"
+            },
+            {
+              "type": "uint256",
+              "name": "totalAirdropsValue"
+            },
+            {
+              "type": "uint256",
+              "name": "reputationScore"
+            },
+            {
+              "type": "uint256",
+              "name": "joinedAt"
+            },
+            {
+              "type": "uint256",
+              "name": "lastActiveAt"
+            },
+            {
+              "type": "bool",
+              "name": "isActive"
+            }
+          ]
+        },
+        {
+          "type": "tuple",
+          "name": "metrics",
+          "components": [
+            {
+              "type": "uint256",
+              "name": "totalPremieres"
+            },
+            {
+              "type": "uint256",
+              "name": "totalAttendees"
+            },
+            {
+              "type": "uint256",
+              "name": "totalAirdropsDistributed"
+            },
+            {
+              "type": "uint256",
+              "name": "totalTokensDistributed"
+            },
+            {
+              "type": "uint256",
+              "name": "totalRevenueGenerated"
+            },
+            {
+              "type": "uint256",
+              "name": "averageAttendanceRate"
+            },
+            {
+              "type": "uint256",
+              "name": "totalNFTsBadgesMinted"
+            },
+            {
+              "type": "uint256",
+              "name": "activeOrganizers"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getPlatformMetrics",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "tuple",
+          "name": "",
+          "components": [
+            {
+              "type": "uint256",
+              "name": "totalPremieres"
+            },
+            {
+              "type": "uint256",
+              "name": "totalAttendees"
+            },
+            {
+              "type": "uint256",
+              "name": "totalAirdropsDistributed"
+            },
+            {
+              "type": "uint256",
+              "name": "totalTokensDistributed"
+            },
+            {
+              "type": "uint256",
+              "name": "totalRevenueGenerated"
+            },
+            {
+              "type": "uint256",
+              "name": "averageAttendanceRate"
+            },
+            {
+              "type": "uint256",
+              "name": "totalNFTsBadgesMinted"
+            },
+            {
+              "type": "uint256",
+              "name": "activeOrganizers"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getPremiereAnalytics",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "_premiereId"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "tuple",
+          "name": "",
+          "components": [
+            {
+              "type": "uint256",
+              "name": "premiereId"
+            },
+            {
+              "type": "uint256",
+              "name": "registrationRate"
+            },
+            {
+              "type": "uint256",
+              "name": "attendanceRate"
+            },
+            {
+              "type": "uint256",
+              "name": "engagementScore"
+            },
+            {
+              "type": "uint256",
+              "name": "airdropEfficiency"
+            },
+            {
+              "type": "uint256",
+              "name": "reputationDistribution"
+            },
+            {
+              "type": "uint256",
+              "name": "geographicReach"
+            },
+            {
+              "type": "uint256",
+              "name": "totalRevenue"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getRoleAdmin",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bytes32",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getTopOrganizers",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "_limit"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "address[]",
+          "name": "addresses"
+        },
+        {
+          "type": "uint256[]",
+          "name": "scores"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "globalMetrics",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": "totalPremieres"
+        },
+        {
+          "type": "uint256",
+          "name": "totalAttendees"
+        },
+        {
+          "type": "uint256",
+          "name": "totalAirdropsDistributed"
+        },
+        {
+          "type": "uint256",
+          "name": "totalTokensDistributed"
+        },
+        {
+          "type": "uint256",
+          "name": "totalRevenueGenerated"
+        },
+        {
+          "type": "uint256",
+          "name": "averageAttendanceRate"
+        },
+        {
+          "type": "uint256",
+          "name": "totalNFTsBadgesMinted"
+        },
+        {
+          "type": "uint256",
+          "name": "activeOrganizers"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "grantRole",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role"
+        },
+        {
+          "type": "address",
+          "name": "account"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "hasRole",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role"
+        },
+        {
+          "type": "address",
+          "name": "account"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "lastAnalyticsUpdate",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "organizerFees",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "organizerProfiles",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "address",
+          "name": "organizer"
+        },
+        {
+          "type": "string",
+          "name": "businessName"
+        },
+        {
+          "type": "string",
+          "name": "description"
+        },
+        {
+          "type": "string",
+          "name": "website"
+        },
+        {
+          "type": "string",
+          "name": "contactEmail"
+        },
+        {
+          "type": "bool",
+          "name": "isVerifiedBusiness"
+        },
+        {
+          "type": "uint256",
+          "name": "totalPremieres"
+        },
+        {
+          "type": "uint256",
+          "name": "totalAttendees"
+        },
+        {
+          "type": "uint256",
+          "name": "totalAirdropsValue"
+        },
+        {
+          "type": "uint256",
+          "name": "reputationScore"
+        },
+        {
+          "type": "uint256",
+          "name": "joinedAt"
+        },
+        {
+          "type": "uint256",
+          "name": "lastActiveAt"
+        },
+        {
+          "type": "bool",
+          "name": "isActive"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "organizerRevenue",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "pause",
+      "constant": false,
+      "payable": false,
+      "inputs": [],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "paused",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "premiereAnalytics",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": "premiereId"
+        },
+        {
+          "type": "uint256",
+          "name": "registrationRate"
+        },
+        {
+          "type": "uint256",
+          "name": "attendanceRate"
+        },
+        {
+          "type": "uint256",
+          "name": "engagementScore"
+        },
+        {
+          "type": "uint256",
+          "name": "airdropEfficiency"
+        },
+        {
+          "type": "uint256",
+          "name": "reputationDistribution"
+        },
+        {
+          "type": "uint256",
+          "name": "geographicReach"
+        },
+        {
+          "type": "uint256",
+          "name": "totalRevenue"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "premiereManager",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "premiumOrganizerFee",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "registerOrganizer",
+      "constant": false,
+      "stateMutability": "payable",
+      "payable": true,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_businessName"
+        },
+        {
+          "type": "string",
+          "name": "_description"
+        },
+        {
+          "type": "string",
+          "name": "_website"
+        },
+        {
+          "type": "string",
+          "name": "_contactEmail"
+        },
+        {
+          "type": "bool",
+          "name": "_requestVerification"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "renounceRole",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role"
+        },
+        {
+          "type": "address",
+          "name": "callerConfirmation"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "reputationOracle",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "revokeRole",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "role"
+        },
+        {
+          "type": "address",
+          "name": "account"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "setBusinessVerificationFee",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "_fee"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "setPremiumOrganizerFee",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "_fee"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "supportsInterface",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes4",
+          "name": "interfaceId"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "totalPlatformFees",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "totalPlatformRevenue",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "unpause",
+      "constant": false,
+      "payable": false,
+      "inputs": [],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "updateBusinessVerification",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "_organizer"
+        },
+        {
+          "type": "bool",
+          "name": "_verified"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "updateGlobalMetrics",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "tuple",
+          "name": "_metrics",
+          "components": [
+            {
+              "type": "uint256",
+              "name": "totalPremieres"
+            },
+            {
+              "type": "uint256",
+              "name": "totalAttendees"
+            },
+            {
+              "type": "uint256",
+              "name": "totalAirdropsDistributed"
+            },
+            {
+              "type": "uint256",
+              "name": "totalTokensDistributed"
+            },
+            {
+              "type": "uint256",
+              "name": "totalRevenueGenerated"
+            },
+            {
+              "type": "uint256",
+              "name": "averageAttendanceRate"
+            },
+            {
+              "type": "uint256",
+              "name": "totalNFTsBadgesMinted"
+            },
+            {
+              "type": "uint256",
+              "name": "activeOrganizers"
+            }
+          ]
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "updateOrganizerReputation",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "_organizer"
+        },
+        {
+          "type": "uint256",
+          "name": "_newScore"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "verifiedBusinesses",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "withdraw",
+      "constant": false,
+      "payable": false,
+      "inputs": [],
+      "outputs": []
+    }
+  ]
+}

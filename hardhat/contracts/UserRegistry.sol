@@ -398,7 +398,7 @@ contract UserRegistry is AccessControl, ReentrancyGuard, Pausable {
      * @notice Calculate verification score based on Self Protocol data quality
      */
     function _calculateVerificationScore(ISelfProtocolIntegration.UserVerification memory verification)
-        internal pure returns (uint256) {
+        internal view returns (uint256) {
         uint256 score = 100; // Base score
         
         // Age verification quality
@@ -466,7 +466,12 @@ contract UserRegistry is AccessControl, ReentrancyGuard, Pausable {
 
     /**
      * @notice Get verification statistics
-     * @return stats Comprehensive verification statistics
+     * @return totalUsersCount Total number of registered users
+     * @return totalVerifiedCount Total number of verified users
+     * @return totalOfacClearedCount Total number of OFAC cleared users
+     * @return passportVerifications Total passport verifications
+     * @return euIdVerifications Total EU ID verifications
+     * @return tierCounts Count per verification tier
      */
     function getVerificationStats() external view returns (
         uint256 totalUsersCount,

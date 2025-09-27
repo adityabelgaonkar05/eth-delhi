@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useAuth } from '../context/SelfAuthContext';
 
-const SelfAuthentication = ({ onAuthSuccess, onAuthError, userIdentifier }) => {
+const SelfAuthentication = () => {
     const [selfApp, setSelfApp] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [SelfComponents, setSelfComponents] = useState(null);
+    const { handleSelfVerificationSuccess, handleSelfVerificationError, error: authError } = useAuth();
 
     // Dynamically import Self components to avoid import issues
     useEffect(() => {
@@ -31,24 +33,7 @@ const SelfAuthentication = ({ onAuthSuccess, onAuthError, userIdentifier }) => {
 
         const initializeSelfApp = async () => {
             try {
-                // Check if user is already verified
-                if (userIdentifier) {
-                    const storedNgrokUrl = localStorage.getItem('cryptoverse_ngrok_url');
-                    const apiUrl = storedNgrokUrl || import.meta.env.VITE_API_URL || 'http://localhost:3001';
-
-                    try {
-                        const response = await fetch(`${apiUrl}/api/auth/status/${userIdentifier}`);
-                        if (response.ok) {
-                            const statusData = await response.json();
-                            if (statusData.isVerified) {
-                                onAuthSuccess(statusData.userData);
-                                return;
-                            }
-                        }
-                    } catch (statusError) {
-                        console.log('Could not check status, continuing with verification');
-                    }
-                }
+                // Skip the pre-check since we want to always show the QR code for fresh verification
 
                 // Get endpoint URL
                 const storedNgrokUrl = localStorage.getItem('cryptoverse_ngrok_url');
@@ -65,18 +50,9 @@ const SelfAuthentication = ({ onAuthSuccess, onAuthError, userIdentifier }) => {
                     return;
                 }
 
-                // Generate a proper Ethereum address format if not provided
-                let userId = userIdentifier;
-                if (!userId) {
-                    // Generate a valid 40-character hex string for Ethereum address format
-                    const randomHex = Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-                    userId = `0x${randomHex}`;
-                }
-
-                // Ensure the userId is in the correct format (42 characters starting with 0x)
-                if (!userId.startsWith('0x') || userId.length !== 42) {
-                    userId = `0x${userId.replace('0x', '').padStart(40, '0')}`;
-                }
+                // Generate a proper Ethereum address format
+                const randomHex = Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+                const userId = `0x${randomHex}`;
 
                 console.log('Initializing Self app with endpoint:', endpoint);
                 console.log('Using userId:', userId);
@@ -119,42 +95,20 @@ const SelfAuthentication = ({ onAuthSuccess, onAuthError, userIdentifier }) => {
         };
 
         initializeSelfApp();
-    }, [userIdentifier, onAuthSuccess, SelfComponents]);
+    }, [SelfComponents]);
 
     const handleSuccessfulVerification = async () => {
         try {
             console.log('Self verification successful!');
 
-            // Give some time for the backend to process the verification
-            setTimeout(async () => {
-                try {
-                    if (userIdentifier || selfApp?.userId) {
-                        const userId = userIdentifier || selfApp.userId;
-                        const storedNgrokUrl = localStorage.getItem('cryptoverse_ngrok_url');
-                        const baseUrl = storedNgrokUrl || import.meta.env.VITE_API_URL || 'http://localhost:3001';
-
-                        const response = await fetch(`${baseUrl}/api/auth/status/${userId}`);
-                        if (response.ok) {
-                            const statusData = await response.json();
-
-                            if (statusData.isVerified) {
-                                onAuthSuccess(statusData.userData);
-                            } else {
-                                onAuthError('Verification completed but user not found in database. Please try again.');
-                            }
-                        } else {
-                            onAuthError('Could not verify status. Please try again.');
-                        }
-                    }
-                } catch (error) {
-                    console.error('Post-verification check failed:', error);
-                    onAuthError('Verification may have succeeded, but we could not confirm. Please refresh and try again.');
-                }
-            }, 3000); // Give more time for processing
-
+            if (selfApp?.userId) {
+                handleSelfVerificationSuccess(selfApp.userId);
+            } else {
+                handleSelfVerificationError('Verification succeeded but user ID not available');
+            }
         } catch (error) {
             console.error('Post-verification error:', error);
-            onAuthError('Verification completed but failed to fetch user data');
+            handleSelfVerificationError('Verification completed but failed to process');
         }
     };
 

@@ -34,6 +34,7 @@ import { ContractProvider } from "./context/ContractContext";
 import ContractExample from "./components/ContractExample";
 import SelfAuthentication from "./components/SelfAuthenticationFixed";
 import WalrusTest from "./components/WalrusTest";
+import CheckAuth from "./components/CheckAuth";
 
 function App() {
   return (
@@ -48,6 +49,7 @@ function App() {
                   <Routes>
                     {/* Public routes */}
                     <Route path="/auth" element={<SelfAuthentication />} />
+                    <Route path="/check-auth" element={<CheckAuth />} />
                     <Route path="/" element={<LandingPage />} />
                     <Route path="/business" element={<BusinessLanding />} />
                     <Route path="/onboarding" element={<OnboardingPage />} />

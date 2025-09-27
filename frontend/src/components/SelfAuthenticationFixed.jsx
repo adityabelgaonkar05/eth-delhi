@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/SelfAuthContext';
 
 const SelfAuthentication = () => {
@@ -8,6 +9,7 @@ const SelfAuthentication = () => {
     const [SelfComponents, setSelfComponents] = useState(null);
     const [isVerificationPending, setIsVerificationPending] = useState(false);
     const { handleSelfVerificationSuccess, handleSelfVerificationError, handleVerificationComplete, error: authError } = useAuth();
+    const navigate = useNavigate();
 
     // Dynamically import Self components to avoid import issues
     useEffect(() => {
@@ -106,90 +108,24 @@ const SelfAuthentication = () => {
 
     const handleSuccessfulVerification = async () => {
         try {
-            console.log('Self verification successful! Waiting for backend processing...');
+            console.log('Self verification successful! Redirecting to check-auth...');
 
-            // Get the session ID we stored earlier
+            // Clean up session storage
             const sessionId = localStorage.getItem('self_session_id');
-            if (!sessionId) {
-                handleSelfVerificationError('Session ID not found. Please refresh and try again.');
-                return;
+            if (sessionId) {
+                localStorage.removeItem('self_session_id');
             }
 
-            // Poll the backend to check for completed verification using session ID
-            let attempts = 0;
-            const maxAttempts = 15; // Increased for more patient polling
-            const pollInterval = 2000; // 2 seconds
+            // Clear pending state
+            setIsVerificationPending(false);
 
-            const pollForVerification = async () => {
-                attempts++;
-                console.log(`Polling session ${sessionId}, attempt ${attempts}/${maxAttempts}`);
-
-                try {
-                    const response = await fetch(`http://localhost:3001/api/auth/session/${sessionId}`, {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-
-                        if (data.status === 'success') {
-                            // Verification completed successfully
-                            console.log('Verification completed! Session data:', data);
-
-                            // Clean up session storage
-                            localStorage.removeItem('self_session_id');
-
-                            // Clear pending state
-                            setIsVerificationPending(false);
-                            
-                            // Handle complete verification data (includes token, user data, onboarding status)
-                            handleVerificationComplete(data);
-                            return;
-                        } else if (data.status === 'pending') {
-                            // Still processing, continue polling
-                            console.log('Verification still processing...');
-                            // Update loading state or show progress
-                        } else {
-                            // Error occurred
-                            handleSelfVerificationError(data.message || 'Verification failed');
-                            return;
-                        }
-                    }
-
-                    // Continue polling if not successful yet
-                    if (attempts >= maxAttempts) {
-                        setIsVerificationPending(false);
-                        handleSelfVerificationError('Verification timeout. The verification may have succeeded but took too long to process. Please refresh and check your account status.');
-                        return;
-                    }
-
-                    setTimeout(pollForVerification, pollInterval);
-
-                } catch (error) {
-                    console.error('Polling error:', error);
-
-                    if (attempts >= maxAttempts) {
-                        handleSelfVerificationError('Network error during verification check. Please refresh and try again.');
-                        return;
-                    }
-
-                    // Continue polling on network errors
-                    setTimeout(pollForVerification, pollInterval);
-                }
-            };
-
-            // Set verification pending state
-            setIsVerificationPending(true);
-            
-            // Start polling after a short delay to allow backend processing
-            setTimeout(pollForVerification, 1000);
+            // Always redirect to check-auth endpoint
+            navigate('/check-auth');
 
         } catch (error) {
             console.error('Post-verification error:', error);
-            handleSelfVerificationError('Verification completed but failed to process');
+            // Even if there's an error, still redirect to check-auth
+            navigate('/check-auth');
         }
     };
 
@@ -289,7 +225,7 @@ const SelfAuthentication = () => {
                 <div className="mt-6 text-sm text-gray-500 text-center">
                     <p>Requirements:</p>
                     <ul className="mt-2 space-y-1">
-                        <li>• Must be 18 years or older</li>
+                        <li>• Must be 16 years or older</li>
                         <li>• Valid government-issued ID</li>
                         <li>• Good lighting for document scanning</li>
                     </ul>

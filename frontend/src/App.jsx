@@ -27,7 +27,7 @@ function App() {
             <Route path="/cinema" element={<Cinema />} />
             <Route path="/library" element={<Library />} />
             <Route path="/townhall" element={<Townhall />} />
-            {/* <Route path="wallet" element={<WalletSelector />} /> wallet testing route */}
+            {/* <Route path="wallet" element={<WalletSelector />} /> */}
           </Routes>
         </div>
       </Router>

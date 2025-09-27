@@ -117,27 +117,6 @@ export const WalletProvider = ({ children }) => {
     // Detect available wallets
     detectWallets();
 
-    // Check if already connected
-    const checkConnection = async () => {
-      if (window.ethereum) {
-        try {
-          const accounts = await window.ethereum.request({
-            method: "eth_accounts",
-          });
-          if (accounts.length > 0) {
-            setAccount(accounts[0]);
-            const provider = new ethers.BrowserProvider(window.ethereum);
-            const newSigner = await provider.getSigner();
-            setSigner(newSigner);
-          }
-        } catch (err) {
-          console.error("Error checking connection:", err);
-        }
-      }
-    };
-
-    checkConnection();
-
     // Set up event listeners for any available provider
     if (window.ethereum) {
       window.ethereum.on("accountsChanged", handleAccountsChanged);

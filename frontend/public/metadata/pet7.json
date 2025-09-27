@@ -1,7 +1,7 @@
 {
   "name": "Cosmic Guardian",
   "description": "The ultimate protector of the CryptoVerse, forged from stardust and quantum code. This legendary being transcends dimensions and watches over all digital realms with infinite wisdom.",
-  "image": "http://localhost:5173/images/pet7.webp",
+  "image": "https://aggregator-devnet.walrus.space/v1/0xa6e2227760feb8361c8c6d62eb0c05d2d7d573c3fc749adab11cf2dd67e23b79",
   "external_url": "http://localhost:5173/pets",
   "attributes": [
     {
@@ -24,5 +24,8 @@
       "trait_type": "Price",
       "value": "1000 CVRS"
     }
-  ]
+  ],
+  "walrus_image_id": "0xa6e2227760feb8361c8c6d62eb0c05d2d7d573c3fc749adab11cf2dd67e23b79",
+  "walrus_metadata_id": "0x95678b92abde9c93788aa21497bfee32410b01ba7194f99305730bf4aff9bc69",
+  "walrus_upload_date": "2025-09-27T14:40:57.579Z"
 }

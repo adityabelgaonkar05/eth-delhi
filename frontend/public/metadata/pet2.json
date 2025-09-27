@@ -1,7 +1,7 @@
 {
   "name": "Cyber Cat",
   "description": "A sleek virtual feline with neon-blue circuits running through its digital fur. This cyber cat prowls the virtual streets of CryptoVerse.",
-  "image": "http://localhost:5173/images/pet2.webp",
+  "image": "https://aggregator-devnet.walrus.space/v1/0xde025d987750dd3901f220ddf84f9d6dcbfebfd4907497acbc431a025694d779",
   "external_url": "http://localhost:5173/pets",
   "attributes": [
     {
@@ -24,5 +24,8 @@
       "trait_type": "Price",
       "value": "100 CVRS"
     }
-  ]
+  ],
+  "walrus_image_id": "0xde025d987750dd3901f220ddf84f9d6dcbfebfd4907497acbc431a025694d779",
+  "walrus_metadata_id": "0x5c4b0d70ef536fb0caaacf3973a609d04c7338fa406e52a0330fea40fc899e33",
+  "walrus_upload_date": "2025-09-27T14:38:59.003Z"
 }

@@ -1,7 +1,7 @@
 {
   "name": "Crystal Dragon",
   "description": "A majestic crystalline beast whose scales refract light into rainbow patterns. This epic dragon guards ancient digital treasures and grants wisdom to worthy companions.",
-  "image": "http://localhost:5173/images/pet5.webp",
+  "image": "https://aggregator-devnet.walrus.space/v1/0x0d815af00d6503fcd9b89bdac23641f20528d35ce89a0e96734ed489c72d9336",
   "external_url": "http://localhost:5173/pets",
   "attributes": [
     {
@@ -24,5 +24,8 @@
       "trait_type": "Price",
       "value": "500 CVRS"
     }
-  ]
+  ],
+  "walrus_image_id": "0x0d815af00d6503fcd9b89bdac23641f20528d35ce89a0e96734ed489c72d9336",
+  "walrus_metadata_id": "0xd2d38339f50b781829341f0cdd9a93f58738358260bd92904b4b65b05c932a34",
+  "walrus_upload_date": "2025-09-27T14:40:04.196Z"
 }

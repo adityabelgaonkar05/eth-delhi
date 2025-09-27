@@ -1,7 +1,7 @@
 {
   "name": "Phoenix Rising",
   "description": "A reborn bird of eternal flame, its feathers burn with digital fire that never consumes. This epic phoenix rises from the ashes of deleted code to soar through cyberspace.",
-  "image": "http://localhost:5173/images/pet6.webp",
+  "image": "https://aggregator-devnet.walrus.space/v1/0x1870f46aa069beacdea98ddfb3a81810df51cc3babd480baac33b4b06089b938",
   "external_url": "http://localhost:5173/pets",
   "attributes": [
     {
@@ -24,5 +24,8 @@
       "trait_type": "Price",
       "value": "500 CVRS"
     }
-  ]
+  ],
+  "walrus_image_id": "0x1870f46aa069beacdea98ddfb3a81810df51cc3babd480baac33b4b06089b938",
+  "walrus_metadata_id": "0xb5d259c2455348f429a2bbe4134653f78f7d50ddee7372992e23673507e93277",
+  "walrus_upload_date": "2025-09-27T14:40:25.833Z"
 }

@@ -104,23 +104,23 @@ contract CryptoVersePetNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Access
     }
     
     /**
-     * @dev Creates the initial 7 pet NFTs with their tiers and metadata
+     * @dev Creates the initial 7 pet NFTs with their tiers and Walrus metadata URLs
      */
     function _createInitialPets() private {
-        // COMMON tier pets (pet1, pet2)
-        _createPet("Pixel Pup", "A friendly digital companion", PetTier.COMMON, "https://your-domain.com/metadata/pet1.json");
-        _createPet("Cyber Cat", "A sleek virtual feline", PetTier.COMMON, "https://your-domain.com/metadata/pet2.json");
+        // COMMON tier pets (pet1, pet2) - Use Walrus URLs
+        _createPet("Pixel Pup", "A friendly digital companion", PetTier.COMMON, "https://aggregator-devnet.walrus.space/v1/0xd9da430b73c6a5aefb4249e6f82d03b5ce6d92d06fd026929de5a771c298cbe2");
+        _createPet("Cyber Cat", "A sleek virtual feline", PetTier.COMMON, "https://aggregator-devnet.walrus.space/v1/0x5c4b0d70ef536fb0caaacf3973a609d04c7338fa406e52a0330fea40fc899e33");
         
-        // RARE tier pets (pet3, pet4)
-        _createPet("Mystic Mare", "A magical horse from the digital realm", PetTier.RARE, "https://your-domain.com/metadata/pet3.json");
-        _createPet("Thunder Wolf", "A fierce lupine guardian", PetTier.RARE, "https://your-domain.com/metadata/pet4.json");
+        // RARE tier pets (pet3, pet4) - Use Walrus URLs
+        _createPet("Mystic Mare", "A magical horse from the digital realm", PetTier.RARE, "https://aggregator-devnet.walrus.space/v1/0x5f60aa41fbb700c114ad62a4dda0f45b1c8bab875ed1f0e06dae47e1c139ef99");
+        _createPet("Thunder Wolf", "A fierce lupine guardian", PetTier.RARE, "https://aggregator-devnet.walrus.space/v1/0xfc4a882d718d93e1cb567c440eb9b1d2e75bb262d50072ef9dfc687b0294113b");
         
-        // EPIC tier pets (pet5, pet6)
-        _createPet("Crystal Dragon", "A majestic crystalline beast", PetTier.EPIC, "https://your-domain.com/metadata/pet5.json");
-        _createPet("Phoenix Rising", "A reborn bird of eternal flame", PetTier.EPIC, "https://your-domain.com/metadata/pet6.json");
+        // EPIC tier pets (pet5, pet6) - Use Walrus URLs
+        _createPet("Crystal Dragon", "A majestic crystalline beast", PetTier.EPIC, "https://aggregator-devnet.walrus.space/v1/0xd2d38339f50b781829341f0cdd9a93f58738358260bd92904b4b65b05c932a34");
+        _createPet("Phoenix Rising", "A reborn bird of eternal flame", PetTier.EPIC, "https://aggregator-devnet.walrus.space/v1/0xb5d259c2455348f429a2bbe4134653f78f7d50ddee7372992e23673507e93277");
         
-        // LEGENDARY tier pet (pet7)
-        _createPet("Cosmic Guardian", "The ultimate protector of the CryptoVerse", PetTier.LEGENDARY, "https://your-domain.com/metadata/pet7.json");
+        // LEGENDARY tier pet (pet7) - Use Walrus URLs
+        _createPet("Cosmic Guardian", "The ultimate protector of the CryptoVerse", PetTier.LEGENDARY, "https://aggregator-devnet.walrus.space/v1/0x95678b92abde9c93788aa21497bfee32410b01ba7194f99305730bf4aff9bc69");
     }
     
     /**

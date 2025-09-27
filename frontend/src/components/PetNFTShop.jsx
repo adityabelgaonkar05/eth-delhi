@@ -3,6 +3,9 @@ import { ethers } from 'ethers';
 import { useWallet } from '../context/WalletContext';
 import { useContracts, useCryptoVersePetNFT, useCryptoVerseToken } from '../context/ContractContext';
 
+// Import Walrus verified upload data
+import walrusData from '../contractData/WalrusVerifiedUpload.json';
+
 const PetNFTShop = () => {
   const { account, signer } = useWallet();
   const { contracts } = useContracts();
@@ -23,15 +26,16 @@ const PetNFTShop = () => {
     3: { name: 'LEGENDARY', color: 'text-yellow-600', bg: 'bg-yellow-100', border: 'border-yellow-300' }
   };
 
-  const petImages = {
-    1: '/images/pet1.webp',
-    2: '/images/pet2.webp', 
-    3: '/images/pet3.webp',
-    4: '/images/pet4.webp',
-    5: '/images/pet5.webp',
-    6: '/images/pet6.webp',
-    7: '/images/pet7.webp'
-  };
+  // Create mapping from Walrus verified uploads
+  const petImages = walrusData.assets.reduce((acc, asset) => {
+    if (asset.imageBlobId) {
+      acc[asset.petId] = asset.imageUrl;
+    } else {
+      // Fallback to local images for pets that failed to upload
+      acc[asset.petId] = `/images/pet${asset.petId}.webp`;
+    }
+    return acc;
+  }, {});
 
   useEffect(() => {
     if (petNFTContract && cvrsTokenContract && account) {
@@ -212,6 +216,11 @@ const PetNFTShop = () => {
                       <div className={`absolute top-2 right-2 ${tierData.bg} ${tierData.color} px-2 py-1 rounded-full text-xs font-bold`}>
                         {tierData.name}
                       </div>
+                      {pet.image.includes('walrus.space') && (
+                        <div className="absolute top-2 left-2 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-bold">
+                          🌊 Walrus
+                        </div>
+                      )}
                     </div>
                     <div className="p-4">
                       <h3 className="text-lg font-bold text-gray-900 mb-2">{pet.name}</h3>
@@ -258,6 +267,11 @@ const PetNFTShop = () => {
                       <div className={`absolute top-2 right-2 ${tierData.bg} ${tierData.color} px-2 py-1 rounded-full text-xs font-bold`}>
                         {tierData.name}
                       </div>
+                      {pet.image.includes('walrus.space') && (
+                        <div className="absolute top-2 left-2 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-bold">
+                          🌊 Walrus
+                        </div>
+                      )}
                     </div>
                     <div className="p-4">
                       <h3 className="text-lg font-bold text-gray-900 mb-2">{pet.name}</h3>

@@ -46,6 +46,7 @@ const MultiplayerGame = () => {
   const [error, setError] = useState(null)
   const [connected, setConnected] = useState(false)
   const [playerCount, setPlayerCount] = useState(0)
+  const [playerCoords, setPlayerCoords] = useState({ x: 0, y: 0 })
 
   console.log('MultiplayerGame state:', { isLoading, error, connected, playerCount })
 
@@ -301,9 +302,10 @@ const MultiplayerGame = () => {
   }, [initializeSocket])
 
   // Send player movement to server
+  // Send player movement to server
   const sendPlayerMovement = useCallback(() => {
     if (socketRef.current && playerRef.current) {
-      socketRef.current.emit('playerMove', {
+      const coords = {
         x: playerRef.current.x,
         y: playerRef.current.y,
         facing: playerRef.current.facing,
@@ -312,7 +314,12 @@ const MultiplayerGame = () => {
                        playerRef.current.facing === 'left' ? 'walkLeft' : 'walkRight',
         moving: playerRef.current.velocity.x !== 0 || playerRef.current.velocity.y !== 0,
         room: 'main'
-      })
+      }
+      
+      // Update coordinate display with socket data
+      setPlayerCoords({ x: coords.x, y: coords.y })
+      
+      socketRef.current.emit('playerMove', coords)
     }
   }, [])
 
@@ -535,6 +542,22 @@ const MultiplayerGame = () => {
         }}>
           <div>Status: {connected ? '🟢 Connected' : '🔴 Disconnected'}</div>
           <div>Players: {playerCount}</div>
+        </div>
+
+        {/* Player coordinates */}
+        <div style={{
+          position: 'absolute',
+          bottom: '10px',
+          right: '10px',
+          color: 'white',
+          background: 'rgba(0,0,0,0.7)',
+          padding: '8px',
+          borderRadius: '5px',
+          fontSize: '12px',
+          fontFamily: 'monospace'
+        }}>
+          <div>X: {Math.round(playerCoords.x)}</div>
+          <div>Y: {Math.round(playerCoords.y)}</div>
         </div>
 
         <canvas 

@@ -1,10 +1,12 @@
 import React, { useState, useEffect, memo, useCallback } from "react";
 import { TextAnimate } from "./ui/text-animate";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
-const BusinessOnboarding = memo(({ isOpen, onClose, onComplete }) => {
+const BusinessOnboarding = memo(({ isOpen, onClose, onComplete, onSwitchToLogin }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     companyName: "",
     cin: "",
@@ -13,6 +15,7 @@ const BusinessOnboarding = memo(({ isOpen, onClose, onComplete }) => {
     password: ""
   });
   const navigate = useNavigate();
+  const { signup, loading, error } = useAuth();
 
   // Load Advercase font
   useEffect(() => {
@@ -85,15 +88,29 @@ const BusinessOnboarding = memo(({ isOpen, onClose, onComplete }) => {
     }));
   }, [currentStep]);
 
-  const handleNext = useCallback(() => {
+  const handleNext = useCallback(async () => {
     if (currentStep < questions.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Show completion screen
-      setIsCompleted(true);
-      onComplete(formData);
+      // Submit to backend for registration
+      setIsSubmitting(true);
+      
+      try {
+        const result = await signup(formData);
+        
+        if (result.success) {
+          setIsCompleted(true);
+          onComplete(result.business);
+        } else {
+          alert(`Registration failed: ${result.error}`);
+        }
+      } catch (error) {
+        alert(`Registration failed: ${error.message}`);
+      } finally {
+        setIsSubmitting(false);
+      }
     }
-  }, [currentStep, formData, onComplete]);
+  }, [currentStep, formData, signup, onComplete]);
 
   const handleRedirectToWorkwithus = useCallback(() => {
     navigate('/workwithus');
@@ -231,7 +248,14 @@ const BusinessOnboarding = memo(({ isOpen, onClose, onComplete }) => {
                 )}
               </div>
 
-          {/* Navigation buttons */}
+              {/* Error display */}
+              {error && (
+                <div className="text-red-400 text-sm text-center" style={{ fontFamily: "Advercase, monospace" }}>
+                  {error}
+                </div>
+              )}
+
+              {/* Navigation buttons */}
           <div className="flex space-x-6">
             {currentStep > 0 && (
               <button
@@ -245,15 +269,15 @@ const BusinessOnboarding = memo(({ isOpen, onClose, onComplete }) => {
             
             <button
               onClick={handleNext}
-              disabled={!isCurrentStepComplete()}
+              disabled={!isCurrentStepComplete() || isSubmitting}
               className={`px-8 py-3 text-sm uppercase tracking-wider transition-colors ${
-                isCurrentStepComplete()
+                isCurrentStepComplete() && !isSubmitting
                   ? 'bg-white text-black hover:bg-gray-200'
                   : 'bg-gray-600 text-gray-400 cursor-not-allowed'
               }`}
               style={{ fontFamily: "Advercase, monospace" }}
             >
-              {currentStep === questions.length - 1 ? 'Complete' : 'Next'}
+              {isSubmitting ? 'Creating Account...' : (currentStep === questions.length - 1 ? 'Complete' : 'Next')}
             </button>
           </div>
 
@@ -263,6 +287,20 @@ const BusinessOnboarding = memo(({ isOpen, onClose, onComplete }) => {
             style={{ fontFamily: "Advercase, monospace" }}
           >
             {currentStep + 1} of {questions.length}
+          </div>
+
+          {/* Switch to Login */}
+          <div className="text-center">
+            <p className="text-gray-400 text-sm mb-4" style={{ fontFamily: "Advercase, monospace" }}>
+              Already have a business account?
+            </p>
+            <button
+              onClick={onSwitchToLogin}
+              className="text-white hover:text-gray-300 text-sm uppercase tracking-wider border-b border-white hover:border-gray-300 transition-colors"
+              style={{ fontFamily: "Advercase, monospace" }}
+            >
+              Sign In
+            </button>
           </div>
             </>
           )}

@@ -5,25 +5,55 @@ import bgMiddle from "../assets/bg-middle.png";
 import bgEnd from "../assets/bg-end.png";
 import bgFooter from "../assets/bg-footer.png";
 import BusinessOnboarding from "./BusinessOnboarding";
+import BusinessLogin from "./BusinessLogin";
+import { useAuth } from "../context/AuthContext";
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const { business, logout } = useAuth();
 
   const handleWorkWithUs = () => {
-    setShowOnboarding(true);
+    if (business) {
+      // If already logged in, go directly to dashboard
+      navigate("/workwithus");
+    } else {
+      // Show signup form
+      setShowOnboarding(true);
+    }
   };
 
-  const handleOnboardingComplete = (formData) => {
-    console.log("Business onboarding completed:", formData);
-    // Here you can save the data, send to API, etc.
+  const handleLogin = () => {
+    setShowLogin(true);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+  };
+
+  const handleOnboardingComplete = (businessData) => {
+    console.log("Business onboarding completed:", businessData);
     setShowOnboarding(false);
-    // Navigate to the work with us page or show success message
     navigate("/workwithus");
   };
 
   const handleOnboardingClose = () => {
     setShowOnboarding(false);
+  };
+
+  const handleLoginClose = () => {
+    setShowLogin(false);
+  };
+
+  const handleSwitchToSignup = () => {
+    setShowLogin(false);
+    setShowOnboarding(true);
+  };
+
+  const handleSwitchToLogin = () => {
+    setShowOnboarding(false);
+    setShowLogin(true);
   };
 
   return (
@@ -39,18 +69,42 @@ const LandingPage = () => {
 
             {/* Navigation Buttons */}
             <div className="flex items-center space-x-4">
-              <button
-                className="navbar-button pixel-text rounded-4xl"
-                onClick={() => navigate("/game")}
-              >
-                Sign Up
-              </button>
-              <button
-                className="navbar-button-primary pixel-text rounded-4xl"
-                onClick={handleWorkWithUs}
-              >
-                Work With Us
-              </button>
+              {business ? (
+                // Authenticated business navigation
+                <>
+                  <span className="pixel-text text-white text-sm">
+                    Welcome, {business.companyName}
+                  </span>
+                  <button
+                    className="navbar-button pixel-text rounded-4xl"
+                    onClick={() => navigate("/workwithus")}
+                  >
+                    Dashboard
+                  </button>
+                  <button
+                    className="navbar-button pixel-text rounded-4xl"
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                // Unauthenticated navigation
+                <>
+                  <button
+                    className="navbar-button pixel-text rounded-4xl"
+                    onClick={handleLogin}
+                  >
+                    Business Login
+                  </button>
+                  <button
+                    className="navbar-button-primary pixel-text rounded-4xl"
+                    onClick={handleWorkWithUs}
+                  >
+                    Work With Us
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -290,6 +344,14 @@ const LandingPage = () => {
         isOpen={showOnboarding}
         onClose={handleOnboardingClose}
         onComplete={handleOnboardingComplete}
+        onSwitchToLogin={handleSwitchToLogin}
+      />
+      
+      {/* Business Login Modal */}
+      <BusinessLogin
+        isOpen={showLogin}
+        onClose={handleLoginClose}
+        onSwitchToSignup={handleSwitchToSignup}
       />
     </div>
   );

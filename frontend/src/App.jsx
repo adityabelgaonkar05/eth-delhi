@@ -15,26 +15,31 @@ import "./App.css";
 import { WalletProvider } from "./context/WalletContext";
 import WalletSelector from "./components/WalletSelector";
 import { TokenProvider } from "./context/TokenContract";
+import { ContractProvider } from "./context/ContractContext";
+import ContractExample from "./components/ContractExample";
 
 function App() {
   return (
     <WalletProvider>
-      <TokenProvider>
-        <Router>
-          <div className="App">
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/game" element={<MultiplayerGame />} />
-              <Route path="/workwithus" element={<Workwithus />} />
-              <Route path="/admin" element={<Workwithus />} />
-              <Route path="/cinema" element={<Cinema />} />
-              <Route path="/library" element={<Library />} />
-              <Route path="/townhall" element={<Townhall />} />
-              {/* <Route path="wallet" element={<WalletSelector />} /> */}
-            </Routes>
-          </div>
-        </Router>
-      </TokenProvider>
+      <ContractProvider>
+        <TokenProvider>
+          <Router>
+            <div className="App">
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/game" element={<MultiplayerGame />} />
+                <Route path="/workwithus" element={<Workwithus />} />
+                <Route path="/admin" element={<Workwithus />} />
+                <Route path="/cinema" element={<Cinema />} />
+                <Route path="/library" element={<Library />} />
+                <Route path="/townhall" element={<Townhall />} />
+                <Route path="/contractTesting" element={<ContractExample />} />
+                {/* <Route path="wallet" element={<WalletSelector />} /> */}
+              </Routes>
+            </div>
+          </Router>
+        </TokenProvider>
+      </ContractProvider>
     </WalletProvider>
   );
 }

@@ -434,6 +434,13 @@ const MultiplayerGame = () => {
   // Initialize Socket.IO connection
   const initializeSocket = useCallback(() => {
     console.log("Initializing socket connection...");
+    
+    // Disconnect existing socket if it exists
+    if (socketRef.current) {
+      console.log("Disconnecting existing socket...");
+      socketRef.current.disconnect();
+    }
+    
     const socket = io("http://localhost:3001");
     socketRef.current = socket;
 
@@ -757,9 +764,11 @@ const MultiplayerGame = () => {
     ctx.fillRect(258, 219, 13, 10) // Highlight the townhall entrance area (X: 253-265, Y: 219-229)
     
     // Draw local player
-    playerRef.current.draw(ctx);
+    if (playerRef.current) {
+      playerRef.current.draw(ctx);
+    }
 
-    // Draw other players
+    // Draw other players  
     otherPlayersRef.current.forEach((player) => {
       player.draw(ctx);
     });
@@ -868,6 +877,7 @@ const MultiplayerGame = () => {
   // Initialize game on component mount
   useEffect(() => {
     console.log("MultiplayerGame useEffect triggered - initializing game...");
+    
     const init = async () => {
       try {
         await initializeGame();
@@ -1423,6 +1433,7 @@ const MultiplayerGame = () => {
         room="main"
         username="Player"
         isVisible={true}
+        socket={socketRef.current}
       />
     </div>
   );

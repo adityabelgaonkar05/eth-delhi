@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { io } from 'socket.io-client';
 
-const GameChat = ({ room = "main", username = "Anonymous", isVisible = true }) => {
-  const [socket, setSocket] = useState(null);
+const GameChat = ({ room = "main", username = "Anonymous", isVisible = true, socket = null }) => {
+  // Remove local socket state since we're using the passed socket
   const [messages, setMessages] = useState([]);
   const [currentMessage, setCurrentMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -34,29 +33,20 @@ const GameChat = ({ room = "main", username = "Anonymous", isVisible = true }) =
     };
   }, []);
 
-  // Initialize socket connection
+    // Initialize chat listeners on the existing socket
   useEffect(() => {
-    if (!isVisible) return;
+    if (!isVisible || !socket) return;
     
-    const newSocket = io('http://localhost:3001');
-    setSocket(newSocket);
+    console.log("Setting up chat listeners on existing socket:", socket.id);
 
-    // Join the room (this registers the player in the game)
-    newSocket.emit('joinRoom', room);
-    
-    // Wait a moment then request chat history
-    setTimeout(() => {
-      newSocket.emit('getChatHistory', room);
-    }, 1000);
-
-    // Listen for chat messages
-    newSocket.on('chatMessage', (message) => {
+    // Set up chat event listeners
+    socket.on('chatMessage', (message) => {
       console.log('💬 Received chat message:', message);
       addMessage(message);
     });
 
     // Listen for chat history (only show recent messages)
-    newSocket.on('chatHistory', (history) => {
+    socket.on('chatHistory', (history) => {
       console.log('📜 Received chat history:', history);
       // Only show last 5 messages from history
       const recentHistory = history.slice(-5);
@@ -64,32 +54,27 @@ const GameChat = ({ room = "main", username = "Anonymous", isVisible = true }) =
     });
 
     // Listen for chat errors
-    newSocket.on('chatError', (error) => {
+    socket.on('chatError', (error) => {
       console.error('💬 Chat error:', error);
       setChatError(error.message);
       setTimeout(() => setChatError(''), 5000);
     });
 
-    // Handle connection events
-    newSocket.on('connect', () => {
-      console.log('🔗 Connected to chat server');
-      setIsConnected(true);
-    });
+    // Handle connection events - socket is already connected
+    setIsConnected(socket.connected);
 
-    newSocket.on('disconnect', () => {
-      console.log('❌ Disconnected from chat server');
-      setIsConnected(false);
-    });
+    // Wait a moment then request chat history
+    setTimeout(() => {
+      socket.emit('getChatHistory', room);
+    }, 1000);
 
-    newSocket.on('connect_error', (error) => {
-      console.error('🚫 Socket connection error:', error);
-      setIsConnected(false);
-    });
-
+    // Clean up listeners on unmount
     return () => {
-      newSocket.close();
+      socket.off('chatMessage');
+      socket.off('chatHistory'); 
+      socket.off('chatError');
     };
-  }, [room, isVisible]);
+  }, [room, isVisible, socket, addMessage]);
 
   // Handle sending messages
   const sendMessage = useCallback((e) => {
@@ -139,6 +124,40 @@ const GameChat = ({ room = "main", username = "Anonymous", isVisible = true }) =
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isTyping]);
+
+  // Generate consistent color for username
+  const getUsernameColor = useCallback((username) => {
+    // Predefined colors that are readable on dark backgrounds
+    const colors = [
+      '#FF6B6B', // Red
+      '#4ECDC4', // Teal
+      '#45B7D1', // Blue
+      '#96CEB4', // Green
+      '#FFEAA7', // Yellow
+      '#DDA0DD', // Plum
+      '#98D8C8', // Mint
+      '#F7DC6F', // Light Yellow
+      '#BB8FCE', // Light Purple
+      '#85C1E9', // Light Blue
+      '#F8C471', // Orange
+      '#82E0AA', // Light Green
+      '#F1948A', // Pink
+      '#AED6F1', // Sky Blue
+      '#A9DFBF'  // Pastel Green
+    ];
+    
+    // Create a simple hash from username
+    let hash = 0;
+    for (let i = 0; i < username.length; i++) {
+      const char = username.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    
+    // Use absolute value and modulo to get color index
+    const colorIndex = Math.abs(hash) % colors.length;
+    return colors[colorIndex];
+  }, []);
 
   // Format timestamp
   const formatTime = (timestamp) => {
@@ -193,7 +212,7 @@ const GameChat = ({ room = "main", username = "Anonymous", isVisible = true }) =
                   <span className="text-white">&lt;</span>
                   <span 
                     className="font-bold"
-                    style={{ color: msg.playerColor || '#FFFFFF' }}
+                    style={{ color: msg.playerColor || getUsernameColor(msg.username) }}
                   >
                     {msg.username}
                   </span>
@@ -220,6 +239,13 @@ const GameChat = ({ room = "main", username = "Anonymous", isVisible = true }) =
                 border: '1px solid rgba(255, 255, 255, 0.1)'
               }}
             >
+              <span className="text-white text-base mr-1">&lt;</span>
+              <span 
+                className="font-bold text-base mr-1"
+                style={{ color: getUsernameColor(username) }}
+              >
+                {username}
+              </span>
               <span className="text-white text-base mr-2">&gt;</span>
               <input
                 ref={inputRef}

@@ -123,7 +123,7 @@ const CONTRACT_CONFIGS = {
 
 // Network configuration
 const RPC =
-  import.meta.env.VITE_FLOW_RPC || "https://rest-testnet.onflow.org/v1";
+  import.meta.env.VITE_FLOW_RPC || "https://testnet.evm.nodes.onflow.org";
 const CHAINID = 545;
 
 export const ContractProvider = ({ children }) => {

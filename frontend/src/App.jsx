@@ -18,6 +18,8 @@ import Townhall from "./components/Townhall";
 import Workwithus from "./components/Workwithus";
 import ChatTest from "./components/ChatTest";
 import PetNFTShop from "./components/PetNFTShop";
+import LeaderboardsPage from "./components/LeaderboardsPage";
+import QuickNavigation from "./components/QuickNavigation";
 import OnboardingPage from "./components/OnboardingPage";
 import "./App.css";
 import { WalletProvider } from "./context/WalletContext";
@@ -65,6 +67,20 @@ function App() {
                       </AuthGuard>
                     } />
 
+                    {/* Pet Shop route */}
+                    <Route path="/pets" element={
+                      <AuthGuard>
+                        <PetNFTShop />
+                      </AuthGuard>
+                    } />
+
+                    {/* Leaderboards route */}
+                    <Route path="/leaderboards" element={
+                      <AuthGuard>
+                        <LeaderboardsPage />
+                      </AuthGuard>
+                    } />
+
                     {/* Admin/work routes */}
                     <Route path="/workwithus" element={<Workwithus />} />
                     <Route path="/admin" element={<Workwithus />} />
@@ -73,6 +89,9 @@ function App() {
                     <Route path="/contractTesting" element={<ContractExample />} />
                     {/* <Route path="wallet" element={<WalletSelector />} /> */}
                   </Routes>
+                  
+                  {/* Quick Navigation - remove in production */}
+                  <QuickNavigation />
                 </div>
               </SelfAuthProvider>
             </Router>

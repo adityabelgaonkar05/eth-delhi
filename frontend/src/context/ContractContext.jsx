@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { ethers } from "ethers";
 import { useWallet } from "./WalletContext";
+import walrusApi from "../services/walrusApi";
 
 // Import all contract ABIs
 import CryptoVerseTokenABI from "../contractData/CryptoVerseToken.json";
@@ -454,6 +455,15 @@ export const ContractProvider = ({ children }) => {
 
     // Re-initialize contracts
     initializeContracts,
+
+    // Backend Walrus API functions
+    uploadToWalrusViaBackend,
+    retrieveFromWalrusViaBackend,
+    checkBlobStatusViaBackend,
+    uploadFileToWalrusViaBackend,
+    uploadTextToWalrusViaBackend,
+    uploadJsonToWalrusViaBackend,
+    checkWalrusHealthViaBackend,
   };
 
   return (
@@ -537,4 +547,228 @@ export const useWalrusStorage = () => {
   const { getContract, isLoading } = useContracts();
   const contract = getContract("WalrusStorage");
   return { contract, isLoading };
+};
+
+// Backend Walrus API Integration Functions
+
+/**
+ * Upload content to Walrus storage via backend API
+ * @param {string|Buffer|Array} content - Content to upload
+ * @param {number} epochs - Number of epochs for storage
+ * @param {boolean} permanent - Whether storage is permanent
+ * @returns {Promise<Object>} Upload result with blobId and metadata
+ */
+export const uploadToWalrusViaBackend = async (
+  content,
+  epochs = 1,
+  permanent = false
+) => {
+  try {
+    console.log("📤 Uploading to Walrus via backend API...");
+    const result = await walrusApi.uploadToWalrus(content, epochs, permanent);
+    console.log("✅ Backend Walrus upload successful:", result);
+    return result;
+  } catch (error) {
+    console.error("❌ Backend Walrus upload failed:", error);
+    throw error;
+  }
+};
+
+/**
+ * Retrieve content from Walrus storage via backend API
+ * @param {string} blobId - Blob ID to retrieve
+ * @returns {Promise<Object>} Retrieved content and metadata
+ */
+export const retrieveFromWalrusViaBackend = async (blobId) => {
+  try {
+    console.log(`📥 Retrieving from Walrus via backend API: ${blobId}`);
+    const result = await walrusApi.retrieveFromWalrus(blobId);
+    console.log("✅ Backend Walrus retrieval successful:", result);
+    return result;
+  } catch (error) {
+    console.error("❌ Backend Walrus retrieval failed:", error);
+    throw error;
+  }
+};
+
+/**
+ * Check blob status via backend API
+ * @param {string} blobId - Blob ID to check
+ * @returns {Promise<Object>} Blob status information
+ */
+export const checkBlobStatusViaBackend = async (blobId) => {
+  try {
+    console.log(`🔍 Checking blob status via backend API: ${blobId}`);
+    const result = await walrusApi.checkBlobStatus(blobId);
+    console.log("✅ Backend blob status check successful:", result);
+    return result;
+  } catch (error) {
+    console.error("❌ Backend blob status check failed:", error);
+    throw error;
+  }
+};
+
+/**
+ * Upload file to Walrus via backend API
+ * @param {File} file - File to upload
+ * @param {number} epochs - Number of epochs for storage
+ * @param {boolean} permanent - Whether storage is permanent
+ * @returns {Promise<Object>} Upload result
+ */
+export const uploadFileToWalrusViaBackend = async (
+  file,
+  epochs = 1,
+  permanent = false
+) => {
+  try {
+    console.log(`📁 Uploading file via backend API: ${file.name}`);
+    const result = await walrusApi.uploadFile(file, epochs, permanent);
+    console.log("✅ Backend file upload successful:", result);
+    return result;
+  } catch (error) {
+    console.error("❌ Backend file upload failed:", error);
+    throw error;
+  }
+};
+
+/**
+ * Upload text to Walrus via backend API
+ * @param {string} text - Text content to upload
+ * @param {number} epochs - Number of epochs for storage
+ * @param {boolean} permanent - Whether storage is permanent
+ * @returns {Promise<Object>} Upload result
+ */
+export const uploadTextToWalrusViaBackend = async (
+  text,
+  epochs = 1,
+  permanent = false
+) => {
+  try {
+    console.log("📝 Uploading text via backend API...");
+    const result = await walrusApi.uploadText(text, epochs, permanent);
+    console.log("✅ Backend text upload successful:", result);
+    return result;
+  } catch (error) {
+    console.error("❌ Backend text upload failed:", error);
+    throw error;
+  }
+};
+
+/**
+ * Upload JSON data to Walrus via backend API
+ * @param {Object} data - JSON data to upload
+ * @param {number} epochs - Number of epochs for storage
+ * @param {boolean} permanent - Whether storage is permanent
+ * @returns {Promise<Object>} Upload result
+ */
+export const uploadJsonToWalrusViaBackend = async (
+  data,
+  epochs = 1,
+  permanent = false
+) => {
+  try {
+    console.log("📋 Uploading JSON via backend API...");
+    const result = await walrusApi.uploadJson(data, epochs, permanent);
+    console.log("✅ Backend JSON upload successful:", result);
+    return result;
+  } catch (error) {
+    console.error("❌ Backend JSON upload failed:", error);
+    throw error;
+  }
+};
+
+/**
+ * Check Walrus service health via backend API
+ * @returns {Promise<Object>} Health status
+ */
+export const checkWalrusHealthViaBackend = async () => {
+  try {
+    console.log("🏥 Checking Walrus health via backend API...");
+    const result = await walrusApi.checkHealth();
+    console.log("✅ Backend health check successful:", result);
+    return result;
+  } catch (error) {
+    console.error("❌ Backend health check failed:", error);
+    throw error;
+  }
+};
+
+// Legacy function for direct contract interaction (kept for backward compatibility)
+export const uploadToWalrus = async (
+  walrusContract,
+  fileBytes,
+  storageTier
+) => {
+  if (!walrusContract || !fileBytes) {
+    throw new Error("Contract instance and file content are required.");
+  }
+
+  try {
+    // === STEP 1: Calculate the Storage Cost ===
+    console.log("1/4: Calculating storage cost on-chain...");
+    const cost = await walrusContract.calculateStorageCost(
+      fileBytes.length,
+      storageTier
+    );
+    console.log(`   - Required payment: ${ethers.formatEther(cost)} ETH`);
+
+    // === STEP 2: Call the storeBlob function with payment ===
+    console.log("2/4: Sending transaction to storeBlob...");
+    const isPublic = true; // Set your desired privacy
+    const tx = await walrusContract.storeBlob(
+      fileBytes,
+      storageTier,
+      isPublic,
+      {
+        value: cost, // Send the calculated cost with the transaction
+      }
+    );
+
+    console.log(`   - Transaction sent! Hash: ${tx.hash}`);
+    console.log("3/4: Waiting for transaction confirmation...");
+    const receipt = await tx.wait(); // Wait for the transaction to be mined
+
+    // === STEP 3: Get the Request ID from the Event Log ===
+    // We parse the logs from the receipt to find the event we emitted.
+    const requestedEvent = receipt.logs.find((log) => {
+      try {
+        const parsedLog = walrusContract.interface.parseLog(log);
+        return parsedLog?.name === "WalrusStoreRequested";
+      } catch (err) {
+        return false;
+      }
+    });
+
+    if (!requestedEvent) {
+      throw new Error(
+        "Could not find WalrusStoreRequested event in transaction receipt."
+      );
+    }
+
+    const requestId = requestedEvent.args[0];
+    console.log(`   - Transaction confirmed! Request ID: ${requestId}`);
+    console.log("4/4: Waiting for the oracle to process the request...");
+
+    // === STEP 4: Listen for the Final Confirmation from the Oracle ===
+    // We return a new Promise that will resolve only when the oracle has completed its job.
+    return new Promise((resolve, reject) => {
+      // Set up a listener for the WalrusStoreCompleted event, filtered by our requestId
+      const filter = walrusContract.filters.WalrusStoreCompleted(requestId);
+
+      walrusContract.once(filter, (reqId, blobId) => {
+        console.log("✅ Oracle callback received! Process complete.");
+        console.log(`   - Final Blob ID: ${blobId}`);
+        resolve({ requestId: reqId, finalBlobId: blobId });
+      });
+
+      // Optional: Add a timeout in case the oracle never responds
+      setTimeout(() => {
+        reject(new Error("Oracle response timed out after 5 minutes."));
+      }, 300000);
+    });
+  } catch (error) {
+    console.error("uploadToWalrus failed:", error);
+    // Re-throw the error so the calling component can handle it
+    throw error;
+  }
 };

@@ -19,6 +19,7 @@ import WalletSelector from "./components/WalletSelector";
 import { TokenProvider } from "./context/TokenContract";
 import { ContractProvider } from "./context/ContractContext";
 import ContractExample from "./components/ContractExample";
+import WalrusTest from "./components/WalrusTest";
 
 function App() {
   return (
@@ -41,6 +42,8 @@ function App() {
                     path="/contractTesting"
                     element={<ContractExample />}
                   />
+
+                  <Route path="/walrusTest" element={<WalrusTest />} />
                   {/* <Route path="wallet" element={<WalletSelector />} /> */}
                 </Routes>
               </div>

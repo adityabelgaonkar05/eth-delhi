@@ -1,0 +1,3 @@
+# Sui wallet configuration for Walrus
+network: "testnet"
+rpc_url: "https://walrus-testnet.sui.io:443"

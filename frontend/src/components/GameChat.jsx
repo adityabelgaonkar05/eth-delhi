@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { getUsernameColor } from '../utils/colorUtils';
 
 const GameChat = ({ room = "main", username = "Anonymous", isVisible = true, socket = null }) => {
   // Remove local socket state since we're using the passed socket
@@ -124,40 +125,6 @@ const GameChat = ({ room = "main", username = "Anonymous", isVisible = true, soc
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isTyping]);
-
-  // Generate consistent color for username
-  const getUsernameColor = useCallback((username) => {
-    // Predefined colors that are readable on dark backgrounds
-    const colors = [
-      '#FF6B6B', // Red
-      '#4ECDC4', // Teal
-      '#45B7D1', // Blue
-      '#96CEB4', // Green
-      '#FFEAA7', // Yellow
-      '#DDA0DD', // Plum
-      '#98D8C8', // Mint
-      '#F7DC6F', // Light Yellow
-      '#BB8FCE', // Light Purple
-      '#85C1E9', // Light Blue
-      '#F8C471', // Orange
-      '#82E0AA', // Light Green
-      '#F1948A', // Pink
-      '#AED6F1', // Sky Blue
-      '#A9DFBF'  // Pastel Green
-    ];
-    
-    // Create a simple hash from username
-    let hash = 0;
-    for (let i = 0; i < username.length; i++) {
-      const char = username.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32-bit integer
-    }
-    
-    // Use absolute value and modulo to get color index
-    const colorIndex = Math.abs(hash) % colors.length;
-    return colors[colorIndex];
-  }, []);
 
   // Format timestamp
   const formatTime = (timestamp) => {

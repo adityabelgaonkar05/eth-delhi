@@ -1,41 +1,46 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { useNavigate } from 'react-router-dom'
-import { io } from 'socket.io-client'
-import Player from '../game/classes/Player'
-import MultiPlayer from '../game/classes/MultiPlayer'
-import CollisionBlock from '../game/classes/CollisionBlock'
-import Sprite from '../game/classes/Sprite'
-import GameChat from './GameChat'
+import { useNavigate } from "react-router-dom";
+import { io } from "socket.io-client";
+import Player from "../game/classes/Player";
+import MultiPlayer from "../game/classes/MultiPlayer";
+import CollisionBlock from "../game/classes/CollisionBlock";
+import Sprite from "../game/classes/Sprite";
+import GameChat from "./GameChat";
 import TokenBalance from "./TokenBalance";
-import PlayerStatus from './PlayerStatus'
-import PlayerNameTag from './PlayerNameTag'
-import PlayerProfileModal from './PlayerProfileModal'
-import PlayerSearch from './PlayerSearch'
-import { useSocket } from '../context/SocketContext'
-import { getUsernameColor } from '../utils/colorUtils'
-import { getBlogsByAuthor, getContract, getAllBlogs, rewardBlogReading } from '../utils/contractHelpers'
-import { 
-  collisions, 
-  l_New_Layer_1, 
-  l_New_Layer_2, 
-  l_New_Layer_3, 
-  l_New_Layer_4, 
-  l_New_Layer_5, 
-  l_New_Layer_6, 
-  l_New_Layer_7, 
-  l_New_Layer_8, 
-  l_New_Layer_9, 
-  l_New_Layer_10, 
-  l_New_Layer_11, 
-  l_New_Layer_12, 
-  l_New_Layer_13 
-} from '../game/data/gameData'
-import { loadImage } from '../game/utils/gameUtils'
+import PlayerStatus from "./PlayerStatus";
+import PlayerNameTag from "./PlayerNameTag";
+import PlayerProfileModal from "./PlayerProfileModal";
+import PlayerSearch from "./PlayerSearch";
+import { useSocket } from "../context/SocketContext";
+import { getUsernameColor } from "../utils/colorUtils";
+import {
+  getBlogsByAuthor,
+  getContract,
+  getAllBlogs,
+  rewardBlogReading,
+} from "../utils/contractHelpers";
+import {
+  collisions,
+  l_New_Layer_1,
+  l_New_Layer_2,
+  l_New_Layer_3,
+  l_New_Layer_4,
+  l_New_Layer_5,
+  l_New_Layer_6,
+  l_New_Layer_7,
+  l_New_Layer_8,
+  l_New_Layer_9,
+  l_New_Layer_10,
+  l_New_Layer_11,
+  l_New_Layer_12,
+  l_New_Layer_13,
+} from "../game/data/gameData";
+import { loadImage } from "../game/utils/gameUtils";
 
 const MultiplayerGame = () => {
   console.log("MultiplayerGame component rendering...");
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const canvasRef = useRef(null);
   const playerRef = useRef(null); // Local player
   const otherPlayersRef = useRef(new Map()); // Other players
@@ -53,68 +58,72 @@ const MultiplayerGame = () => {
   const lastTimeRef = useRef(performance.now());
   const elapsedTimeRef = useRef(0);
 
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [connected, setConnected] = useState(false)
-  const [playerCount, setPlayerCount] = useState(0)
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [connected, setConnected] = useState(false);
+  const [playerCount, setPlayerCount] = useState(0);
 
   // Player profile modal state
-  const [selectedPlayer, setSelectedPlayer] = useState(null)
-  const [showPlayerModal, setShowPlayerModal] = useState(false)
-  const [hoveredPlayer, setHoveredPlayer] = useState(null)
-  const [playerCoords, setPlayerCoords] = useState({ x: 0, y: 0 })
-  
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [showPlayerModal, setShowPlayerModal] = useState(false);
+  const [hoveredPlayer, setHoveredPlayer] = useState(null);
+  const [playerCoords, setPlayerCoords] = useState({ x: 0, y: 0 });
+
   // Player search state
-  const [showPlayerSearch, setShowPlayerSearch] = useState(false)
-  
-  const [showLibraryPrompt, setShowLibraryPrompt] = useState(false)
-  const [hasShownLibraryPrompt, setHasShownLibraryPrompt] = useState(false)
-  const [libraryPromptCooldown, setLibraryPromptCooldown] = useState(false)
-  const [cooldownTimeLeft, setCooldownTimeLeft] = useState(0)
-  const [isHoldingLibrary, setIsHoldingLibrary] = useState(false)
-  const [libraryHoldProgress, setLibraryHoldProgress] = useState(0)
-  const cooldownTimeoutRef = useRef(null)
-  const cooldownIntervalRef = useRef(null)
-  const libraryHoldIntervalRef = useRef(null)
+  const [showPlayerSearch, setShowPlayerSearch] = useState(false);
+
+  const [showLibraryPrompt, setShowLibraryPrompt] = useState(false);
+  const [hasShownLibraryPrompt, setHasShownLibraryPrompt] = useState(false);
+  const [libraryPromptCooldown, setLibraryPromptCooldown] = useState(false);
+  const [cooldownTimeLeft, setCooldownTimeLeft] = useState(0);
+  const [isHoldingLibrary, setIsHoldingLibrary] = useState(false);
+  const [libraryHoldProgress, setLibraryHoldProgress] = useState(0);
+  const cooldownTimeoutRef = useRef(null);
+  const cooldownIntervalRef = useRef(null);
+  const libraryHoldIntervalRef = useRef(null);
 
   // Cinema room states
-  const [showCinemaPrompt, setShowCinemaPrompt] = useState(false)
-  const [hasShownCinemaPrompt, setHasShownCinemaPrompt] = useState(false)
-  const [cinemaPromptCooldown, setCinemaPromptCooldown] = useState(false)
-  const [cinemaCooldownTimeLeft, setCinemaCooldownTimeLeft] = useState(0)
-  const [isHoldingCinema, setIsHoldingCinema] = useState(false)
-  const [cinemaHoldProgress, setCinemaHoldProgress] = useState(0)
-  const cinemaCooldownTimeoutRef = useRef(null)
-  const cinemaCooldownIntervalRef = useRef(null)
-  const cinemaHoldIntervalRef = useRef(null)
+  const [showCinemaPrompt, setShowCinemaPrompt] = useState(false);
+  const [hasShownCinemaPrompt, setHasShownCinemaPrompt] = useState(false);
+  const [cinemaPromptCooldown, setCinemaPromptCooldown] = useState(false);
+  const [cinemaCooldownTimeLeft, setCinemaCooldownTimeLeft] = useState(0);
+  const [isHoldingCinema, setIsHoldingCinema] = useState(false);
+  const [cinemaHoldProgress, setCinemaHoldProgress] = useState(0);
+  const cinemaCooldownTimeoutRef = useRef(null);
+  const cinemaCooldownIntervalRef = useRef(null);
+  const cinemaHoldIntervalRef = useRef(null);
 
   // Townhall room states
-  const [showTownhallPrompt, setShowTownhallPrompt] = useState(false)
-  const [hasShownTownhallPrompt, setHasShownTownhallPrompt] = useState(false)
-  const [townhallPromptCooldown, setTownhallPromptCooldown] = useState(false)
-  const [townhallCooldownTimeLeft, setTownhallCooldownTimeLeft] = useState(0)
-  const [isHoldingTownhall, setIsHoldingTownhall] = useState(false)
-  const [townhallHoldProgress, setTownhallHoldProgress] = useState(0)
-  const townhallCooldownTimeoutRef = useRef(null)
-  const townhallCooldownIntervalRef = useRef(null)
-  const townhallHoldIntervalRef = useRef(null)
+  const [showTownhallPrompt, setShowTownhallPrompt] = useState(false);
+  const [hasShownTownhallPrompt, setHasShownTownhallPrompt] = useState(false);
+  const [townhallPromptCooldown, setTownhallPromptCooldown] = useState(false);
+  const [townhallCooldownTimeLeft, setTownhallCooldownTimeLeft] = useState(0);
+  const [isHoldingTownhall, setIsHoldingTownhall] = useState(false);
+  const [townhallHoldProgress, setTownhallHoldProgress] = useState(0);
+  const townhallCooldownTimeoutRef = useRef(null);
+  const townhallCooldownIntervalRef = useRef(null);
+  const townhallHoldIntervalRef = useRef(null);
 
   // Blog hub states
-  const [showBlogPrompt, setShowBlogPrompt] = useState(false)
-  const [hasShownBlogPrompt, setHasShownBlogPrompt] = useState(false)
-  const [blogPromptCooldown, setBlogPromptCooldown] = useState(false)
-  const [blogCooldownTimeLeft, setBlogCooldownTimeLeft] = useState(0)
-  const [isHoldingBlog, setIsHoldingBlog] = useState(false)
-  const [blogHoldProgress, setBlogHoldProgress] = useState(0)
-  const [showBlogModal, setShowBlogModal] = useState(false)
-  const [blogs, setBlogs] = useState([])
-  const [loadingBlogs, setLoadingBlogs] = useState(false)
-  const blogCooldownTimeoutRef = useRef(null)
-  const blogCooldownIntervalRef = useRef(null)
-  const blogHoldIntervalRef = useRef(null)
+  const [showBlogPrompt, setShowBlogPrompt] = useState(false);
+  const [hasShownBlogPrompt, setHasShownBlogPrompt] = useState(false);
+  const [blogPromptCooldown, setBlogPromptCooldown] = useState(false);
+  const [blogCooldownTimeLeft, setBlogCooldownTimeLeft] = useState(0);
+  const [isHoldingBlog, setIsHoldingBlog] = useState(false);
+  const [blogHoldProgress, setBlogHoldProgress] = useState(0);
+  const [showBlogModal, setShowBlogModal] = useState(false);
+  const [blogs, setBlogs] = useState([]);
+  const [loadingBlogs, setLoadingBlogs] = useState(false);
+  const blogCooldownTimeoutRef = useRef(null);
+  const blogCooldownIntervalRef = useRef(null);
+  const blogHoldIntervalRef = useRef(null);
 
   // Socket context
-  const { connect: connectSocket, disconnect: disconnectSocket, socket } = useSocket();
+  const {
+    connect: connectSocket,
+    disconnect: disconnectSocket,
+    socket,
+  } = useSocket();
 
   console.log("MultiplayerGame state:", {
     isLoading,
@@ -125,349 +134,357 @@ const MultiplayerGame = () => {
 
   // Start cooldown period to prevent prompt spam
   const startCooldown = useCallback(() => {
-    console.log('startCooldown called - setting cooldown to true')
-    setLibraryPromptCooldown(true)
-    setCooldownTimeLeft(5)
-    
+    console.log("startCooldown called - setting cooldown to true");
+    setLibraryPromptCooldown(true);
+    setCooldownTimeLeft(5);
+
     // Clear any existing timeout and interval
     if (cooldownTimeoutRef.current) {
-      clearTimeout(cooldownTimeoutRef.current)
+      clearTimeout(cooldownTimeoutRef.current);
     }
     if (cooldownIntervalRef.current) {
-      clearInterval(cooldownIntervalRef.current)
+      clearInterval(cooldownIntervalRef.current);
     }
-    
+
     // Start countdown interval
     cooldownIntervalRef.current = setInterval(() => {
-      setCooldownTimeLeft(prev => {
+      setCooldownTimeLeft((prev) => {
         if (prev <= 1) {
-          clearInterval(cooldownIntervalRef.current)
-          return 0
+          clearInterval(cooldownIntervalRef.current);
+          return 0;
         }
-        return prev - 1
-      })
-    }, 1000)
-    
+        return prev - 1;
+      });
+    }, 1000);
+
     // Set 5-second cooldown
     cooldownTimeoutRef.current = setTimeout(() => {
-      console.log('Cooldown timeout triggered - setting cooldown to false')
-      setLibraryPromptCooldown(false)
-      setHasShownLibraryPrompt(false) // Reset so it can trigger again after cooldown
-      setCooldownTimeLeft(0)
-      console.log('Library prompt cooldown ended')
-    }, 5000) // 5 seconds cooldown
-  }, [])
+      console.log("Cooldown timeout triggered - setting cooldown to false");
+      setLibraryPromptCooldown(false);
+      setHasShownLibraryPrompt(false); // Reset so it can trigger again after cooldown
+      setCooldownTimeLeft(0);
+      console.log("Library prompt cooldown ended");
+    }, 5000); // 5 seconds cooldown
+  }, []);
 
   // Start cinema cooldown period to prevent prompt spam
   const startCinemaCooldown = useCallback(() => {
-    console.log('startCinemaCooldown called - setting cooldown to true')
-    setCinemaPromptCooldown(true)
-    setCinemaCooldownTimeLeft(5)
-    
+    console.log("startCinemaCooldown called - setting cooldown to true");
+    setCinemaPromptCooldown(true);
+    setCinemaCooldownTimeLeft(5);
+
     // Clear any existing timeout and interval
     if (cinemaCooldownTimeoutRef.current) {
-      clearTimeout(cinemaCooldownTimeoutRef.current)
+      clearTimeout(cinemaCooldownTimeoutRef.current);
     }
     if (cinemaCooldownIntervalRef.current) {
-      clearInterval(cinemaCooldownIntervalRef.current)
+      clearInterval(cinemaCooldownIntervalRef.current);
     }
-    
+
     // Start countdown interval
     cinemaCooldownIntervalRef.current = setInterval(() => {
-      setCinemaCooldownTimeLeft(prev => {
+      setCinemaCooldownTimeLeft((prev) => {
         if (prev <= 1) {
-          clearInterval(cinemaCooldownIntervalRef.current)
-          return 0
+          clearInterval(cinemaCooldownIntervalRef.current);
+          return 0;
         }
-        return prev - 1
-      })
-    }, 1000)
-    
+        return prev - 1;
+      });
+    }, 1000);
+
     // Set 5-second cooldown
     cinemaCooldownTimeoutRef.current = setTimeout(() => {
-      console.log('Cinema cooldown timeout triggered - setting cooldown to false')
-      setCinemaPromptCooldown(false)
-      setHasShownCinemaPrompt(false) // Reset so it can trigger again after cooldown
-      setCinemaCooldownTimeLeft(0)
-      console.log('Cinema prompt cooldown ended')
-    }, 5000) // 5 seconds cooldown
-  }, [])
+      console.log(
+        "Cinema cooldown timeout triggered - setting cooldown to false"
+      );
+      setCinemaPromptCooldown(false);
+      setHasShownCinemaPrompt(false); // Reset so it can trigger again after cooldown
+      setCinemaCooldownTimeLeft(0);
+      console.log("Cinema prompt cooldown ended");
+    }, 5000); // 5 seconds cooldown
+  }, []);
 
   // Start townhall cooldown period to prevent prompt spam
   const startTownhallCooldown = useCallback(() => {
-    console.log('startTownhallCooldown called - setting cooldown to true')
-    setTownhallPromptCooldown(true)
-    setTownhallCooldownTimeLeft(5)
-    
+    console.log("startTownhallCooldown called - setting cooldown to true");
+    setTownhallPromptCooldown(true);
+    setTownhallCooldownTimeLeft(5);
+
     // Clear any existing timeout and interval
     if (townhallCooldownTimeoutRef.current) {
-      clearTimeout(townhallCooldownTimeoutRef.current)
+      clearTimeout(townhallCooldownTimeoutRef.current);
     }
     if (townhallCooldownIntervalRef.current) {
-      clearInterval(townhallCooldownIntervalRef.current)
+      clearInterval(townhallCooldownIntervalRef.current);
     }
-    
+
     // Start countdown interval
     townhallCooldownIntervalRef.current = setInterval(() => {
-      setTownhallCooldownTimeLeft(prev => {
+      setTownhallCooldownTimeLeft((prev) => {
         if (prev <= 1) {
-          clearInterval(townhallCooldownIntervalRef.current)
-          return 0
+          clearInterval(townhallCooldownIntervalRef.current);
+          return 0;
         }
-        return prev - 1
-      })
-    }, 1000)
-    
+        return prev - 1;
+      });
+    }, 1000);
+
     // Set 5-second cooldown
     townhallCooldownTimeoutRef.current = setTimeout(() => {
-      console.log('Townhall cooldown timeout triggered - setting cooldown to false')
-      setTownhallPromptCooldown(false)
-      setHasShownTownhallPrompt(false) // Reset so it can trigger again after cooldown
-      setTownhallCooldownTimeLeft(0)
-      console.log('Townhall prompt cooldown ended')
-    }, 5000) // 5 seconds cooldown
-  }, [])
+      console.log(
+        "Townhall cooldown timeout triggered - setting cooldown to false"
+      );
+      setTownhallPromptCooldown(false);
+      setHasShownTownhallPrompt(false); // Reset so it can trigger again after cooldown
+      setTownhallCooldownTimeLeft(0);
+      console.log("Townhall prompt cooldown ended");
+    }, 5000); // 5 seconds cooldown
+  }, []);
 
   // Start blog cooldown period to prevent prompt spam
   const startBlogCooldown = useCallback(() => {
-    console.log('startBlogCooldown called - setting cooldown to true')
-    setBlogPromptCooldown(true)
-    setBlogCooldownTimeLeft(5)
-    
+    console.log("startBlogCooldown called - setting cooldown to true");
+    setBlogPromptCooldown(true);
+    setBlogCooldownTimeLeft(5);
+
     // Clear any existing timeout and interval
     if (blogCooldownTimeoutRef.current) {
-      clearTimeout(blogCooldownTimeoutRef.current)
+      clearTimeout(blogCooldownTimeoutRef.current);
     }
     if (blogCooldownIntervalRef.current) {
-      clearInterval(blogCooldownIntervalRef.current)
+      clearInterval(blogCooldownIntervalRef.current);
     }
-    
+
     // Start countdown interval
     blogCooldownIntervalRef.current = setInterval(() => {
-      setBlogCooldownTimeLeft(prev => {
+      setBlogCooldownTimeLeft((prev) => {
         if (prev <= 1) {
-          clearInterval(blogCooldownIntervalRef.current)
-          return 0
+          clearInterval(blogCooldownIntervalRef.current);
+          return 0;
         }
-        return prev - 1
-      })
-    }, 1000)
-    
+        return prev - 1;
+      });
+    }, 1000);
+
     // Set 5-second cooldown
     blogCooldownTimeoutRef.current = setTimeout(() => {
-      console.log('Blog cooldown timeout triggered - setting cooldown to false')
-      setBlogPromptCooldown(false)
-      setHasShownBlogPrompt(false) // Reset so it can trigger again after cooldown
-      setBlogCooldownTimeLeft(0)
-      console.log('Blog prompt cooldown ended')
-    }, 5000) // 5 seconds cooldown
-  }, [])
+      console.log(
+        "Blog cooldown timeout triggered - setting cooldown to false"
+      );
+      setBlogPromptCooldown(false);
+      setHasShownBlogPrompt(false); // Reset so it can trigger again after cooldown
+      setBlogCooldownTimeLeft(0);
+      console.log("Blog prompt cooldown ended");
+    }, 5000); // 5 seconds cooldown
+  }, []);
 
   // Handle library navigation
   const handleGoToLibrary = useCallback(() => {
-    setShowLibraryPrompt(false)
-    startCooldown()
-    navigate('/library')
-  }, [startCooldown, navigate])
+    setShowLibraryPrompt(false);
+    startCooldown();
+    navigate("/library");
+  }, [startCooldown, navigate]);
 
   const handleStayInGame = useCallback(() => {
-    console.log('handleStayInGame called - starting cooldown')
-    setShowLibraryPrompt(false)
-    setIsHoldingLibrary(false)
-    setLibraryHoldProgress(0)
+    console.log("handleStayInGame called - starting cooldown");
+    setShowLibraryPrompt(false);
+    setIsHoldingLibrary(false);
+    setLibraryHoldProgress(0);
     if (libraryHoldIntervalRef.current) {
-      clearInterval(libraryHoldIntervalRef.current)
+      clearInterval(libraryHoldIntervalRef.current);
     }
-    startCooldown()
-  }, [startCooldown])
+    startCooldown();
+  }, [startCooldown]);
 
   // Handle cinema navigation
   const handleGoToCinema = useCallback(() => {
-    setShowCinemaPrompt(false)
-    startCinemaCooldown()
-    navigate('/cinema')
-  }, [startCinemaCooldown, navigate])
+    setShowCinemaPrompt(false);
+    startCinemaCooldown();
+    navigate("/cinema");
+  }, [startCinemaCooldown, navigate]);
 
   const handleStayInGameCinema = useCallback(() => {
-    console.log('handleStayInGameCinema called - starting cooldown')
-    setShowCinemaPrompt(false)
-    setIsHoldingCinema(false)
-    setCinemaHoldProgress(0)
+    console.log("handleStayInGameCinema called - starting cooldown");
+    setShowCinemaPrompt(false);
+    setIsHoldingCinema(false);
+    setCinemaHoldProgress(0);
     if (cinemaHoldIntervalRef.current) {
-      clearInterval(cinemaHoldIntervalRef.current)
+      clearInterval(cinemaHoldIntervalRef.current);
     }
-    startCinemaCooldown()
-  }, [startCinemaCooldown])
+    startCinemaCooldown();
+  }, [startCinemaCooldown]);
 
   // Handle townhall navigation
   const handleGoToTownhall = useCallback(() => {
-    setShowTownhallPrompt(false)
-    startTownhallCooldown()
-    navigate('/townhall')
-  }, [startTownhallCooldown, navigate])
+    setShowTownhallPrompt(false);
+    startTownhallCooldown();
+    navigate("/townhall");
+  }, [startTownhallCooldown, navigate]);
 
   const handleStayInGameTownhall = useCallback(() => {
-    console.log('handleStayInGameTownhall called - starting cooldown')
-    setShowTownhallPrompt(false)
-    setIsHoldingTownhall(false)
-    setTownhallHoldProgress(0)
+    console.log("handleStayInGameTownhall called - starting cooldown");
+    setShowTownhallPrompt(false);
+    setIsHoldingTownhall(false);
+    setTownhallHoldProgress(0);
     if (townhallHoldIntervalRef.current) {
-      clearInterval(townhallHoldIntervalRef.current)
+      clearInterval(townhallHoldIntervalRef.current);
     }
-    startTownhallCooldown()
-  }, [startTownhallCooldown])
+    startTownhallCooldown();
+  }, [startTownhallCooldown]);
 
   // Handle blog hub navigation
   const handleOpenBlogHub = useCallback(() => {
-    setShowBlogPrompt(false)
-    setShowBlogModal(true)
-    startBlogCooldown()
-    loadBlogs()
-  }, [startBlogCooldown])
+    setShowBlogPrompt(false);
+    setShowBlogModal(true);
+    startBlogCooldown();
+    loadBlogs();
+  }, [startBlogCooldown]);
 
   const handleStayInGameBlog = useCallback(() => {
-    console.log('handleStayInGameBlog called - starting cooldown')
-    setShowBlogPrompt(false)
-    setIsHoldingBlog(false)
-    setBlogHoldProgress(0)
+    console.log("handleStayInGameBlog called - starting cooldown");
+    setShowBlogPrompt(false);
+    setIsHoldingBlog(false);
+    setBlogHoldProgress(0);
     if (blogHoldIntervalRef.current) {
-      clearInterval(blogHoldIntervalRef.current)
+      clearInterval(blogHoldIntervalRef.current);
     }
-    startBlogCooldown()
-  }, [startBlogCooldown])
+    startBlogCooldown();
+  }, [startBlogCooldown]);
 
   // Handle hold button functionality for Library
   const handleLibraryHoldStart = useCallback(() => {
-    setIsHoldingLibrary(true)
-    setLibraryHoldProgress(0)
-    
+    setIsHoldingLibrary(true);
+    setLibraryHoldProgress(0);
+
     libraryHoldIntervalRef.current = setInterval(() => {
-      setLibraryHoldProgress(prev => {
+      setLibraryHoldProgress((prev) => {
         if (prev >= 100) {
           // Hold complete - go to library
-          handleGoToLibrary()
-          return 100
+          handleGoToLibrary();
+          return 100;
         }
-        return prev + 2 // 2% per 10ms = 100% in 500ms
-      })
-    }, 10)
-  }, [])
+        return prev + 2; // 2% per 10ms = 100% in 500ms
+      });
+    }, 10);
+  }, []);
 
   const handleLibraryHoldEnd = useCallback(() => {
-    setIsHoldingLibrary(false)
-    setLibraryHoldProgress(0)
+    setIsHoldingLibrary(false);
+    setLibraryHoldProgress(0);
     if (libraryHoldIntervalRef.current) {
-      clearInterval(libraryHoldIntervalRef.current)
+      clearInterval(libraryHoldIntervalRef.current);
     }
-  }, [])
+  }, []);
 
   // Handle hold button functionality for Cinema
   const handleCinemaHoldStart = useCallback(() => {
-    setIsHoldingCinema(true)
-    setCinemaHoldProgress(0)
-    
+    setIsHoldingCinema(true);
+    setCinemaHoldProgress(0);
+
     cinemaHoldIntervalRef.current = setInterval(() => {
-      setCinemaHoldProgress(prev => {
+      setCinemaHoldProgress((prev) => {
         if (prev >= 100) {
           // Hold complete - go to cinema
-          handleGoToCinema()
-          return 100
+          handleGoToCinema();
+          return 100;
         }
-        return prev + 2 // 2% per 10ms = 100% in 500ms
-      })
-    }, 10)
-  }, [])
+        return prev + 2; // 2% per 10ms = 100% in 500ms
+      });
+    }, 10);
+  }, []);
 
   const handleCinemaHoldEnd = useCallback(() => {
-    setIsHoldingCinema(false)
-    setCinemaHoldProgress(0)
+    setIsHoldingCinema(false);
+    setCinemaHoldProgress(0);
     if (cinemaHoldIntervalRef.current) {
-      clearInterval(cinemaHoldIntervalRef.current)
+      clearInterval(cinemaHoldIntervalRef.current);
     }
-  }, [])
+  }, []);
 
   // Handle hold button functionality for Townhall
   const handleTownhallHoldStart = useCallback(() => {
-    setIsHoldingTownhall(true)
-    setTownhallHoldProgress(0)
-    
+    setIsHoldingTownhall(true);
+    setTownhallHoldProgress(0);
+
     townhallHoldIntervalRef.current = setInterval(() => {
-      setTownhallHoldProgress(prev => {
+      setTownhallHoldProgress((prev) => {
         if (prev >= 100) {
           // Hold complete - go to townhall
-          handleGoToTownhall()
-          return 100
+          handleGoToTownhall();
+          return 100;
         }
-        return prev + 2 // 2% per 10ms = 100% in 500ms
-      })
-    }, 10)
-  }, [])
+        return prev + 2; // 2% per 10ms = 100% in 500ms
+      });
+    }, 10);
+  }, []);
 
   const handleTownhallHoldEnd = useCallback(() => {
-    setIsHoldingTownhall(false)
-    setTownhallHoldProgress(0)
+    setIsHoldingTownhall(false);
+    setTownhallHoldProgress(0);
     if (townhallHoldIntervalRef.current) {
-      clearInterval(townhallHoldIntervalRef.current)
+      clearInterval(townhallHoldIntervalRef.current);
     }
-  }, [])
+  }, []);
 
   // Handle hold button functionality for Blog Hub
   const handleBlogHoldStart = useCallback(() => {
-    setIsHoldingBlog(true)
-    setBlogHoldProgress(0)
-    
+    setIsHoldingBlog(true);
+    setBlogHoldProgress(0);
+
     blogHoldIntervalRef.current = setInterval(() => {
-      setBlogHoldProgress(prev => {
+      setBlogHoldProgress((prev) => {
         if (prev >= 100) {
           // Hold complete - open blog hub
-          handleOpenBlogHub()
-          return 100
+          handleOpenBlogHub();
+          return 100;
         }
-        return prev + 2 // 2% per 10ms = 100% in 500ms
-      })
-    }, 10)
-  }, [handleOpenBlogHub])
+        return prev + 2; // 2% per 10ms = 100% in 500ms
+      });
+    }, 10);
+  }, [handleOpenBlogHub]);
 
   const handleBlogHoldEnd = useCallback(() => {
-    setIsHoldingBlog(false)
-    setBlogHoldProgress(0)
+    setIsHoldingBlog(false);
+    setBlogHoldProgress(0);
     if (blogHoldIntervalRef.current) {
-      clearInterval(blogHoldIntervalRef.current)
+      clearInterval(blogHoldIntervalRef.current);
     }
-  }, [])
+  }, []);
 
   // Load blogs from blockchain and reward system
   const loadBlogs = useCallback(async () => {
-    setLoadingBlogs(true)
+    setLoadingBlogs(true);
     try {
-      const allBlogs = await getAllBlogs()
-      setBlogs(allBlogs)
+      const allBlogs = await getAllBlogs();
+      setBlogs(allBlogs);
     } catch (error) {
-      console.error('Error loading blogs:', error)
-      setBlogs([])
+      console.error("Error loading blogs:", error);
+      setBlogs([]);
     } finally {
-      setLoadingBlogs(false)
+      setLoadingBlogs(false);
     }
-  }, [])
+  }, []);
 
   // Reward user for reading blogs
   const rewardUserForBlogReading = useCallback(async () => {
     try {
-      const accounts = await window.ethereum?.request({ method: 'eth_requestAccounts' })
-      const userAddress = accounts?.[0]
-      
+      const accounts = await window.ethereum?.request({
+        method: "eth_requestAccounts",
+      });
+      const userAddress = accounts?.[0];
+
       if (userAddress) {
-        const result = await rewardBlogReading(userAddress)
+        const result = await rewardBlogReading(userAddress);
         if (result.success) {
-          console.log('Blog reading reward granted!')
+          console.log("Blog reading reward granted!");
         } else {
-          console.error('Failed to grant reward:', result.error)
+          console.error("Failed to grant reward:", result.error);
         }
       }
     } catch (error) {
-      console.error('Error granting blog reading reward:', error)
+      console.error("Error granting blog reading reward:", error);
     }
-  }, [])
+  }, []);
 
   // Layer data and tileset configuration
   const layersData = {
@@ -578,16 +595,16 @@ const MultiplayerGame = () => {
   // Initialize Socket.IO connection
   const initializeSocket = useCallback(() => {
     console.log("Initializing socket connection...");
-    
+
     // Use the socket context to connect
     const newSocket = connectSocket("http://localhost:3001");
-    
+
     if (!newSocket) {
       console.error("Failed to create socket connection");
       setError("Failed to connect to server");
       return;
     }
-    
+
     // Update socketRef for compatibility with existing code
     socketRef.current = newSocket;
 
@@ -609,7 +626,7 @@ const MultiplayerGame = () => {
       // Create other players
       Object.entries(gameState.players).forEach(([playerId, playerData]) => {
         if (playerId !== newSocket.id) {
-          const username = playerData.username || 'Anonymous';
+          const username = playerData.username || "Anonymous";
           const userColor = getUsernameColor(username);
           const otherPlayer = new MultiPlayer({
             id: playerId,
@@ -619,7 +636,7 @@ const MultiplayerGame = () => {
             color: userColor,
             isLocal: false,
             username: username,
-            walletAddress: playerData.walletAddress || null
+            walletAddress: playerData.walletAddress || null,
           });
           otherPlayer.updateSprite(
             playerData.facing,
@@ -635,7 +652,7 @@ const MultiplayerGame = () => {
 
     newSocket.on("playerJoined", (playerData) => {
       console.log("Player joined:", playerData);
-      const username = playerData.username || 'Anonymous';
+      const username = playerData.username || "Anonymous";
       const userColor = getUsernameColor(username);
       const newPlayer = new MultiPlayer({
         id: playerData.id,
@@ -645,7 +662,7 @@ const MultiplayerGame = () => {
         color: userColor,
         isLocal: false,
         username: username,
-        walletAddress: playerData.walletAddress || null
+        walletAddress: playerData.walletAddress || null,
       });
       otherPlayersRef.current.set(playerData.id, newPlayer);
       setPlayerCount((prev) => prev + 1);
@@ -690,9 +707,9 @@ const MultiplayerGame = () => {
         console.log(`Clicked on player: ${player.username} (${playerId})`);
         setSelectedPlayer({
           id: playerId,
-          username: player.username || 'Anonymous',
+          username: player.username || "Anonymous",
           address: player.walletAddress,
-          color: player.color
+          color: player.color,
         });
         setShowPlayerModal(true);
       }
@@ -709,23 +726,23 @@ const MultiplayerGame = () => {
     const y = event.clientY - rect.top;
 
     let foundHover = null;
-    
+
     // Check if mouse is over any other player
     otherPlayersRef.current.forEach((player, playerId) => {
       if (player.containsPoint(x, y)) {
         foundHover = {
           id: playerId,
-          username: player.username || 'Anonymous',
+          username: player.username || "Anonymous",
           x: player.x + player.width / 2,
           y: player.y,
-          color: player.color
+          color: player.color,
         };
-        canvas.style.cursor = 'pointer';
+        canvas.style.cursor = "pointer";
       }
     });
 
     if (!foundHover) {
-      canvas.style.cursor = 'default';
+      canvas.style.cursor = "default";
     }
 
     setHoveredPlayer(foundHover);
@@ -752,9 +769,9 @@ const MultiplayerGame = () => {
       canvas.height = 20 * 16 * dpr; // 320px
 
       // Set up canvas event listeners for player interaction
-      canvas.addEventListener('click', handleCanvasClick);
-      canvas.addEventListener('mousemove', handleCanvasMouseMove);
-      canvas.style.cursor = 'default';
+      canvas.addEventListener("click", handleCanvasClick);
+      canvas.addEventListener("mousemove", handleCanvasMouseMove);
+      canvas.style.cursor = "default";
 
       // Create collision blocks
       const blockSize = 16;
@@ -903,61 +920,85 @@ const MultiplayerGame = () => {
       playerRef.current.velocity.x !== 0 || playerRef.current.velocity.y !== 0;
 
     // Check for library interaction zone (coordinates 258,80 to 272,80)
-    const playerX = playerRef.current.x
-    const playerY = playerRef.current.y
-    const isInLibraryZone = playerX >= 258 && playerX <= 272 && playerY >= 75 && playerY <= 85
-    
+    const playerX = playerRef.current.x;
+    const playerY = playerRef.current.y;
+    const isInLibraryZone =
+      playerX >= 258 && playerX <= 272 && playerY >= 75 && playerY <= 85;
+
     // Check for cinema interaction zone (coordinates 481,117)
-    const isInCinemaZone = playerX >= 475 && playerX <= 485 && playerY >= 112 && playerY <= 122
-    
+    const isInCinemaZone =
+      playerX >= 475 && playerX <= 485 && playerY >= 112 && playerY <= 122;
+
     // Check for townhall interaction zone (coordinates 259,224)
-    const isInTownhallZone = playerX >= 253 && playerX <= 265 && playerY >= 219 && playerY <= 229
-    
+    const isInTownhallZone =
+      playerX >= 253 && playerX <= 265 && playerY >= 219 && playerY <= 229;
+
     // Check for blog hub interaction zone (coordinates 181,172)
-    const isInBlogZone = playerX >= 176 && playerX <= 186 && playerY >= 167 && playerY <= 177
-    
+    const isInBlogZone =
+      playerX >= 176 && playerX <= 186 && playerY >= 167 && playerY <= 177;
+
     // Debug logging (remove in production)
     if (playerX >= 250 && playerX <= 280 && playerY >= 70 && playerY <= 90) {
-      console.log(`Player at (${Math.round(playerX)}, ${Math.round(playerY)}), in library zone: ${isInLibraryZone}, prompt shown: ${hasShownLibraryPrompt}, cooldown: ${libraryPromptCooldown}`)
+      console.log(
+        `Player at (${Math.round(playerX)}, ${Math.round(
+          playerY
+        )}), in library zone: ${isInLibraryZone}, prompt shown: ${hasShownLibraryPrompt}, cooldown: ${libraryPromptCooldown}`
+      );
     }
     if (playerX >= 470 && playerX <= 490 && playerY >= 110 && playerY <= 125) {
-      console.log(`Player at (${Math.round(playerX)}, ${Math.round(playerY)}), in cinema zone: ${isInCinemaZone}, prompt shown: ${hasShownCinemaPrompt}, cooldown: ${cinemaPromptCooldown}`)
+      console.log(
+        `Player at (${Math.round(playerX)}, ${Math.round(
+          playerY
+        )}), in cinema zone: ${isInCinemaZone}, prompt shown: ${hasShownCinemaPrompt}, cooldown: ${cinemaPromptCooldown}`
+      );
     }
     if (playerX >= 250 && playerX <= 270 && playerY >= 215 && playerY <= 235) {
-      console.log(`Player at (${Math.round(playerX)}, ${Math.round(playerY)}), in townhall zone: ${isInTownhallZone}, prompt shown: ${hasShownTownhallPrompt}, cooldown: ${townhallPromptCooldown}`)
+      console.log(
+        `Player at (${Math.round(playerX)}, ${Math.round(
+          playerY
+        )}), in townhall zone: ${isInTownhallZone}, prompt shown: ${hasShownTownhallPrompt}, cooldown: ${townhallPromptCooldown}`
+      );
     }
     if (playerX >= 175 && playerX <= 190 && playerY >= 165 && playerY <= 180) {
-      console.log(`Player at (${Math.round(playerX)}, ${Math.round(playerY)}), in blog zone: ${isInBlogZone}, prompt shown: ${hasShownBlogPrompt}, cooldown: ${blogPromptCooldown}`)
+      console.log(
+        `Player at (${Math.round(playerX)}, ${Math.round(
+          playerY
+        )}), in blog zone: ${isInBlogZone}, prompt shown: ${hasShownBlogPrompt}, cooldown: ${blogPromptCooldown}`
+      );
     }
-    
+
     // Only trigger library prompt if in zone, not already shown, and not in cooldown
     if (isInLibraryZone && !hasShownLibraryPrompt && !libraryPromptCooldown) {
-      console.log('Triggering library prompt!')
-      setShowLibraryPrompt(true)
-      setHasShownLibraryPrompt(true)
+      console.log("Triggering library prompt!");
+      setShowLibraryPrompt(true);
+      setHasShownLibraryPrompt(true);
     }
-    
+
     // Only trigger cinema prompt if in zone, not already shown, and not in cooldown
     if (isInCinemaZone && !hasShownCinemaPrompt && !cinemaPromptCooldown) {
-      console.log('Triggering cinema prompt!')
-      setShowCinemaPrompt(true)
-      setHasShownCinemaPrompt(true)
+      console.log("Triggering cinema prompt!");
+      setShowCinemaPrompt(true);
+      setHasShownCinemaPrompt(true);
     }
-    
+
     // Only trigger townhall prompt if in zone, not already shown, and not in cooldown
-    if (isInTownhallZone && !hasShownTownhallPrompt && !townhallPromptCooldown) {
-      console.log('Triggering townhall prompt!')
-      setShowTownhallPrompt(true)
-      setHasShownTownhallPrompt(true)
+    if (
+      isInTownhallZone &&
+      !hasShownTownhallPrompt &&
+      !townhallPromptCooldown
+    ) {
+      console.log("Triggering townhall prompt!");
+      setShowTownhallPrompt(true);
+      setHasShownTownhallPrompt(true);
     }
-    
+
     // Only trigger blog hub prompt if in zone, not already shown, and not in cooldown
     if (isInBlogZone && !hasShownBlogPrompt && !blogPromptCooldown) {
-      console.log('Triggering blog hub prompt!')
-      setShowBlogPrompt(true)
-      setHasShownBlogPrompt(true)
+      console.log("Triggering blog hub prompt!");
+      setShowBlogPrompt(true);
+      setHasShownBlogPrompt(true);
     }
-    
+
     // Don't reset the prompt state when leaving zone - let cooldown handle it
     // This prevents the loop issue
 
@@ -975,29 +1016,53 @@ const MultiplayerGame = () => {
     });
 
     // Render scene
-    ctx.save()
-    ctx.scale(dpr, dpr)
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    ctx.drawImage(backgroundCanvasRef.current, 0, 0)
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(backgroundCanvasRef.current, 0, 0);
+
+    // Draw HOME text
+    ctx.font = '12px "Press Start 2P", monospace';
+    ctx.fillStyle = "white";
+    ctx.textAlign = "center";
+    ctx.fillText("HOME", 160, 47);
+
+    // Draw LIBRARY text
+    ctx.font = '12px "Press Start 2P", monospace';
+    ctx.fillStyle = "white";
+    ctx.textAlign = "center";
+    ctx.fillText("LIBRARY", 265, 30);
+
+    // Draw CINEMA text
+    ctx.font = '12px "Press Start 2P", monospace';
+    ctx.fillStyle = "white";
+    ctx.textAlign = "center";
+    ctx.fillText("CINEMA", 510, 60);
+
+    // Draw TOWNHALL text
+    ctx.font = '12px "Press Start 2P", monospace';
+    ctx.fillStyle = "white";
+    ctx.textAlign = "center";
+    ctx.fillText("TOWNHALL", 270, 180);
 
     // Draw library entrance indicator
-    ctx.fillStyle = 'rgba(255, 255, 0, 0.3)'
-    ctx.fillRect(257, 75, 14, 10) // Highlight the library entrance area (X: 258-272, Y: 75-85)
-    
+    ctx.fillStyle = "rgba(255, 255, 0, 0.3)";
+    ctx.fillRect(257, 75, 14, 10); // Highlight the library entrance area (X: 258-272, Y: 75-85)
+
     // Draw cinema entrance indicator
-    ctx.fillStyle = 'rgba(255, 0, 255, 0.3)'
-    ctx.fillRect(481.5, 120, 13, 10) // Highlight the cinema entrance area (X: 475-485, Y: 112-122)
-    
+    ctx.fillStyle = "rgba(255, 0, 255, 0.3)";
+    ctx.fillRect(481.5, 120, 13, 10); // Highlight the cinema entrance area (X: 475-485, Y: 112-122)
+
     // Draw townhall entrance indicator
-    ctx.fillStyle = 'rgba(0, 255, 255, 0.3)'
-    ctx.fillRect(258, 219, 13, 10) // Highlight the townhall entrance area (X: 253-265, Y: 219-229)
-    
+    ctx.fillStyle = "rgba(0, 255, 255, 0.3)";
+    ctx.fillRect(258, 219, 13, 10); // Highlight the townhall entrance area (X: 253-265, Y: 219-229)
+
     // Draw local player
     if (playerRef.current) {
       playerRef.current.draw(ctx);
     }
 
-    // Draw other players  
+    // Draw other players
     otherPlayersRef.current.forEach((player) => {
       player.draw(ctx);
     });
@@ -1022,32 +1087,34 @@ const MultiplayerGame = () => {
   useEffect(() => {
     const handleKeyDown = (e) => {
       // Handle ESC key to close prompts
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         if (showBlogModal) {
-          setShowBlogModal(false)
-          rewardUserForBlogReading()
-          return
+          setShowBlogModal(false);
+          rewardUserForBlogReading();
+          return;
         }
         if (showLibraryPrompt) {
-          handleStayInGame()
-          return
+          handleStayInGame();
+          return;
         }
         if (showCinemaPrompt) {
-          handleStayInGameCinema()
-          return
+          handleStayInGameCinema();
+          return;
         }
         if (showTownhallPrompt) {
-          handleStayInGameTownhall()
-          return
+          handleStayInGameTownhall();
+          return;
         }
         if (showBlogPrompt) {
-          handleStayInGameBlog()
-          return
+          handleStayInGameBlog();
+          return;
         }
       }
 
-      const wasPressed = Object.values(keysRef.current).some(key => key.pressed)
-      
+      const wasPressed = Object.values(keysRef.current).some(
+        (key) => key.pressed
+      );
+
       switch (e.key.toLowerCase()) {
         case "w":
         case "arrowup":
@@ -1107,15 +1174,23 @@ const MultiplayerGame = () => {
     window.addEventListener("keyup", handleKeyUp);
 
     return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-      window.removeEventListener('keyup', handleKeyUp)
-    }
-  }, [sendPlayerInput, showLibraryPrompt, showCinemaPrompt, showTownhallPrompt, handleStayInGame, handleStayInGameCinema, handleStayInGameTownhall])
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [
+    sendPlayerInput,
+    showLibraryPrompt,
+    showCinemaPrompt,
+    showTownhallPrompt,
+    handleStayInGame,
+    handleStayInGameCinema,
+    handleStayInGameTownhall,
+  ]);
 
   // Initialize game on component mount
   useEffect(() => {
     console.log("MultiplayerGame useEffect triggered - initializing game...");
-    
+
     const init = async () => {
       try {
         await initializeGame();
@@ -1137,49 +1212,49 @@ const MultiplayerGame = () => {
       // Cleanup canvas event listeners
       const canvas = canvasRef.current;
       if (canvas) {
-        canvas.removeEventListener('click', handleCanvasClick);
-        canvas.removeEventListener('mousemove', handleCanvasMouseMove);
+        canvas.removeEventListener("click", handleCanvasClick);
+        canvas.removeEventListener("mousemove", handleCanvasMouseMove);
       }
       // Cleanup cooldown timeout and interval
       if (cooldownTimeoutRef.current) {
-        clearTimeout(cooldownTimeoutRef.current)
+        clearTimeout(cooldownTimeoutRef.current);
       }
       if (cooldownIntervalRef.current) {
-        clearInterval(cooldownIntervalRef.current)
+        clearInterval(cooldownIntervalRef.current);
       }
       if (cinemaCooldownTimeoutRef.current) {
-        clearTimeout(cinemaCooldownTimeoutRef.current)
+        clearTimeout(cinemaCooldownTimeoutRef.current);
       }
       if (cinemaCooldownIntervalRef.current) {
-        clearInterval(cinemaCooldownIntervalRef.current)
+        clearInterval(cinemaCooldownIntervalRef.current);
       }
       if (townhallCooldownTimeoutRef.current) {
-        clearTimeout(townhallCooldownTimeoutRef.current)
+        clearTimeout(townhallCooldownTimeoutRef.current);
       }
       if (townhallCooldownIntervalRef.current) {
-        clearInterval(townhallCooldownIntervalRef.current)
+        clearInterval(townhallCooldownIntervalRef.current);
       }
       if (blogCooldownTimeoutRef.current) {
-        clearTimeout(blogCooldownTimeoutRef.current)
+        clearTimeout(blogCooldownTimeoutRef.current);
       }
       if (blogCooldownIntervalRef.current) {
-        clearInterval(blogCooldownIntervalRef.current)
+        clearInterval(blogCooldownIntervalRef.current);
       }
       // Cleanup hold intervals
       if (libraryHoldIntervalRef.current) {
-        clearInterval(libraryHoldIntervalRef.current)
+        clearInterval(libraryHoldIntervalRef.current);
       }
       if (cinemaHoldIntervalRef.current) {
-        clearInterval(cinemaHoldIntervalRef.current)
+        clearInterval(cinemaHoldIntervalRef.current);
       }
       if (townhallHoldIntervalRef.current) {
-        clearInterval(townhallHoldIntervalRef.current)
+        clearInterval(townhallHoldIntervalRef.current);
       }
       if (blogHoldIntervalRef.current) {
-        clearInterval(blogHoldIntervalRef.current)
+        clearInterval(blogHoldIntervalRef.current);
       }
-    }
-  }, [])
+    };
+  }, []);
 
   // Start animation loop when not loading
   useEffect(() => {
@@ -1230,7 +1305,7 @@ const MultiplayerGame = () => {
             boxShadow: "2px 2px 4px rgba(0,0,0,0.5)",
             textShadow: "1px 1px 2px rgba(0,0,0,0.8)",
             transition: "all 0.2s",
-            zIndex: 10
+            zIndex: 10,
           }}
           onMouseOver={(e) => {
             e.target.style.backgroundColor = "#5B21B6";
@@ -1256,7 +1331,8 @@ const MultiplayerGame = () => {
             backgroundColor: "#2a1810",
             border: "3px solid #8b4513",
             borderRadius: "0",
-            boxShadow: "6px 6px 0px #1a0f08, inset 2px 2px 0px #d2b48c, inset -2px -2px 0px #654321",
+            boxShadow:
+              "6px 6px 0px #1a0f08, inset 2px 2px 0px #d2b48c, inset -2px -2px 0px #654321",
             width: "160px",
             height: "70px",
             padding: "10px 12px",
@@ -1268,34 +1344,57 @@ const MultiplayerGame = () => {
             justifyContent: "center",
             alignItems: "center",
             transform: "scale(1)",
-            transformOrigin: "bottom right"
+            transformOrigin: "bottom right",
           }}
         >
           {/* Medieval decorative border pattern */}
-          <div style={{
-            position: "absolute",
-            top: "2px",
-            left: "2px",
-            right: "2px",
-            height: "2px",
-            background: "linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)",
-            imageRendering: "pixelated"
-          }} />
-          <div style={{
-            position: "absolute",
-            bottom: "2px",
-            left: "2px",
-            right: "2px",
-            height: "2px",
-            background: "linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)",
-            imageRendering: "pixelated"
-          }} />
-          
-          <div style={{ color: "#d2b48c", marginBottom: "4px", fontWeight: "bold" }}>⚔️ STATUS ⚔️</div>
-          <div style={{ color: connected ? "#44ff44" : "#ff4444", fontWeight: "bold", fontSize: "12px", marginBottom: "2px" }}>
+          <div
+            style={{
+              position: "absolute",
+              top: "2px",
+              left: "2px",
+              right: "2px",
+              height: "2px",
+              background:
+                "linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)",
+              imageRendering: "pixelated",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              bottom: "2px",
+              left: "2px",
+              right: "2px",
+              height: "2px",
+              background:
+                "linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)",
+              imageRendering: "pixelated",
+            }}
+          />
+
+          <div
+            style={{
+              color: "#d2b48c",
+              marginBottom: "4px",
+              fontWeight: "bold",
+            }}
+          >
+            ⚔️ STATUS ⚔️
+          </div>
+          <div
+            style={{
+              color: connected ? "#44ff44" : "#ff4444",
+              fontWeight: "bold",
+              fontSize: "12px",
+              marginBottom: "2px",
+            }}
+          >
             {connected ? "CONNECTED" : "DISCONNECTED"}
           </div>
-          <div style={{ color: "#ffd700", fontWeight: "bold", fontSize: "12px" }}>
+          <div
+            style={{ color: "#ffd700", fontWeight: "bold", fontSize: "12px" }}
+          >
             PLAYERS: {playerCount}
           </div>
         </div>
@@ -1312,7 +1411,8 @@ const MultiplayerGame = () => {
             backgroundColor: "#2a1810",
             border: "3px solid #8b4513",
             borderRadius: "0",
-            boxShadow: "6px 6px 0px #1a0f08, inset 2px 2px 0px #d2b48c, inset -2px -2px 0px #654321",
+            boxShadow:
+              "6px 6px 0px #1a0f08, inset 2px 2px 0px #d2b48c, inset -2px -2px 0px #654321",
             width: "160px",
             height: "50px",
             padding: "8px 12px",
@@ -1324,38 +1424,60 @@ const MultiplayerGame = () => {
             justifyContent: "center",
             alignItems: "center",
             transform: "scale(1)",
-            transformOrigin: "top right"
+            transformOrigin: "top right",
           }}
         >
           {/* Medieval decorative border pattern */}
-          <div style={{
-            position: "absolute",
-            top: "2px",
-            left: "2px",
-            right: "2px",
-            height: "2px",
-            background: "linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)",
-            imageRendering: "pixelated"
-          }} />
-          <div style={{
-            position: "absolute",
-            bottom: "2px",
-            left: "2px",
-            right: "2px",
-            height: "2px",
-            background: "linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)",
-            imageRendering: "pixelated"
-          }} />
-          
-          <div style={{ color: "#d2b48c", marginBottom: "4px", fontWeight: "bold" }}>📍 COORDS 📍</div>
-          <div style={{ color: "#44ff44", fontWeight: "bold", fontSize: "10px" }}>
+          <div
+            style={{
+              position: "absolute",
+              top: "2px",
+              left: "2px",
+              right: "2px",
+              height: "2px",
+              background:
+                "linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)",
+              imageRendering: "pixelated",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              bottom: "2px",
+              left: "2px",
+              right: "2px",
+              height: "2px",
+              background:
+                "linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)",
+              imageRendering: "pixelated",
+            }}
+          />
+
+          <div
+            style={{
+              color: "#d2b48c",
+              marginBottom: "4px",
+              fontWeight: "bold",
+            }}
+          >
+            📍 COORDS 📍
+          </div>
+          <div
+            style={{ color: "#44ff44", fontWeight: "bold", fontSize: "10px" }}
+          >
             X: {Math.round(playerCoords.x)} Y: {Math.round(playerCoords.y)}
           </div>
-          {(libraryPromptCooldown || cinemaPromptCooldown || townhallPromptCooldown || blogPromptCooldown) && (
-            <div style={{ color: '#ff6b6b', fontSize: '8px', marginTop: '2px' }}>
+          {(libraryPromptCooldown ||
+            cinemaPromptCooldown ||
+            townhallPromptCooldown ||
+            blogPromptCooldown) && (
+            <div
+              style={{ color: "#ff6b6b", fontSize: "8px", marginTop: "2px" }}
+            >
               {libraryPromptCooldown && `Library: ${cooldownTimeLeft}s`}
               {cinemaPromptCooldown && `Cinema: ${cinemaCooldownTimeLeft}s`}
-              {townhallPromptCooldown && `Townhall: ${townhallCooldownTimeLeft}s`}
+              {townhallPromptCooldown &&
+                `Townhall: ${townhallCooldownTimeLeft}s`}
               {blogPromptCooldown && `Blog: ${blogCooldownTimeLeft}s`}
             </div>
           )}
@@ -1412,51 +1534,62 @@ const MultiplayerGame = () => {
 
         {/* Library Interaction Prompt */}
         {showLibraryPrompt && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000
-          }}>
-            <div style={{
-              backgroundColor: '#2a2a2a',
-              border: '3px solid #4a4a4a',
-              borderRadius: '15px',
-              padding: '30px',
-              textAlign: 'center',
-              maxWidth: '400px',
-              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)'
-            }}>
-              <h2 style={{
-                color: '#fff',
-                fontSize: '24px',
-                marginBottom: '20px',
-                fontFamily: 'monospace'
-              }}>
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.8)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 1000,
+            }}
+          >
+            <div
+              style={{
+                backgroundColor: "#2a2a2a",
+                border: "3px solid #4a4a4a",
+                borderRadius: "15px",
+                padding: "30px",
+                textAlign: "center",
+                maxWidth: "400px",
+                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.5)",
+              }}
+            >
+              <h2
+                style={{
+                  color: "#fff",
+                  fontSize: "24px",
+                  marginBottom: "20px",
+                  fontFamily: "monospace",
+                }}
+              >
                 📚 Library Access
               </h2>
-              
-              <p style={{
-                color: '#ccc',
-                fontSize: '16px',
-                marginBottom: '30px',
-                lineHeight: '1.5'
-              }}>
-                You've discovered the library entrance!<br/>
+
+              <p
+                style={{
+                  color: "#ccc",
+                  fontSize: "16px",
+                  marginBottom: "30px",
+                  lineHeight: "1.5",
+                }}
+              >
+                You've discovered the library entrance!
+                <br />
                 Hold the button to enter the library.
               </p>
-              
-              <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                marginBottom: '20px'
-              }}>
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  marginBottom: "20px",
+                }}
+              >
                 <button
                   onMouseDown={handleLibraryHoldStart}
                   onMouseUp={handleLibraryHoldEnd}
@@ -1464,47 +1597,53 @@ const MultiplayerGame = () => {
                   onTouchStart={handleLibraryHoldStart}
                   onTouchEnd={handleLibraryHoldEnd}
                   style={{
-                    backgroundColor: isHoldingLibrary ? '#45a049' : '#4CAF50',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    cursor: 'pointer',
-                    fontFamily: 'monospace',
-                    fontWeight: 'bold',
-                    transition: 'background-color 0.1s',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    minWidth: '200px',
-                    height: '50px'
+                    backgroundColor: isHoldingLibrary ? "#45a049" : "#4CAF50",
+                    color: "white",
+                    border: "none",
+                    padding: "12px 24px",
+                    borderRadius: "8px",
+                    fontSize: "16px",
+                    cursor: "pointer",
+                    fontFamily: "monospace",
+                    fontWeight: "bold",
+                    transition: "background-color 0.1s",
+                    position: "relative",
+                    overflow: "hidden",
+                    minWidth: "200px",
+                    height: "50px",
                   }}
                 >
                   {/* Progress bar overlay */}
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    height: '100%',
-                    width: `${libraryHoldProgress}%`,
-                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                    transition: 'width 0.1s linear',
-                    borderRadius: '8px'
-                  }} />
-                  
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      height: "100%",
+                      width: `${libraryHoldProgress}%`,
+                      backgroundColor: "rgba(255, 255, 255, 0.3)",
+                      transition: "width 0.1s linear",
+                      borderRadius: "8px",
+                    }}
+                  />
+
                   {/* Button text */}
-                  <span style={{ position: 'relative', zIndex: 1 }}>
-                    {isHoldingLibrary ? `Entering... ${Math.round(libraryHoldProgress)}%` : 'Hold to Enter Library'}
+                  <span style={{ position: "relative", zIndex: 1 }}>
+                    {isHoldingLibrary
+                      ? `Entering... ${Math.round(libraryHoldProgress)}%`
+                      : "Hold to Enter Library"}
                   </span>
                 </button>
               </div>
-              
-              <p style={{
-                color: '#888',
-                fontSize: '12px',
-                marginTop: '20px',
-                fontStyle: 'italic'
-              }}>
+
+              <p
+                style={{
+                  color: "#888",
+                  fontSize: "12px",
+                  marginTop: "20px",
+                  fontStyle: "italic",
+                }}
+              >
                 Press ESC to close this dialog
               </p>
             </div>
@@ -1513,51 +1652,62 @@ const MultiplayerGame = () => {
 
         {/* Cinema Interaction Prompt */}
         {showCinemaPrompt && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000
-          }}>
-            <div style={{
-              backgroundColor: '#2a2a2a',
-              border: '3px solid #4a4a4a',
-              borderRadius: '15px',
-              padding: '30px',
-              textAlign: 'center',
-              maxWidth: '400px',
-              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)'
-            }}>
-              <h2 style={{
-                color: '#fff',
-                fontSize: '24px',
-                marginBottom: '20px',
-                fontFamily: 'monospace'
-              }}>
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.8)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 1000,
+            }}
+          >
+            <div
+              style={{
+                backgroundColor: "#2a2a2a",
+                border: "3px solid #4a4a4a",
+                borderRadius: "15px",
+                padding: "30px",
+                textAlign: "center",
+                maxWidth: "400px",
+                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.5)",
+              }}
+            >
+              <h2
+                style={{
+                  color: "#fff",
+                  fontSize: "24px",
+                  marginBottom: "20px",
+                  fontFamily: "monospace",
+                }}
+              >
                 🎬 Cinema Access
               </h2>
-              
-              <p style={{
-                color: '#ccc',
-                fontSize: '16px',
-                marginBottom: '30px',
-                lineHeight: '1.5'
-              }}>
-                You've discovered the cinema entrance!<br/>
+
+              <p
+                style={{
+                  color: "#ccc",
+                  fontSize: "16px",
+                  marginBottom: "30px",
+                  lineHeight: "1.5",
+                }}
+              >
+                You've discovered the cinema entrance!
+                <br />
                 Hold the button to enter the cinema.
               </p>
-              
-              <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                marginBottom: '20px'
-              }}>
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  marginBottom: "20px",
+                }}
+              >
                 <button
                   onMouseDown={handleCinemaHoldStart}
                   onMouseUp={handleCinemaHoldEnd}
@@ -1565,47 +1715,53 @@ const MultiplayerGame = () => {
                   onTouchStart={handleCinemaHoldStart}
                   onTouchEnd={handleCinemaHoldEnd}
                   style={{
-                    backgroundColor: isHoldingCinema ? '#45a049' : '#4CAF50',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    cursor: 'pointer',
-                    fontFamily: 'monospace',
-                    fontWeight: 'bold',
-                    transition: 'background-color 0.1s',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    minWidth: '200px',
-                    height: '50px'
+                    backgroundColor: isHoldingCinema ? "#45a049" : "#4CAF50",
+                    color: "white",
+                    border: "none",
+                    padding: "12px 24px",
+                    borderRadius: "8px",
+                    fontSize: "16px",
+                    cursor: "pointer",
+                    fontFamily: "monospace",
+                    fontWeight: "bold",
+                    transition: "background-color 0.1s",
+                    position: "relative",
+                    overflow: "hidden",
+                    minWidth: "200px",
+                    height: "50px",
                   }}
                 >
                   {/* Progress bar overlay */}
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    height: '100%',
-                    width: `${cinemaHoldProgress}%`,
-                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                    transition: 'width 0.1s linear',
-                    borderRadius: '8px'
-                  }} />
-                  
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      height: "100%",
+                      width: `${cinemaHoldProgress}%`,
+                      backgroundColor: "rgba(255, 255, 255, 0.3)",
+                      transition: "width 0.1s linear",
+                      borderRadius: "8px",
+                    }}
+                  />
+
                   {/* Button text */}
-                  <span style={{ position: 'relative', zIndex: 1 }}>
-                    {isHoldingCinema ? `Entering... ${Math.round(cinemaHoldProgress)}%` : 'Hold to Enter Cinema'}
+                  <span style={{ position: "relative", zIndex: 1 }}>
+                    {isHoldingCinema
+                      ? `Entering... ${Math.round(cinemaHoldProgress)}%`
+                      : "Hold to Enter Cinema"}
                   </span>
                 </button>
               </div>
-              
-              <p style={{
-                color: '#888',
-                fontSize: '12px',
-                marginTop: '20px',
-                fontStyle: 'italic'
-              }}>
+
+              <p
+                style={{
+                  color: "#888",
+                  fontSize: "12px",
+                  marginTop: "20px",
+                  fontStyle: "italic",
+                }}
+              >
                 Press ESC to close this dialog
               </p>
             </div>
@@ -1614,51 +1770,62 @@ const MultiplayerGame = () => {
 
         {/* Townhall Interaction Prompt */}
         {showTownhallPrompt && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000
-          }}>
-            <div style={{
-              backgroundColor: '#2a2a2a',
-              border: '3px solid #4a4a4a',
-              borderRadius: '15px',
-              padding: '30px',
-              textAlign: 'center',
-              maxWidth: '400px',
-              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)'
-            }}>
-              <h2 style={{
-                color: '#fff',
-                fontSize: '24px',
-                marginBottom: '20px',
-                fontFamily: 'monospace'
-              }}>
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.8)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 1000,
+            }}
+          >
+            <div
+              style={{
+                backgroundColor: "#2a2a2a",
+                border: "3px solid #4a4a4a",
+                borderRadius: "15px",
+                padding: "30px",
+                textAlign: "center",
+                maxWidth: "400px",
+                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.5)",
+              }}
+            >
+              <h2
+                style={{
+                  color: "#fff",
+                  fontSize: "24px",
+                  marginBottom: "20px",
+                  fontFamily: "monospace",
+                }}
+              >
                 🏛️ Townhall Access
               </h2>
-              
-              <p style={{
-                color: '#ccc',
-                fontSize: '16px',
-                marginBottom: '30px',
-                lineHeight: '1.5'
-              }}>
-                You've discovered the townhall entrance!<br/>
+
+              <p
+                style={{
+                  color: "#ccc",
+                  fontSize: "16px",
+                  marginBottom: "30px",
+                  lineHeight: "1.5",
+                }}
+              >
+                You've discovered the townhall entrance!
+                <br />
                 Hold the button to enter the townhall.
               </p>
-              
-              <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                marginBottom: '20px'
-              }}>
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  marginBottom: "20px",
+                }}
+              >
                 <button
                   onMouseDown={handleTownhallHoldStart}
                   onMouseUp={handleTownhallHoldEnd}
@@ -1666,47 +1833,53 @@ const MultiplayerGame = () => {
                   onTouchStart={handleTownhallHoldStart}
                   onTouchEnd={handleTownhallHoldEnd}
                   style={{
-                    backgroundColor: isHoldingTownhall ? '#45a049' : '#4CAF50',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    cursor: 'pointer',
-                    fontFamily: 'monospace',
-                    fontWeight: 'bold',
-                    transition: 'background-color 0.1s',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    minWidth: '200px',
-                    height: '50px'
+                    backgroundColor: isHoldingTownhall ? "#45a049" : "#4CAF50",
+                    color: "white",
+                    border: "none",
+                    padding: "12px 24px",
+                    borderRadius: "8px",
+                    fontSize: "16px",
+                    cursor: "pointer",
+                    fontFamily: "monospace",
+                    fontWeight: "bold",
+                    transition: "background-color 0.1s",
+                    position: "relative",
+                    overflow: "hidden",
+                    minWidth: "200px",
+                    height: "50px",
                   }}
                 >
                   {/* Progress bar overlay */}
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    height: '100%',
-                    width: `${townhallHoldProgress}%`,
-                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                    transition: 'width 0.1s linear',
-                    borderRadius: '8px'
-                  }} />
-                  
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      height: "100%",
+                      width: `${townhallHoldProgress}%`,
+                      backgroundColor: "rgba(255, 255, 255, 0.3)",
+                      transition: "width 0.1s linear",
+                      borderRadius: "8px",
+                    }}
+                  />
+
                   {/* Button text */}
-                  <span style={{ position: 'relative', zIndex: 1 }}>
-                    {isHoldingTownhall ? `Entering... ${Math.round(townhallHoldProgress)}%` : 'Hold to Enter Townhall'}
+                  <span style={{ position: "relative", zIndex: 1 }}>
+                    {isHoldingTownhall
+                      ? `Entering... ${Math.round(townhallHoldProgress)}%`
+                      : "Hold to Enter Townhall"}
                   </span>
                 </button>
               </div>
-              
-              <p style={{
-                color: '#888',
-                fontSize: '12px',
-                marginTop: '20px',
-                fontStyle: 'italic'
-              }}>
+
+              <p
+                style={{
+                  color: "#888",
+                  fontSize: "12px",
+                  marginTop: "20px",
+                  fontStyle: "italic",
+                }}
+              >
                 Press ESC to close this dialog
               </p>
             </div>
@@ -1715,107 +1888,128 @@ const MultiplayerGame = () => {
 
         {/* Blog Hub Interaction Prompt */}
         {showBlogPrompt && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000
-          }}>
-            <div style={{
-              backgroundColor: '#2a2a2a',
-              border: '3px solid #4a4a4a',
-              borderRadius: '15px',
-              padding: '30px',
-              textAlign: 'center',
-              maxWidth: '400px',
-              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)'
-            }}>
-              <h2 style={{
-                color: '#fff',
-                fontSize: '24px',
-                marginBottom: '10px',
-                textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
-              }}>
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.8)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 1000,
+            }}
+          >
+            <div
+              style={{
+                backgroundColor: "#2a2a2a",
+                border: "3px solid #4a4a4a",
+                borderRadius: "15px",
+                padding: "30px",
+                textAlign: "center",
+                maxWidth: "400px",
+                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.5)",
+              }}
+            >
+              <h2
+                style={{
+                  color: "#fff",
+                  fontSize: "24px",
+                  marginBottom: "10px",
+                  textShadow: "2px 2px 4px rgba(0,0,0,0.5)",
+                }}
+              >
                 📚 Blog Hub Discovered! 📚
               </h2>
-              
-              <p style={{
-                color: '#ccc',
-                fontSize: '16px',
-                marginBottom: '25px',
-                lineHeight: '1.4'
-              }}>
+
+              <p
+                style={{
+                  color: "#ccc",
+                  fontSize: "16px",
+                  marginBottom: "25px",
+                  lineHeight: "1.4",
+                }}
+              >
                 Explore amazing blogs from businesses around the metaverse!
-                <br />Read, learn, and earn rewards!
+                <br />
+                Read, learn, and earn rewards!
               </p>
-              
-              <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: "15px",
+                  justifyContent: "center",
+                }}
+              >
                 <button
                   onClick={handleStayInGameBlog}
                   style={{
-                    padding: '12px 20px',
-                    backgroundColor: '#666',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.3s'
+                    padding: "12px 20px",
+                    backgroundColor: "#666",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    transition: "background-color 0.3s",
                   }}
-                  onMouseOver={(e) => e.target.style.backgroundColor = '#777'}
-                  onMouseOut={(e) => e.target.style.backgroundColor = '#666'}
+                  onMouseOver={(e) => (e.target.style.backgroundColor = "#777")}
+                  onMouseOut={(e) => (e.target.style.backgroundColor = "#666")}
                 >
                   Stay in Game
                 </button>
-                
+
                 <button
                   onMouseDown={handleBlogHoldStart}
                   onMouseUp={handleBlogHoldEnd}
                   onMouseLeave={handleBlogHoldEnd}
                   style={{
-                    padding: '12px 20px',
-                    backgroundColor: '#ff6b35',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    transition: 'background-color 0.3s'
+                    padding: "12px 20px",
+                    backgroundColor: "#ff6b35",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    position: "relative",
+                    overflow: "hidden",
+                    transition: "background-color 0.3s",
                   }}
                 >
                   {/* Progress bar */}
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    height: '100%',
-                    width: `${blogHoldProgress}%`,
-                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                    transition: 'width 0.1s linear',
-                    borderRadius: '8px'
-                  }} />
-                  
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      height: "100%",
+                      width: `${blogHoldProgress}%`,
+                      backgroundColor: "rgba(255, 255, 255, 0.3)",
+                      transition: "width 0.1s linear",
+                      borderRadius: "8px",
+                    }}
+                  />
+
                   {/* Button text */}
-                  <span style={{ position: 'relative', zIndex: 1 }}>
-                    {isHoldingBlog ? `Opening... ${Math.round(blogHoldProgress)}%` : 'Hold to Open Blog Hub'}
+                  <span style={{ position: "relative", zIndex: 1 }}>
+                    {isHoldingBlog
+                      ? `Opening... ${Math.round(blogHoldProgress)}%`
+                      : "Hold to Open Blog Hub"}
                   </span>
                 </button>
               </div>
-              
-              <p style={{
-                color: '#888',
-                fontSize: '12px',
-                marginTop: '20px',
-                fontStyle: 'italic'
-              }}>
+
+              <p
+                style={{
+                  color: "#888",
+                  fontSize: "12px",
+                  marginTop: "20px",
+                  fontStyle: "italic",
+                }}
+              >
                 Press ESC to close this dialog
               </p>
             </div>
@@ -1824,86 +2018,106 @@ const MultiplayerGame = () => {
 
         {/* Blog Hub Modal */}
         {showBlogModal && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.9)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1001
-          }}>
-            <div style={{
-              backgroundColor: '#1a1a1a',
-              border: '3px solid #ff6b35',
-              borderRadius: '15px',
-              padding: '30px',
-              width: '90vw',
-              maxWidth: '800px',
-              maxHeight: '80vh',
-              overflow: 'auto',
-              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.8)'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h2 style={{
-                  color: '#ff6b35',
-                  fontSize: '28px',
-                  margin: 0,
-                  textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
-                }}>
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.9)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 1001,
+            }}
+          >
+            <div
+              style={{
+                backgroundColor: "#1a1a1a",
+                border: "3px solid #ff6b35",
+                borderRadius: "15px",
+                padding: "30px",
+                width: "90vw",
+                maxWidth: "800px",
+                maxHeight: "80vh",
+                overflow: "auto",
+                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.8)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "20px",
+                }}
+              >
+                <h2
+                  style={{
+                    color: "#ff6b35",
+                    fontSize: "28px",
+                    margin: 0,
+                    textShadow: "2px 2px 4px rgba(0,0,0,0.5)",
+                  }}
+                >
                   📚 Blog Hub - Knowledge Rewards
                 </h2>
                 <button
                   onClick={() => {
-                    setShowBlogModal(false)
-                    rewardUserForBlogReading()
+                    setShowBlogModal(false);
+                    rewardUserForBlogReading();
                   }}
                   style={{
-                    backgroundColor: '#ff4444',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: '40px',
-                    height: '40px',
-                    fontSize: '20px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
+                    backgroundColor: "#ff4444",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "50%",
+                    width: "40px",
+                    height: "40px",
+                    fontSize: "20px",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                 >
                   ×
                 </button>
               </div>
-              
+
               {loadingBlogs ? (
-                <div style={{
-                  textAlign: 'center',
-                  color: '#fff',
-                  fontSize: '18px',
-                  padding: '50px'
-                }}>
+                <div
+                  style={{
+                    textAlign: "center",
+                    color: "#fff",
+                    fontSize: "18px",
+                    padding: "50px",
+                  }}
+                >
                   🔍 Loading blogs from the blockchain...
                 </div>
               ) : (
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-                  gap: '20px',
-                  maxHeight: '500px',
-                  overflow: 'auto'
-                }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns:
+                      "repeat(auto-fill, minmax(250px, 1fr))",
+                    gap: "20px",
+                    maxHeight: "500px",
+                    overflow: "auto",
+                  }}
+                >
                   {blogs.length === 0 ? (
-                    <div style={{
-                      gridColumn: '1 / -1',
-                      textAlign: 'center',
-                      color: '#ccc',
-                      fontSize: '16px',
-                      padding: '50px'
-                    }}>
+                    <div
+                      style={{
+                        gridColumn: "1 / -1",
+                        textAlign: "center",
+                        color: "#ccc",
+                        fontSize: "16px",
+                        padding: "50px",
+                      }}
+                    >
                       📝 No blogs published yet. Be the first to create one!
                     </div>
                   ) : (
@@ -1911,91 +2125,106 @@ const MultiplayerGame = () => {
                       <div
                         key={blog.id}
                         style={{
-                          backgroundColor: '#2a2a2a',
-                          border: '2px solid #444',
-                          borderRadius: '10px',
-                          padding: '15px',
-                          cursor: 'pointer',
-                          transition: 'all 0.3s ease',
-                          ':hover': {
-                            transform: 'translateY(-5px)',
-                            borderColor: '#ff6b35'
-                          }
+                          backgroundColor: "#2a2a2a",
+                          border: "2px solid #444",
+                          borderRadius: "10px",
+                          padding: "15px",
+                          cursor: "pointer",
+                          transition: "all 0.3s ease",
+                          ":hover": {
+                            transform: "translateY(-5px)",
+                            borderColor: "#ff6b35",
+                          },
                         }}
                         onMouseOver={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-5px)'
-                          e.currentTarget.style.borderColor = '#ff6b35'
+                          e.currentTarget.style.transform = "translateY(-5px)";
+                          e.currentTarget.style.borderColor = "#ff6b35";
                         }}
                         onMouseOut={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0)'
-                          e.currentTarget.style.borderColor = '#444'
+                          e.currentTarget.style.transform = "translateY(0)";
+                          e.currentTarget.style.borderColor = "#444";
                         }}
                       >
-                        <h3 style={{
-                          color: '#fff',
-                          fontSize: '16px',
-                          marginBottom: '8px',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        }}>
+                        <h3
+                          style={{
+                            color: "#fff",
+                            fontSize: "16px",
+                            marginBottom: "8px",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
                           {blog.title}
                         </h3>
-                        
-                        <p style={{
-                          color: '#ccc',
-                          fontSize: '12px',
-                          marginBottom: '10px',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        }}>
-                          {blog.description || 'No description available'}
+
+                        <p
+                          style={{
+                            color: "#ccc",
+                            fontSize: "12px",
+                            marginBottom: "10px",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {blog.description || "No description available"}
                         </p>
-                        
-                        <div style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          fontSize: '10px',
-                          color: '#888'
-                        }}>
-                          <span>👤 {blog.author.slice(0, 6)}...{blog.author.slice(-4)}</span>
+
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            fontSize: "10px",
+                            color: "#888",
+                          }}
+                        >
+                          <span>
+                            👤 {blog.author.slice(0, 6)}...
+                            {blog.author.slice(-4)}
+                          </span>
                           <span>❤️ {blog.likes}</span>
                         </div>
-                        
-                        <div style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          fontSize: '10px',
-                          color: '#888',
-                          marginTop: '5px'
-                        }}>
+
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            fontSize: "10px",
+                            color: "#888",
+                            marginTop: "5px",
+                          }}
+                        >
                           <span>👁️ {blog.views} views</span>
                           <span>{blog.publishedAt.toLocaleDateString()}</span>
                         </div>
-                        
+
                         {blog.category && (
-                          <div style={{
-                            marginTop: '8px',
-                            backgroundColor: '#ff6b35',
-                            color: 'white',
-                            fontSize: '10px',
-                            padding: '2px 6px',
-                            borderRadius: '12px',
-                            display: 'inline-block'
-                          }}>
+                          <div
+                            style={{
+                              marginTop: "8px",
+                              backgroundColor: "#ff6b35",
+                              color: "white",
+                              fontSize: "10px",
+                              padding: "2px 6px",
+                              borderRadius: "12px",
+                              display: "inline-block",
+                            }}
+                          >
                             {blog.category}
                           </div>
                         )}
-                        
+
                         {blog.isPremium && (
-                          <span style={{
-                            marginLeft: '5px',
-                            color: '#ffd700',
-                            fontSize: '12px'
-                          }}>
+                          <span
+                            style={{
+                              marginLeft: "5px",
+                              color: "#ffd700",
+                              fontSize: "12px",
+                            }}
+                          >
                             ⭐ Premium
                           </span>
                         )}
@@ -2004,32 +2233,41 @@ const MultiplayerGame = () => {
                   )}
                 </div>
               )}
-              
-              <div style={{
-                marginTop: '20px',
-                padding: '15px',
-                backgroundColor: '#2a2a2a',
-                borderRadius: '10px',
-                border: '2px solid #4ade80'
-              }}>
-                <h4 style={{
-                  color: '#4ade80',
-                  fontSize: '16px',
-                  marginBottom: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px'
-                }}>
+
+              <div
+                style={{
+                  marginTop: "20px",
+                  padding: "15px",
+                  backgroundColor: "#2a2a2a",
+                  borderRadius: "10px",
+                  border: "2px solid #4ade80",
+                }}
+              >
+                <h4
+                  style={{
+                    color: "#4ade80",
+                    fontSize: "16px",
+                    marginBottom: "8px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "5px",
+                  }}
+                >
                   🎁 Reward System
                 </h4>
-                <p style={{
-                  color: '#ccc',
-                  fontSize: '12px',
-                  margin: 0
-                }}>
-                  • Visit Blog Hub: <span style={{color: '#ffd700'}}>+10 CVRS tokens</span><br />
-                  • Read a blog: <span style={{color: '#ffd700'}}>+10 CVRS tokens</span><br />
-                  • Engage with content: <span style={{color: '#ffd700'}}>+Reputation points</span>
+                <p
+                  style={{
+                    color: "#ccc",
+                    fontSize: "12px",
+                    margin: 0,
+                  }}
+                >
+                  • Visit Blog Hub:{" "}
+                  <span style={{ color: "#ffd700" }}>+10 CVRS tokens</span>
+                  <br />• Read a blog:{" "}
+                  <span style={{ color: "#ffd700" }}>+10 CVRS tokens</span>
+                  <br />• Engage with content:{" "}
+                  <span style={{ color: "#ffd700" }}>+Reputation points</span>
                 </p>
               </div>
             </div>
@@ -2057,7 +2295,7 @@ const MultiplayerGame = () => {
               id: hoveredPlayer.id,
               username: hoveredPlayer.username,
               address: null, // Will be fetched in modal
-              color: hoveredPlayer.color
+              color: hoveredPlayer.color,
             });
             setShowPlayerModal(true);
           }}
@@ -2083,10 +2321,10 @@ const MultiplayerGame = () => {
         onPlayerSelect={(player) => {
           // Open player profile when selected from search
           setSelectedPlayer({
-            id: player.userAddress || 'unknown',
+            id: player.userAddress || "unknown",
             username: player.username,
             address: player.userAddress,
-            color: getUsernameColor(player.username)
+            color: getUsernameColor(player.username),
           });
           setShowPlayerModal(true);
           setShowPlayerSearch(false);

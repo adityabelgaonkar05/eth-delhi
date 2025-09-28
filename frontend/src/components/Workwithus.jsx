@@ -9,6 +9,12 @@ import {
 } from "../utils/contractHelpers";
 import { fetchAllDashboardData } from "../services/dashboardApi";
 import { useWallet } from "../context/WalletContext";
+import { ethers } from "ethers";
+
+// Import contract hooks for better integration
+import {
+  useContracts,
+} from "../context/ContractContext";
 
 const Workwithus = () => {
   const [activeSection, setActiveSection] = useState("Dashboard");
@@ -18,9 +24,13 @@ const Workwithus = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [dataError, setDataError] = useState(null);
+  const [transactionStatus, setTransactionStatus] = useState(null);
+  const [estimatedGas, setEstimatedGas] = useState(null);
+  const [processingFiles, setProcessingFiles] = useState(false);
 
-  // Wallet context for blockchain operations
-  const { isConnected, fetchWallet } = useWallet();
+  // Wallet and contract integration
+  const { isConnected, account, signer, fetchWallet } = useWallet();
+  const { contracts } = useContracts();
 
   // Load Advercase font
   useEffect(() => {
@@ -70,6 +80,81 @@ const Workwithus = () => {
     loadDashboardData();
   }, []);
 
+  // File processing helpers for Walrus integration
+  const processFileForWalrus = async (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const arrayBuffer = reader.result;
+        const uint8Array = new Uint8Array(arrayBuffer);
+        resolve(uint8Array);
+      };
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(file);
+    });
+  };
+
+  // Gas estimation helper for premiere creation
+  const estimateGasForPremiere = async (premiereData) => {
+    try {
+      if (!signer || !contracts) return null;
+      
+      const contract = getContract("VideoPremiereManager", true);
+      const gasEstimate = await contract.estimateGas.createVideoPremiere(
+        premiereData.title,
+        premiereData.description,
+        premiereData.videoData,
+        premiereData.thumbnailData,
+        Math.floor(new Date(premiereData.scheduledTime).getTime() / 1000),
+        premiereData.capacity,
+        premiereData.storageTier || "standard"
+      );
+      
+      return ethers.formatEther(gasEstimate);
+    } catch (error) {
+      console.error("Gas estimation failed:", error);
+      return null;
+    }
+  };
+
+  // Gas estimation helper for blog publishing
+  const estimateGasForBlog = async (blogData) => {
+    try {
+      if (!signer || !contracts) return null;
+      
+      const contract = await getContract("BlogManagerWithWalrus", true);
+      
+      // Prepare metadata and content for gas estimation
+      const metadata = {
+        description: blogData.blogDescription || "",
+        tags: blogData.tags ? blogData.tags.split(",").map(tag => tag.trim()).filter(tag => tag.length > 0) : [],
+        category: blogData.category || "",
+        thumbnailBlobId: "",
+        estimatedReadTime: parseInt(blogData.readTime) || 5,
+        language: blogData.language || "en",
+        allowComments: blogData.allowComments !== false,
+        premiumPrice: blogData.isPremium && blogData.premiumPrice ? ethers.parseEther(blogData.premiumPrice.toString()) : 0
+      };
+      
+      const contentBytes = ethers.toUtf8Bytes(blogData.blogContent);
+      const storageTier = parseInt(blogData.blogStorageTier) || 1;
+      
+      // Calculate publishing fee and storage cost
+      const publishingFee = ethers.parseEther("100"); // 100 FLOW tokens
+      let estimatedStorageCost = 0;
+      if (storageTier === 0) estimatedStorageCost = 0; // EPHEMERAL
+      else if (storageTier === 1) estimatedStorageCost = ethers.parseEther("0.1"); // STANDARD  
+      else if (storageTier === 2) estimatedStorageCost = ethers.parseEther("0.5"); // PERMANENT
+      
+      const totalCost = publishingFee + estimatedStorageCost;
+      
+      return `${ethers.formatEther(totalCost)} FLOW (${ethers.formatEther(publishingFee)} fee + ${ethers.formatEther(estimatedStorageCost)} storage)`;
+    } catch (error) {
+      console.error("Blog gas estimation failed:", error);
+      return "Unable to estimate cost";
+    }
+  };
+
   const navigationSections = [
     "Dashboard",
     "Create Premiere",
@@ -90,51 +175,106 @@ const Workwithus = () => {
   const handleSubmit = async (e, formType) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setTransactionStatus(null);
+    setProcessingFiles(false);
 
     try {
       let result = { success: false };
 
       switch (formType) {
         case "create-premiere": {
-          // Convert file to bytes for Walrus storage
-          const videoData = formData.videoFile
-            ? await fileToBytes(formData.videoFile)
-            : new Uint8Array();
-          const thumbnailData = formData.thumbnailFile
-            ? await fileToBytes(formData.thumbnailFile)
-            : new Uint8Array();
+          // Check wallet connection first
+          if (!isConnected) {
+            console.log("🔗 Wallet not connected, requesting connection for premiere creation...");
+            try {
+              setTransactionStatus("Connecting wallet...");
+              await fetchWallet();
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              
+              if (!isConnected) {
+                alert("Please connect your wallet to create a premiere.");
+                setIsSubmitting(false);
+                setTransactionStatus(null);
+                return;
+              }
+            } catch (error) {
+              console.error("Failed to connect wallet:", error);
+              alert("Failed to connect wallet. Please make sure you have MetaMask or another Web3 wallet installed and try again.");
+              setIsSubmitting(false);
+              setTransactionStatus(null);
+              return;
+            }
+          }
 
-          result = await createVideoPremiere({
-            title: formData.title,
-            description: formData.description,
-            videoData,
-            thumbnailData,
-            scheduledTime: formData.scheduledTime,
-            capacity: parseInt(formData.capacity),
-            storageTier: formData.storageTier,
-          });
+          // Validate required fields
+          if (!formData.title || !formData.description || !formData.scheduledTime || !formData.capacity) {
+            alert("Please fill in all required fields (Title, Description, Scheduled Time, Capacity)");
+            setIsSubmitting(false);
+            return;
+          }
 
-          // If premiere created and airdrop configured, set up airdrop
-          if (result.success && formData.tokenAddress && formData.totalTokens) {
-            const airdropResult = await configureAirdrop(result.premiereId, {
-              tokenAddress: formData.tokenAddress,
-              totalAmount: formData.totalTokens,
-              reputationCapPercent: parseInt(formData.reputationCap) * 100, // Convert to basis points
+          try {
+            // Estimate gas for the transaction
+            setTransactionStatus("Estimating transaction cost...");
+            const gasEstimate = await estimateGasForPremiere(formData);
+            setEstimatedGas(gasEstimate);
+            
+            // Process files for Walrus storage
+            setProcessingFiles(true);
+            setTransactionStatus("Processing files for decentralized storage...");
+            
+            const videoData = formData.videoFile
+              ? await fileToBytes(formData.videoFile)
+              : new Uint8Array();
+            const thumbnailData = formData.thumbnailFile
+              ? await fileToBytes(formData.thumbnailFile)
+              : new Uint8Array();
+
+            setProcessingFiles(false);
+            setTransactionStatus("Creating premiere on blockchain...");
+
+            result = await createVideoPremiere({
+              title: formData.title,
+              description: formData.description,
+              videoData,
+              thumbnailData,
+              scheduledTime: formData.scheduledTime,
+              capacity: parseInt(formData.capacity),
+              storageTier: formData.storageTier,
             });
 
-            if (airdropResult.success) {
-              alert(
-                `Premiere created successfully with airdrop! Premiere ID: ${result.premiereId}`
-              );
-            } else {
-              alert(
-                `Premiere created but airdrop configuration failed: ${airdropResult.error}`
-              );
+            // If premiere created and airdrop configured, set up airdrop
+            if (result.success && formData.tokenAddress && formData.totalTokens) {
+              setTransactionStatus("Configuring token airdrop...");
+              const airdropResult = await configureAirdrop(result.premiereId, {
+                tokenAddress: formData.tokenAddress,
+                totalAmount: formData.totalTokens,
+                reputationCapPercent: parseInt(formData.reputationCap) * 100, // Convert to basis points
+              });
+
+              if (airdropResult.success) {
+                setTransactionStatus("Premiere created successfully with airdrop!");
+                alert(`Premiere created successfully with airdrop! Premiere ID: ${result.premiereId}`);
+              } else {
+                setTransactionStatus("Premiere created, but airdrop configuration failed");
+                alert(`Premiere created but airdrop configuration failed: ${airdropResult.error}`);
+              }
+            } else if (result.success) {
+              setTransactionStatus("Premiere created successfully!");
+              alert(`Premiere created successfully! Premiere ID: ${result.premiereId}`);
             }
-          } else if (result.success) {
-            alert(
-              `Premiere created successfully! Premiere ID: ${result.premiereId}`
-            );
+
+            // Clear form on success
+            if (result.success) {
+              setFormData({});
+              setEstimatedGas(null);
+              setTimeout(() => setTransactionStatus(null), 3000);
+            }
+          } catch (error) {
+            console.error("❌ Premiere creation error:", error);
+            result = { success: false, error: error.message };
+            setTransactionStatus("Transaction failed");
+            setProcessingFiles(false);
           }
           break;
         }
@@ -142,40 +282,30 @@ const Workwithus = () => {
         case "create-blog":
           // Check if wallet is connected for blog publishing
           if (!isConnected) {
-            console.log(
-              "🔗 Wallet not connected, requesting connection for blog publishing..."
-            );
+            console.log("🔗 Wallet not connected, requesting connection for blog publishing...");
             try {
+              setTransactionStatus("Connecting wallet...");
               await fetchWallet();
-              // Wait a moment for wallet connection
               await new Promise((resolve) => setTimeout(resolve, 1000));
-
-              // Check if wallet is still not connected after attempting to connect
+              
               if (!isConnected) {
                 alert("Please connect your wallet to publish a blog post.");
                 setIsSubmitting(false);
+                setTransactionStatus(null);
                 return;
               }
             } catch (error) {
               console.error("Failed to connect wallet:", error);
-              alert(
-                "Failed to connect wallet. Please make sure you have MetaMask or another Web3 wallet installed and try again."
-              );
+              alert("Failed to connect wallet. Please make sure you have MetaMask or another Web3 wallet installed and try again.");
               setIsSubmitting(false);
+              setTransactionStatus(null);
               return;
             }
           }
 
           // Validate required fields
-          if (
-            !formData.blogTitle ||
-            !formData.blogContent ||
-            !formData.blogDescription ||
-            !formData.category
-          ) {
-            alert(
-              "Please fill in all required fields (Title, Content, Description, Category)"
-            );
+          if (!formData.blogTitle || !formData.blogContent || !formData.blogDescription || !formData.category) {
+            alert("Please fill in all required fields (Title, Content, Description, Category)");
             setIsSubmitting(false);
             return;
           }
@@ -183,6 +313,19 @@ const Workwithus = () => {
           console.log("📝 Publishing blog with data:", formData);
 
           try {
+            // Estimate gas for the transaction
+            setTransactionStatus("Estimating transaction cost...");
+            const gasEstimate = await estimateGasForBlog(formData);
+            setEstimatedGas(gasEstimate);
+            
+            // Process thumbnail file if provided
+            if (formData.blogThumbnail) {
+              setProcessingFiles(true);
+              setTransactionStatus("Processing thumbnail for decentralized storage...");
+            }
+            
+            setTransactionStatus("Publishing blog on blockchain...");
+            
             result = await publishBlog({
               title: formData.blogTitle,
               content: formData.blogContent,
@@ -196,28 +339,35 @@ const Workwithus = () => {
               premiumPrice: formData.premiumPrice || 0,
               storageTier: formData.blogStorageTier || 1,
             });
+            
+            setProcessingFiles(false);
+            
+            if (result.success) {
+              setTransactionStatus("Blog published successfully!");
+              alert(`Blog published successfully! Blog ID: ${result.blogId}`);
+              console.log("✅ Blog published successfully:", result);
+              
+              // Clear form on success
+              setFormData({});
+              setEstimatedGas(null);
+              setTimeout(() => setTransactionStatus(null), 3000);
+            }
           } catch (error) {
             console.error("❌ Blog publishing error:", error);
             result = { success: false, error: error.message };
+            setTransactionStatus("Blog publishing failed");
+            setProcessingFiles(false);
           }
 
-          if (result.success) {
-            alert(`Blog published successfully! Blog ID: ${result.blogId}`);
-            console.log("✅ Blog published successfully:", result);
-          } else {
+          if (!result.success) {
             console.error("❌ Blog publishing failed:", result.error);
 
             // Show specific error messages based on the error
             let errorMessage = result.error;
-            if (result.error.includes("VerificationRequired")) {
-              errorMessage =
-                "❌ Self Protocol verification required! You must be verified as a human to publish blogs. Please complete the verification process first.";
-            } else if (result.error.includes("InsufficientPayment")) {
-              errorMessage =
-                "❌ Insufficient payment! Please ensure you have enough FLOW tokens to cover the publishing fee and storage costs.";
+            if (result.error.includes("InsufficientPayment")) {
+              errorMessage = "❌ Insufficient payment! Please ensure you have enough FLOW tokens to cover the publishing fee and storage costs.";
             } else if (result.error.includes("execution reverted")) {
-              errorMessage =
-                "❌ Transaction failed! This could be due to insufficient funds, verification requirements, or contract issues. Please check your wallet and try again.";
+              errorMessage = "❌ Transaction failed! This could be due to insufficient funds or contract issues. Please check your wallet and try again.";
             }
 
             alert(errorMessage);
@@ -755,12 +905,49 @@ const Workwithus = () => {
           </p>
         </div>
 
+        {/* Transaction Status Feedback */}
+        {transactionStatus && (
+          <div className="bg-blue-100 border-4 border-blue-500 shadow-[4px_4px_0px_0px_rgba(59,130,246,1)] p-4 rounded-xl mb-6">
+            <div className="flex items-center space-x-2">
+              <div className="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+              <span className="font-bold text-blue-800">{transactionStatus}</span>
+            </div>
+          </div>
+        )}
+
+        {/* File Processing Status */}
+        {processingFiles && (
+          <div className="bg-orange-100 border-4 border-orange-500 shadow-[4px_4px_0px_0px_rgba(249,115,22,1)] p-4 rounded-xl mb-6">
+            <div className="flex items-center space-x-2">
+              <div className="animate-pulse h-5 w-5 bg-orange-500 rounded-full"></div>
+              <span className="font-bold text-orange-800">Processing files for Walrus storage...</span>
+            </div>
+          </div>
+        )}
+
+        {/* Gas Estimate Display */}
+        {estimatedGas && (
+          <div className="bg-green-100 border-4 border-green-500 shadow-[4px_4px_0px_0px_rgba(34,197,94,1)] p-4 rounded-xl mb-6">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-green-800">Estimated Gas:</span>
+              <span className="font-bold text-green-800">{estimatedGas}</span>
+            </div>
+          </div>
+        )}
+
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-yellow-300 hover:bg-yellow-400 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-4 text-xl font-black uppercase tracking-wider transition-all duration-150 rounded-2xl"
+          className="w-full bg-yellow-300 hover:bg-yellow-400 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-4 text-xl font-black uppercase tracking-wider transition-all duration-150 rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? "CREATING PREMIERE..." : "CREATE PREMIERE"}
+          {isSubmitting ? (
+            <div className="flex items-center justify-center space-x-2">
+              <div className="animate-spin h-6 w-6 border-2 border-black border-t-transparent rounded-full"></div>
+              <span>CREATING PREMIERE...</span>
+            </div>
+          ) : (
+            "CREATE PREMIERE"
+          )}
         </button>
       </form>
     </div>
@@ -874,6 +1061,21 @@ const Workwithus = () => {
             value={formData.tags || ""}
             placeholder="blockchain, defi, tutorial"
           />
+        </div>
+
+        <div>
+          <label className="block text-lg font-bold mb-2 uppercase tracking-wide">
+            Thumbnail Image
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            className="w-full p-4 border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-lg font-medium rounded-xl"
+            onChange={(e) => handleInputChange("blogThumbnail", e.target.files[0])}
+          />
+          <p className="text-sm text-gray-600 mt-1">
+            Optional: Upload a thumbnail image for your blog post
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1022,16 +1224,6 @@ const Workwithus = () => {
           )}
         </div>
 
-        <div className="bg-red-100 border-3 border-red-500 p-4 rounded-xl">
-          <p className="font-bold text-red-800">
-            ⚠️ IMPORTANT: Self Protocol Verification Required
-          </p>
-          <p className="text-sm text-red-700 mt-1">
-            You must be verified as a human through Self Protocol to publish
-            blogs. This is a one-time verification process for security.
-          </p>
-        </div>
-
         <div className="bg-yellow-100 border-3 border-yellow-500 p-4 rounded-xl">
           <p className="font-bold text-yellow-800">
             💰 TOTAL COST: 100 FLOW + Walrus Storage Fee
@@ -1048,13 +1240,50 @@ const Workwithus = () => {
           </p>
         </div>
 
+        {/* Transaction Status Feedback */}
+        {transactionStatus && (
+          <div className="bg-blue-100 border-4 border-blue-500 shadow-[4px_4px_0px_0px_rgba(59,130,246,1)] p-4 rounded-xl mb-6">
+            <div className="flex items-center space-x-2">
+              <div className="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+              <span className="font-bold text-blue-800">{transactionStatus}</span>
+            </div>
+          </div>
+        )}
+
+        {/* File Processing Status */}
+        {processingFiles && (
+          <div className="bg-orange-100 border-4 border-orange-500 shadow-[4px_4px_0px_0px_rgba(249,115,22,1)] p-4 rounded-xl mb-6">
+            <div className="flex items-center space-x-2">
+              <div className="animate-pulse h-5 w-5 bg-orange-500 rounded-full"></div>
+              <span className="font-bold text-orange-800">Processing content for Walrus storage...</span>
+            </div>
+          </div>
+        )}
+
+        {/* Gas Estimate Display */}
+        {estimatedGas && (
+          <div className="bg-green-100 border-4 border-green-500 shadow-[4px_4px_0px_0px_rgba(34,197,94,1)] p-4 rounded-xl mb-6">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-green-800">Estimated Cost:</span>
+              <span className="font-bold text-green-800">{estimatedGas}</span>
+            </div>
+          </div>
+        )}
+
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-4 text-xl font-black uppercase tracking-wider transition-all duration-150 rounded-2xl text-white"
+          className="w-full border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-4 text-xl font-black uppercase tracking-wider transition-all duration-150 rounded-2xl text-white disabled:opacity-50 disabled:cursor-not-allowed"
           style={{ backgroundColor: "#00ffb6" }}
         >
-          {isSubmitting ? "PUBLISHING BLOG..." : "PUBLISH BLOG"}
+          {isSubmitting ? (
+            <div className="flex items-center justify-center space-x-2">
+              <div className="animate-spin h-6 w-6 border-2 border-white border-t-transparent rounded-full"></div>
+              <span>PUBLISHING BLOG...</span>
+            </div>
+          ) : (
+            "PUBLISH BLOG"
+          )}
         </button>
       </form>
     </div>
@@ -1461,6 +1690,39 @@ const Workwithus = () => {
                 </button>
               );
             })}
+            
+            {/* Wallet Connection Button */}
+            <div className="pt-6 mt-6 border-t-2 border-gray-200">
+              <button
+                onClick={isConnected ? () => {} : fetchWallet}
+                disabled={isConnected}
+                className={`w-full p-4 border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] font-bold uppercase tracking-wider transition-all duration-150 rounded-xl ${
+                  isConnected 
+                    ? "bg-green-100 text-green-800 cursor-default" 
+                    : "bg-blue-100 hover:bg-blue-200 text-blue-800"
+                }`}
+              >
+                <div className={`flex items-center ${isSidebarCollapsed ? "justify-center" : "space-x-3"}`}>
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="5" width="18" height="14" rx="2" ry="2"/>
+                    <polyline points="3,10 12,15 21,10"/>
+                  </svg>
+                  {!isSidebarCollapsed && (
+                    <div className="text-left">
+                      <div className="font-bold text-sm">
+                        {isConnected ? "WALLET CONNECTED" : "CONNECT WALLET"}
+                      </div>
+                      <div className="text-xs mt-1">
+                        {isConnected 
+                          ? `${account?.slice(0, 6)}...${account?.slice(-4)}`
+                          : "Click to connect MetaMask"
+                        }
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </button>
+            </div>
           </nav>
         </div>
 

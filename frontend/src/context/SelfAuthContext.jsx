@@ -33,10 +33,14 @@ export const SelfAuthProvider = ({ children }) => {
     try {
       const token = localStorage.getItem('authToken');
 
-      // If no token, redirect to auth (except for landing page)
+      // Business pages that don't need Self Protocol authentication
+      const businessPages = ['/', '/auth', '/business', '/onboarding', '/workwithus', '/admin'];
+      const isBusinessPage = businessPages.includes(location.pathname);
+
+      // If no token, redirect to auth (except for business pages)
       if (!token) {
         setLoading(false);
-        if (location.pathname !== '/' && location.pathname !== '/auth') {
+        if (!isBusinessPage) {
           navigate('/auth');
         }
         return;
@@ -57,21 +61,25 @@ export const SelfAuthProvider = ({ children }) => {
         } else {
           // Invalid token, clear and redirect
           localStorage.removeItem('authToken');
-          if (location.pathname !== '/' && location.pathname !== '/auth') {
+          if (!isBusinessPage) {
             navigate('/auth');
           }
         }
       } else {
         // Token validation failed, clear and redirect
         localStorage.removeItem('authToken');
-        if (location.pathname !== '/' && location.pathname !== '/auth') {
+        if (!isBusinessPage) {
           navigate('/auth');
         }
       }
     } catch (error) {
       console.error('Auth check failed:', error);
       localStorage.removeItem('authToken');
-      if (location.pathname !== '/' && location.pathname !== '/auth') {
+      // Business pages that don't need Self Protocol authentication
+      const businessPages = ['/', '/auth', '/business', '/onboarding', '/workwithus', '/admin'];
+      const isBusinessPage = businessPages.includes(location.pathname);
+      
+      if (!isBusinessPage) {
         navigate('/auth');
       }
     } finally {

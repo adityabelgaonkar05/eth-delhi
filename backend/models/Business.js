@@ -13,12 +13,14 @@ const businessSchema = new mongoose.Schema({
     required: [true, 'CIN is required'],
     unique: true,
     trim: true,
+    minlength: [8, 'CIN must be at least 8 characters'],
+    maxlength: [21, 'CIN cannot exceed 21 characters'],
     validate: {
       validator: function(v) {
-        // Basic CIN validation - should be 21 characters alphanumeric
-        return /^[A-Z]{1}[0-9]{5}[A-Z]{2}[0-9]{4}[A-Z]{3}[0-9]{6}$/.test(v);
+        // More flexible CIN validation - alphanumeric characters
+        return /^[A-Z0-9]+$/i.test(v);
       },
-      message: 'Please enter a valid CIN number'
+      message: 'CIN should contain only letters and numbers'
     }
   },
   companyType: {

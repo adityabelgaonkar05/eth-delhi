@@ -47,8 +47,9 @@ const BusinessOnboarding = memo(({ isOpen, onClose, onComplete, onSwitchToLogin 
     {
       id: "cin",
       question: "What's your company's CIN?",
-      placeholder: "Enter your Corporate Identity Number",
-      type: "text"
+      placeholder: "Enter your Corporate Identity Number (e.g., L12345AB2020PLC123456)",
+      type: "text",
+      help: "CIN should be 8-25 characters with letters and numbers only"
     },
     {
       id: "companyType",
@@ -75,9 +76,10 @@ const BusinessOnboarding = memo(({ isOpen, onClose, onComplete, onSwitchToLogin 
     },
     {
       id: "password",
-      question: "Set a secure password",
-      placeholder: "Enter your password (min. 8 characters)",
-      type: "password"
+      question: "Create a secure password",
+      placeholder: "Enter your password (8+ chars, uppercase, lowercase, number)",
+      type: "password",
+      help: "Password must contain at least 8 characters with uppercase, lowercase, and number"
     }
   ];
 
@@ -96,16 +98,19 @@ const BusinessOnboarding = memo(({ isOpen, onClose, onComplete, onSwitchToLogin 
       setIsSubmitting(true);
       
       try {
+        console.log('Submitting form data:', formData);
         const result = await signup(formData);
         
         if (result.success) {
           setIsCompleted(true);
           onComplete(result.business);
         } else {
-          alert(`Registration failed: ${result.error}`);
+          console.error('Registration failed:', result.error);
+          alert(`Registration failed: ${result.error || 'Unknown error occurred'}`);
         }
       } catch (error) {
-        alert(`Registration failed: ${error.message}`);
+        console.error('Registration error:', error);
+        alert(`Registration failed: ${error.message || 'Network error occurred'}`);
       } finally {
         setIsSubmitting(false);
       }
@@ -243,8 +248,14 @@ const BusinessOnboarding = memo(({ isOpen, onClose, onComplete, onSwitchToLogin 
                     className="w-full px-6 py-4 bg-transparent border-b-2 border-white text-white text-xl text-center placeholder-gray-400 focus:outline-none focus:border-gray-300 transition-colors"
                     style={{ fontFamily: "Advercase, monospace" }}
                     onKeyPress={handleKeyPress}
-                    autoFocus
                   />
+                )}
+                
+                {/* Help text */}
+                {questions[currentStep].help && (
+                  <div className="mt-2 text-sm text-gray-400 text-center">
+                    {questions[currentStep].help}
+                  </div>
                 )}
               </div>
 

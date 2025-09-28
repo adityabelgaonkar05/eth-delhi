@@ -38,14 +38,14 @@ import CheckAuth from "./components/CheckAuth";
 
 function App() {
   return (
-    // <AuthProvider> currently commented out for testing purposes
-    <WalletProvider>
-      <ContractProvider>
-        <TokenProvider>
-          <SocketProvider>
-            <Router>
-              <SelfAuthProvider>
-                <div className="App">
+    <AuthProvider>
+      <WalletProvider>
+        <ContractProvider>
+          <TokenProvider>
+            <SocketProvider>
+              <Router>
+                <SelfAuthProvider>
+                  <div className="App">
                   <Routes>
                     {/* Public routes */}
                     <Route path="/auth" element={<SelfAuthentication />} />
@@ -139,8 +139,8 @@ function App() {
                     {/* <Route path="wallet" element={<WalletSelector />} /> */}
                   </Routes>
 
-                  {/* Quick Navigation - remove in production */}
-                  <QuickNavigation />
+                  {/* Quick Navigation - remove in production
+                  <QuickNavigation /> */}
                 </div>
               </SelfAuthProvider>
             </Router>
@@ -148,7 +148,7 @@ function App() {
         </TokenProvider>
       </ContractProvider>
     </WalletProvider>
-    // </AuthProvider >
+    </AuthProvider>
   );
 }
 

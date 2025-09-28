@@ -58,6 +58,8 @@ export const AuthProvider = ({ children }) => {
       setError(null);
       setLoading(true);
 
+      console.log('Sending signup request with data:', businessData);
+      
       const response = await fetch(`${API_URL}/auth/signup`, {
         method: 'POST',
         headers: {
@@ -68,15 +70,19 @@ export const AuthProvider = ({ children }) => {
       });
 
       const data = await response.json();
+      console.log('Signup response:', { status: response.status, data });
 
       if (response.ok) {
         localStorage.setItem('businessToken', data.token);
         setBusiness(data.data.business);
         return { success: true, business: data.data.business };
       } else {
-        throw new Error(data.message || 'Registration failed');
+        const errorMessage = data.message || data.errors?.join(', ') || 'Registration failed';
+        console.error('Signup failed:', errorMessage);
+        throw new Error(errorMessage);
       }
     } catch (error) {
+      console.error('Signup error:', error);
       setError(error.message);
       return { success: false, error: error.message };
     } finally {

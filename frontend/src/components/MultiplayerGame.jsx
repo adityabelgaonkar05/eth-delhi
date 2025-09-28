@@ -13,6 +13,7 @@ import PlayerProfileModal from './PlayerProfileModal'
 import PlayerSearch from './PlayerSearch'
 import { useSocket } from '../context/SocketContext'
 import { getUsernameColor } from '../utils/colorUtils'
+import { getBlogsByAuthor, getContract, getAllBlogs, rewardBlogReading } from '../utils/contractHelpers'
 import { 
   collisions, 
   l_New_Layer_1, 
@@ -97,6 +98,20 @@ const MultiplayerGame = () => {
   const townhallCooldownTimeoutRef = useRef(null)
   const townhallCooldownIntervalRef = useRef(null)
   const townhallHoldIntervalRef = useRef(null)
+
+  // Blog hub states
+  const [showBlogPrompt, setShowBlogPrompt] = useState(false)
+  const [hasShownBlogPrompt, setHasShownBlogPrompt] = useState(false)
+  const [blogPromptCooldown, setBlogPromptCooldown] = useState(false)
+  const [blogCooldownTimeLeft, setBlogCooldownTimeLeft] = useState(0)
+  const [isHoldingBlog, setIsHoldingBlog] = useState(false)
+  const [blogHoldProgress, setBlogHoldProgress] = useState(0)
+  const [showBlogModal, setShowBlogModal] = useState(false)
+  const [blogs, setBlogs] = useState([])
+  const [loadingBlogs, setLoadingBlogs] = useState(false)
+  const blogCooldownTimeoutRef = useRef(null)
+  const blogCooldownIntervalRef = useRef(null)
+  const blogHoldIntervalRef = useRef(null)
 
   // Socket context
   const { connect: connectSocket, disconnect: disconnectSocket, socket } = useSocket();
@@ -213,6 +228,41 @@ const MultiplayerGame = () => {
     }, 5000) // 5 seconds cooldown
   }, [])
 
+  // Start blog cooldown period to prevent prompt spam
+  const startBlogCooldown = useCallback(() => {
+    console.log('startBlogCooldown called - setting cooldown to true')
+    setBlogPromptCooldown(true)
+    setBlogCooldownTimeLeft(5)
+    
+    // Clear any existing timeout and interval
+    if (blogCooldownTimeoutRef.current) {
+      clearTimeout(blogCooldownTimeoutRef.current)
+    }
+    if (blogCooldownIntervalRef.current) {
+      clearInterval(blogCooldownIntervalRef.current)
+    }
+    
+    // Start countdown interval
+    blogCooldownIntervalRef.current = setInterval(() => {
+      setBlogCooldownTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(blogCooldownIntervalRef.current)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    
+    // Set 5-second cooldown
+    blogCooldownTimeoutRef.current = setTimeout(() => {
+      console.log('Blog cooldown timeout triggered - setting cooldown to false')
+      setBlogPromptCooldown(false)
+      setHasShownBlogPrompt(false) // Reset so it can trigger again after cooldown
+      setBlogCooldownTimeLeft(0)
+      console.log('Blog prompt cooldown ended')
+    }, 5000) // 5 seconds cooldown
+  }, [])
+
   // Handle library navigation
   const handleGoToLibrary = useCallback(() => {
     setShowLibraryPrompt(false)
@@ -266,6 +316,25 @@ const MultiplayerGame = () => {
     }
     startTownhallCooldown()
   }, [startTownhallCooldown])
+
+  // Handle blog hub navigation
+  const handleOpenBlogHub = useCallback(() => {
+    setShowBlogPrompt(false)
+    setShowBlogModal(true)
+    startBlogCooldown()
+    loadBlogs()
+  }, [startBlogCooldown])
+
+  const handleStayInGameBlog = useCallback(() => {
+    console.log('handleStayInGameBlog called - starting cooldown')
+    setShowBlogPrompt(false)
+    setIsHoldingBlog(false)
+    setBlogHoldProgress(0)
+    if (blogHoldIntervalRef.current) {
+      clearInterval(blogHoldIntervalRef.current)
+    }
+    startBlogCooldown()
+  }, [startBlogCooldown])
 
   // Handle hold button functionality for Library
   const handleLibraryHoldStart = useCallback(() => {
@@ -339,6 +408,64 @@ const MultiplayerGame = () => {
     setTownhallHoldProgress(0)
     if (townhallHoldIntervalRef.current) {
       clearInterval(townhallHoldIntervalRef.current)
+    }
+  }, [])
+
+  // Handle hold button functionality for Blog Hub
+  const handleBlogHoldStart = useCallback(() => {
+    setIsHoldingBlog(true)
+    setBlogHoldProgress(0)
+    
+    blogHoldIntervalRef.current = setInterval(() => {
+      setBlogHoldProgress(prev => {
+        if (prev >= 100) {
+          // Hold complete - open blog hub
+          handleOpenBlogHub()
+          return 100
+        }
+        return prev + 2 // 2% per 10ms = 100% in 500ms
+      })
+    }, 10)
+  }, [handleOpenBlogHub])
+
+  const handleBlogHoldEnd = useCallback(() => {
+    setIsHoldingBlog(false)
+    setBlogHoldProgress(0)
+    if (blogHoldIntervalRef.current) {
+      clearInterval(blogHoldIntervalRef.current)
+    }
+  }, [])
+
+  // Load blogs from blockchain and reward system
+  const loadBlogs = useCallback(async () => {
+    setLoadingBlogs(true)
+    try {
+      const allBlogs = await getAllBlogs()
+      setBlogs(allBlogs)
+    } catch (error) {
+      console.error('Error loading blogs:', error)
+      setBlogs([])
+    } finally {
+      setLoadingBlogs(false)
+    }
+  }, [])
+
+  // Reward user for reading blogs
+  const rewardUserForBlogReading = useCallback(async () => {
+    try {
+      const accounts = await window.ethereum?.request({ method: 'eth_requestAccounts' })
+      const userAddress = accounts?.[0]
+      
+      if (userAddress) {
+        const result = await rewardBlogReading(userAddress)
+        if (result.success) {
+          console.log('Blog reading reward granted!')
+        } else {
+          console.error('Failed to grant reward:', result.error)
+        }
+      }
+    } catch (error) {
+      console.error('Error granting blog reading reward:', error)
     }
   }, [])
 
@@ -786,6 +913,9 @@ const MultiplayerGame = () => {
     // Check for townhall interaction zone (coordinates 259,224)
     const isInTownhallZone = playerX >= 253 && playerX <= 265 && playerY >= 219 && playerY <= 229
     
+    // Check for blog hub interaction zone (coordinates 181,172)
+    const isInBlogZone = playerX >= 176 && playerX <= 186 && playerY >= 167 && playerY <= 177
+    
     // Debug logging (remove in production)
     if (playerX >= 250 && playerX <= 280 && playerY >= 70 && playerY <= 90) {
       console.log(`Player at (${Math.round(playerX)}, ${Math.round(playerY)}), in library zone: ${isInLibraryZone}, prompt shown: ${hasShownLibraryPrompt}, cooldown: ${libraryPromptCooldown}`)
@@ -795,6 +925,9 @@ const MultiplayerGame = () => {
     }
     if (playerX >= 250 && playerX <= 270 && playerY >= 215 && playerY <= 235) {
       console.log(`Player at (${Math.round(playerX)}, ${Math.round(playerY)}), in townhall zone: ${isInTownhallZone}, prompt shown: ${hasShownTownhallPrompt}, cooldown: ${townhallPromptCooldown}`)
+    }
+    if (playerX >= 175 && playerX <= 190 && playerY >= 165 && playerY <= 180) {
+      console.log(`Player at (${Math.round(playerX)}, ${Math.round(playerY)}), in blog zone: ${isInBlogZone}, prompt shown: ${hasShownBlogPrompt}, cooldown: ${blogPromptCooldown}`)
     }
     
     // Only trigger library prompt if in zone, not already shown, and not in cooldown
@@ -816,6 +949,13 @@ const MultiplayerGame = () => {
       console.log('Triggering townhall prompt!')
       setShowTownhallPrompt(true)
       setHasShownTownhallPrompt(true)
+    }
+    
+    // Only trigger blog hub prompt if in zone, not already shown, and not in cooldown
+    if (isInBlogZone && !hasShownBlogPrompt && !blogPromptCooldown) {
+      console.log('Triggering blog hub prompt!')
+      setShowBlogPrompt(true)
+      setHasShownBlogPrompt(true)
     }
     
     // Don't reset the prompt state when leaving zone - let cooldown handle it
@@ -883,6 +1023,11 @@ const MultiplayerGame = () => {
     const handleKeyDown = (e) => {
       // Handle ESC key to close prompts
       if (e.key === 'Escape') {
+        if (showBlogModal) {
+          setShowBlogModal(false)
+          rewardUserForBlogReading()
+          return
+        }
         if (showLibraryPrompt) {
           handleStayInGame()
           return
@@ -893,6 +1038,10 @@ const MultiplayerGame = () => {
         }
         if (showTownhallPrompt) {
           handleStayInGameTownhall()
+          return
+        }
+        if (showBlogPrompt) {
+          handleStayInGameBlog()
           return
         }
       }
@@ -1010,6 +1159,12 @@ const MultiplayerGame = () => {
       if (townhallCooldownIntervalRef.current) {
         clearInterval(townhallCooldownIntervalRef.current)
       }
+      if (blogCooldownTimeoutRef.current) {
+        clearTimeout(blogCooldownTimeoutRef.current)
+      }
+      if (blogCooldownIntervalRef.current) {
+        clearInterval(blogCooldownIntervalRef.current)
+      }
       // Cleanup hold intervals
       if (libraryHoldIntervalRef.current) {
         clearInterval(libraryHoldIntervalRef.current)
@@ -1019,6 +1174,9 @@ const MultiplayerGame = () => {
       }
       if (townhallHoldIntervalRef.current) {
         clearInterval(townhallHoldIntervalRef.current)
+      }
+      if (blogHoldIntervalRef.current) {
+        clearInterval(blogHoldIntervalRef.current)
       }
     }
   }, [])
@@ -1193,11 +1351,12 @@ const MultiplayerGame = () => {
           <div style={{ color: "#44ff44", fontWeight: "bold", fontSize: "10px" }}>
             X: {Math.round(playerCoords.x)} Y: {Math.round(playerCoords.y)}
           </div>
-          {(libraryPromptCooldown || cinemaPromptCooldown || townhallPromptCooldown) && (
+          {(libraryPromptCooldown || cinemaPromptCooldown || townhallPromptCooldown || blogPromptCooldown) && (
             <div style={{ color: '#ff6b6b', fontSize: '8px', marginTop: '2px' }}>
               {libraryPromptCooldown && `Library: ${cooldownTimeLeft}s`}
               {cinemaPromptCooldown && `Cinema: ${cinemaCooldownTimeLeft}s`}
               {townhallPromptCooldown && `Townhall: ${townhallCooldownTimeLeft}s`}
+              {blogPromptCooldown && `Blog: ${blogCooldownTimeLeft}s`}
             </div>
           )}
         </div>
@@ -1550,6 +1709,329 @@ const MultiplayerGame = () => {
               }}>
                 Press ESC to close this dialog
               </p>
+            </div>
+          </div>
+        )}
+
+        {/* Blog Hub Interaction Prompt */}
+        {showBlogPrompt && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+          }}>
+            <div style={{
+              backgroundColor: '#2a2a2a',
+              border: '3px solid #4a4a4a',
+              borderRadius: '15px',
+              padding: '30px',
+              textAlign: 'center',
+              maxWidth: '400px',
+              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)'
+            }}>
+              <h2 style={{
+                color: '#fff',
+                fontSize: '24px',
+                marginBottom: '10px',
+                textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+              }}>
+                📚 Blog Hub Discovered! 📚
+              </h2>
+              
+              <p style={{
+                color: '#ccc',
+                fontSize: '16px',
+                marginBottom: '25px',
+                lineHeight: '1.4'
+              }}>
+                Explore amazing blogs from businesses around the metaverse!
+                <br />Read, learn, and earn rewards!
+              </p>
+              
+              <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+                <button
+                  onClick={handleStayInGameBlog}
+                  style={{
+                    padding: '12px 20px',
+                    backgroundColor: '#666',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.3s'
+                  }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#777'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = '#666'}
+                >
+                  Stay in Game
+                </button>
+                
+                <button
+                  onMouseDown={handleBlogHoldStart}
+                  onMouseUp={handleBlogHoldEnd}
+                  onMouseLeave={handleBlogHoldEnd}
+                  style={{
+                    padding: '12px 20px',
+                    backgroundColor: '#ff6b35',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    transition: 'background-color 0.3s'
+                  }}
+                >
+                  {/* Progress bar */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    height: '100%',
+                    width: `${blogHoldProgress}%`,
+                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                    transition: 'width 0.1s linear',
+                    borderRadius: '8px'
+                  }} />
+                  
+                  {/* Button text */}
+                  <span style={{ position: 'relative', zIndex: 1 }}>
+                    {isHoldingBlog ? `Opening... ${Math.round(blogHoldProgress)}%` : 'Hold to Open Blog Hub'}
+                  </span>
+                </button>
+              </div>
+              
+              <p style={{
+                color: '#888',
+                fontSize: '12px',
+                marginTop: '20px',
+                fontStyle: 'italic'
+              }}>
+                Press ESC to close this dialog
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Blog Hub Modal */}
+        {showBlogModal && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1001
+          }}>
+            <div style={{
+              backgroundColor: '#1a1a1a',
+              border: '3px solid #ff6b35',
+              borderRadius: '15px',
+              padding: '30px',
+              width: '90vw',
+              maxWidth: '800px',
+              maxHeight: '80vh',
+              overflow: 'auto',
+              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.8)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{
+                  color: '#ff6b35',
+                  fontSize: '28px',
+                  margin: 0,
+                  textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+                }}>
+                  📚 Blog Hub - Knowledge Rewards
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowBlogModal(false)
+                    rewardUserForBlogReading()
+                  }}
+                  style={{
+                    backgroundColor: '#ff4444',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '40px',
+                    height: '40px',
+                    fontSize: '20px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+              
+              {loadingBlogs ? (
+                <div style={{
+                  textAlign: 'center',
+                  color: '#fff',
+                  fontSize: '18px',
+                  padding: '50px'
+                }}>
+                  🔍 Loading blogs from the blockchain...
+                </div>
+              ) : (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                  gap: '20px',
+                  maxHeight: '500px',
+                  overflow: 'auto'
+                }}>
+                  {blogs.length === 0 ? (
+                    <div style={{
+                      gridColumn: '1 / -1',
+                      textAlign: 'center',
+                      color: '#ccc',
+                      fontSize: '16px',
+                      padding: '50px'
+                    }}>
+                      📝 No blogs published yet. Be the first to create one!
+                    </div>
+                  ) : (
+                    blogs.map((blog) => (
+                      <div
+                        key={blog.id}
+                        style={{
+                          backgroundColor: '#2a2a2a',
+                          border: '2px solid #444',
+                          borderRadius: '10px',
+                          padding: '15px',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          ':hover': {
+                            transform: 'translateY(-5px)',
+                            borderColor: '#ff6b35'
+                          }
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.transform = 'translateY(-5px)'
+                          e.currentTarget.style.borderColor = '#ff6b35'
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.transform = 'translateY(0)'
+                          e.currentTarget.style.borderColor = '#444'
+                        }}
+                      >
+                        <h3 style={{
+                          color: '#fff',
+                          fontSize: '16px',
+                          marginBottom: '8px',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {blog.title}
+                        </h3>
+                        
+                        <p style={{
+                          color: '#ccc',
+                          fontSize: '12px',
+                          marginBottom: '10px',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {blog.description || 'No description available'}
+                        </p>
+                        
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          fontSize: '10px',
+                          color: '#888'
+                        }}>
+                          <span>👤 {blog.author.slice(0, 6)}...{blog.author.slice(-4)}</span>
+                          <span>❤️ {blog.likes}</span>
+                        </div>
+                        
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          fontSize: '10px',
+                          color: '#888',
+                          marginTop: '5px'
+                        }}>
+                          <span>👁️ {blog.views} views</span>
+                          <span>{blog.publishedAt.toLocaleDateString()}</span>
+                        </div>
+                        
+                        {blog.category && (
+                          <div style={{
+                            marginTop: '8px',
+                            backgroundColor: '#ff6b35',
+                            color: 'white',
+                            fontSize: '10px',
+                            padding: '2px 6px',
+                            borderRadius: '12px',
+                            display: 'inline-block'
+                          }}>
+                            {blog.category}
+                          </div>
+                        )}
+                        
+                        {blog.isPremium && (
+                          <span style={{
+                            marginLeft: '5px',
+                            color: '#ffd700',
+                            fontSize: '12px'
+                          }}>
+                            ⭐ Premium
+                          </span>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+              
+              <div style={{
+                marginTop: '20px',
+                padding: '15px',
+                backgroundColor: '#2a2a2a',
+                borderRadius: '10px',
+                border: '2px solid #4ade80'
+              }}>
+                <h4 style={{
+                  color: '#4ade80',
+                  fontSize: '16px',
+                  marginBottom: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px'
+                }}>
+                  🎁 Reward System
+                </h4>
+                <p style={{
+                  color: '#ccc',
+                  fontSize: '12px',
+                  margin: 0
+                }}>
+                  • Visit Blog Hub: <span style={{color: '#ffd700'}}>+10 CVRS tokens</span><br />
+                  • Read a blog: <span style={{color: '#ffd700'}}>+10 CVRS tokens</span><br />
+                  • Engage with content: <span style={{color: '#ffd700'}}>+Reputation points</span>
+                </p>
+              </div>
             </div>
           </div>
         )}

@@ -12,8 +12,9 @@ const signupValidation = [
   body('cin')
     .notEmpty()
     .withMessage('CIN is required')
-    .matches(/^[A-Z]{1}[0-9]{5}[A-Z]{2}[0-9]{4}[A-Z]{3}[0-9]{6}$/)
-    .withMessage('Please enter a valid CIN number (21 characters)'),
+    .isLength({ min: 5, max: 30 })
+    .withMessage('CIN must be between 5 and 30 characters')
+    .trim(),
 
   body('companyType')
     .notEmpty()
@@ -85,10 +86,18 @@ const updatePasswordValidation = [
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    const errorMessages = errors.array().map(error => ({
+      field: error.path,
+      message: error.msg,
+      value: error.value
+    }));
+    
+    console.log('Validation errors:', errorMessages);
+    
     return res.status(400).json({
       status: 'fail',
       message: 'Validation failed',
-      errors: errors.array()
+      errors: errorMessages
     });
   }
   next();

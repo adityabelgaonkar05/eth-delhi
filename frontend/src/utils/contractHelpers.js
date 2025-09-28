@@ -371,10 +371,7 @@ export const publishBlog = async (blogData) => {
 
     // Provide more specific error messages
     let errorMessage = error.message;
-    if (error.message.includes("VerificationRequired")) {
-      errorMessage =
-        "Self Protocol verification required. You must be verified as a human to publish blogs.";
-    } else if (error.message.includes("InsufficientPayment")) {
+    if (error.message.includes("InsufficientPayment")) {
       errorMessage =
         "Insufficient payment. Please ensure you have enough FLOW tokens to cover the publishing fee and storage costs.";
     } else if (error.message.includes("EmptyContent")) {
@@ -383,7 +380,7 @@ export const publishBlog = async (blogData) => {
       errorMessage = "Blog content is too large. Maximum size is 13GB.";
     } else if (error.message.includes("execution reverted")) {
       errorMessage =
-        "Transaction failed. This could be due to insufficient funds, verification requirements, or contract issues.";
+        "Transaction failed. This could be due to insufficient funds or contract issues.";
     }
 
     return { success: false, error: errorMessage };
@@ -446,6 +443,67 @@ export const getBlogsByAuthor = async (
   } catch (error) {
     console.error("Error getting blogs by author:", error);
     return [];
+  }
+};
+
+// Get all blogs from the blockchain
+export const getAllBlogs = async () => {
+  try {
+    const contract = await getContract("BlogManagerWithWalrus");
+    const totalBlogs = await contract.totalBlogs();
+    const blogs = [];
+    
+    // Get blogs from ID 1 to totalBlogs
+    for (let i = 1; i <= totalBlogs; i++) {
+      try {
+        const blogPost = await contract.blogPosts(i);
+        const blogMetadata = await contract.blogMetadata(i);
+        
+        if (blogPost.isActive) {
+          blogs.push({
+            id: i,
+            title: blogPost.title,
+            author: blogPost.author,
+            publishedAt: new Date(Number(blogPost.publishedAt) * 1000),
+            likes: blogPost.likes.toString(),
+            views: blogPost.views.toString(),
+            isPremium: blogPost.isPremium,
+            description: blogMetadata.description,
+            category: blogMetadata.category,
+            tags: blogMetadata.tags,
+            walrusBlobId: blogPost.walrusBlobId,
+            contentSize: blogPost.contentSize.toString(),
+            tier: blogPost.tier
+          });
+        }
+      } catch (error) {
+        console.error(`Error loading blog ${i}:`, error);
+      }
+    }
+    
+    return blogs;
+  } catch (error) {
+    console.error("Error fetching all blogs:", error);
+    return [];
+  }
+};
+
+// Reward user with CVRS tokens for blog reading
+export const rewardBlogReading = async (userAddress) => {
+  try {
+    const contract = await getContract("CryptoVerseToken", true);
+    const rewardAmount = '10000000000000000000'; // 10 CVRS tokens
+    
+    await contract.mintReward(
+      userAddress,
+      rewardAmount,
+      'Blog Reading Hub Visit'
+    );
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error granting blog reading reward:', error);
+    return { success: false, error: error.message };
   }
 };
 

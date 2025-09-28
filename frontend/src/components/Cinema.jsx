@@ -16,6 +16,7 @@ import {
   cinema_l_New_Layer_6 
 } from '../game/data/cinemaDataNew'
 import { loadImage } from '../game/utils/gameUtils'
+import { getContract, getAllPremieres } from '../utils/contractHelpers'
 
 const Cinema = () => {
   console.log('Cinema component rendering...')
@@ -51,6 +52,18 @@ const Cinema = () => {
   const exitCooldownTimeoutRef = useRef(null)
   const exitCooldownIntervalRef = useRef(null)
   const holdIntervalRef = useRef(null)
+
+  // Premiere interaction states
+  const [showPremierePrompt, setShowPremierePrompt] = useState(false)
+  const [hasShownPremierePrompt, setHasShownPremierePrompt] = useState(false)
+  const [premierePromptCooldown, setPremierePromptCooldown] = useState(false)
+  const [premiereCooldownTimeLeft, setPremiereCooldownTimeLeft] = useState(0)
+  const [showPremiereModal, setShowPremiereModal] = useState(false)
+  const [premieres, setPremieres] = useState([])
+  const [loadingPremieres, setLoadingPremieres] = useState(false)
+  const [selectedPremiere, setSelectedPremiere] = useState(null)
+  const premiereCooldownTimeoutRef = useRef(null)
+  const premiereCooldownIntervalRef = useRef(null)
 
   console.log('Cinema state:', { isLoading, error, connected, playerCount })
 
@@ -203,6 +216,69 @@ const Cinema = () => {
       console.log('Exit prompt cooldown ended')
     }, 5000) // 5 seconds cooldown
   }, [])
+
+  // Start premiere cooldown period to prevent prompt spam
+  const startPremiereCooldown = useCallback(() => {
+    console.log('startPremiereCooldown called - setting cooldown to true')
+    setPremierePromptCooldown(true)
+    setPremiereCooldownTimeLeft(5)
+    
+    // Clear any existing timeout and interval
+    if (premiereCooldownTimeoutRef.current) {
+      clearTimeout(premiereCooldownTimeoutRef.current)
+    }
+    if (premiereCooldownIntervalRef.current) {
+      clearInterval(premiereCooldownIntervalRef.current)
+    }
+    
+    // Start countdown interval
+    premiereCooldownIntervalRef.current = setInterval(() => {
+      setPremiereCooldownTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(premiereCooldownIntervalRef.current)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    
+    // Set 5-second cooldown
+    premiereCooldownTimeoutRef.current = setTimeout(() => {
+      console.log('Premiere cooldown timeout triggered - setting cooldown to false')
+      setPremierePromptCooldown(false)
+      setHasShownPremierePrompt(false) // Reset so it can trigger again after cooldown
+      setPremiereCooldownTimeLeft(0)
+      console.log('Premiere prompt cooldown ended')
+    }, 5000) // 5 seconds cooldown
+  }, [])
+
+  // Load premieres from blockchain
+  const loadPremieres = useCallback(async () => {
+    setLoadingPremieres(true)
+    try {
+      const premieresList = await getAllPremieres()
+      setPremieres(premieresList)
+    } catch (error) {
+      console.error('Error loading premieres:', error)
+      setPremieres([])
+    } finally {
+      setLoadingPremieres(false)
+    }
+  }, [])
+
+  // Handle premiere navigation
+  const handleOpenPremiereHub = useCallback(() => {
+    setShowPremierePrompt(false)
+    setShowPremiereModal(true)
+    startPremiereCooldown()
+    loadPremieres()
+  }, [startPremiereCooldown, loadPremieres])
+
+  const handleStayInCinemaFromPremiere = useCallback(() => {
+    console.log('handleStayInCinemaFromPremiere called - starting cooldown')
+    setShowPremierePrompt(false)
+    startPremiereCooldown()
+  }, [startPremiereCooldown])
 
   // Handle exit navigation
   const handleExitToMain = useCallback(() => {
@@ -443,6 +519,21 @@ const Cinema = () => {
       setHasShownExitPrompt(true)
     }
 
+    // Check for premiere interaction zone (bar from y=208 onwards)
+    const isInPremiereZone = playerY >= 208 && playerY <= 230 && playerX >= 50 && playerX <= 590
+    
+    // Debug logging for premiere zone
+    if (playerY >= 200 && playerY <= 240 && playerX >= 40 && playerX <= 600) {
+      console.log(`Player at (${Math.round(playerX)}, ${Math.round(playerY)}), in premiere zone: ${isInPremiereZone}, prompt shown: ${hasShownPremierePrompt}, cooldown: ${premierePromptCooldown}`)
+    }
+    
+    // Only trigger premiere prompt if in zone, not already shown, and not in cooldown
+    if (isInPremiereZone && !hasShownPremierePrompt && !premierePromptCooldown) {
+      console.log('Triggering premiere prompt!')
+      setShowPremierePrompt(true)
+      setHasShownPremierePrompt(true)
+    }
+
     // Render scene
     ctx.save()
     ctx.scale(dpr, dpr)
@@ -452,6 +543,10 @@ const Cinema = () => {
     // Draw exit to main island indicator
     ctx.fillStyle = 'rgba(255, 0, 0, 0.3)'
     ctx.fillRect(304, 296, 32, 23) // Highlight the exit area (X: 304-321, Y: 296-306)
+    
+    // Draw premiere interaction zone indicator (bar from y=208)
+    ctx.fillStyle = 'rgba(255, 215, 0, 0.2)' // Gold color for premiere zone
+    ctx.fillRect(50, 208, 540, 22) // Highlight the premiere bar area (X: 50-590, Y: 208-230)
     
     // Draw local player
     playerRef.current.draw(ctx)
@@ -471,6 +566,14 @@ const Cinema = () => {
     const handleKeyDown = (e) => {
       // Handle ESC key to close exit prompt
       if (e.key === 'Escape') {
+        if (showPremiereModal) {
+          setShowPremiereModal(false)
+          return
+        }
+        if (showPremierePrompt) {
+          handleStayInCinemaFromPremiere()
+          return
+        }
         if (showExitPrompt) {
           handleStayInCinema()
           return
@@ -537,7 +640,7 @@ const Cinema = () => {
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
     }
-  }, [sendPlayerInput, showExitPrompt, handleStayInCinema])
+  }, [sendPlayerInput, showExitPrompt, showPremierePrompt, showPremiereModal, handleStayInCinema, handleStayInCinemaFromPremiere])
 
   // Initialize game on component mount
   useEffect(() => {
@@ -569,6 +672,13 @@ const Cinema = () => {
       }
       if (holdIntervalRef.current) {
         clearInterval(holdIntervalRef.current)
+      }
+      // Cleanup premiere cooldown timeout and interval
+      if (premiereCooldownTimeoutRef.current) {
+        clearTimeout(premiereCooldownTimeoutRef.current)
+      }
+      if (premiereCooldownIntervalRef.current) {
+        clearInterval(premiereCooldownIntervalRef.current)
       }
     }
   }, [])
@@ -819,6 +929,298 @@ const Cinema = () => {
               }}>
                 Press ESC to close this dialog
               </p>
+            </div>
+          </div>
+        )}
+
+        {/* Premiere Interaction Prompt */}
+        {showPremierePrompt && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+          }}>
+            <div style={{
+              backgroundColor: '#2a2a2a',
+              border: '3px solid #ff6b35',
+              borderRadius: '15px',
+              padding: '30px',
+              textAlign: 'center',
+              maxWidth: '400px',
+              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)'
+            }}>
+              <h2 style={{
+                color: '#ff6b35',
+                fontSize: '24px',
+                marginBottom: '10px',
+                textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+              }}>
+                🎬 Premiere Theater! 🎬
+              </h2>
+              
+              <p style={{
+                color: '#ccc',
+                fontSize: '16px',
+                marginBottom: '25px',
+                lineHeight: '1.4'
+              }}>
+                Welcome to the premiere screening area!
+                <br />Discover upcoming video premieres and exclusive content.
+              </p>
+              
+              <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+                <button
+                  onClick={handleStayInCinemaFromPremiere}
+                  style={{
+                    padding: '12px 20px',
+                    backgroundColor: '#666',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.3s'
+                  }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#777'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = '#666'}
+                >
+                  Stay in Cinema
+                </button>
+                
+                <button
+                  onClick={handleOpenPremiereHub}
+                  style={{
+                    padding: '12px 20px',
+                    backgroundColor: '#ff6b35',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.3s'
+                  }}
+                >
+                  View Premieres
+                </button>
+              </div>
+              
+              <p style={{
+                color: '#888',
+                fontSize: '12px',
+                marginTop: '20px',
+                fontStyle: 'italic'
+              }}>
+                Press ESC to close this dialog
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Premiere Hub Modal */}
+        {showPremiereModal && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1001
+          }}>
+            <div style={{
+              backgroundColor: '#1a1a1a',
+              border: '3px solid #ff6b35',
+              borderRadius: '15px',
+              padding: '30px',
+              width: '90vw',
+              maxWidth: '900px',
+              maxHeight: '80vh',
+              overflow: 'auto',
+              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.8)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{
+                  color: '#ff6b35',
+                  fontSize: '28px',
+                  margin: 0,
+                  textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+                }}>
+                  🎬 Video Premieres - Exclusive Screenings
+                </h2>
+                <button
+                  onClick={() => setShowPremiereModal(false)}
+                  style={{
+                    backgroundColor: '#ff4444',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '40px',
+                    height: '40px',
+                    fontSize: '20px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+              
+              {loadingPremieres ? (
+                <div style={{
+                  textAlign: 'center',
+                  color: '#fff',
+                  fontSize: '18px',
+                  padding: '50px'
+                }}>
+                  🎬 Loading premieres from the blockchain...
+                </div>
+              ) : (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                  gap: '20px',
+                  maxHeight: '500px',
+                  overflow: 'auto'
+                }}>
+                  {premieres.length === 0 ? (
+                    <div style={{
+                      gridColumn: '1 / -1',
+                      textAlign: 'center',
+                      color: '#ccc',
+                      fontSize: '16px',
+                      padding: '50px'
+                    }}>
+                      🎭 No premieres scheduled yet. Create one in the business dashboard!
+                    </div>
+                  ) : (
+                    premieres.map((premiere) => (
+                      <div
+                        key={premiere.id}
+                        style={{
+                          backgroundColor: '#2a2a2a',
+                          border: '2px solid #444',
+                          borderRadius: '10px',
+                          padding: '20px',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease'
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.transform = 'translateY(-5px)'
+                          e.currentTarget.style.borderColor = '#ff6b35'
+                          e.currentTarget.style.boxShadow = '0 8px 25px rgba(255, 107, 53, 0.3)'
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.transform = 'translateY(0)'
+                          e.currentTarget.style.borderColor = '#444'
+                          e.currentTarget.style.boxShadow = 'none'
+                        }}
+                        onClick={() => setSelectedPremiere(premiere)}
+                      >
+                        <h3 style={{
+                          color: '#fff',
+                          fontSize: '18px',
+                          marginBottom: '10px',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {premiere.title}
+                        </h3>
+                        
+                        <p style={{
+                          color: '#ccc',
+                          fontSize: '14px',
+                          marginBottom: '15px',
+                          overflow: 'hidden',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: 'vertical'
+                        }}>
+                          {premiere.description || 'No description available'}
+                        </p>
+                        
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          fontSize: '12px',
+                          color: '#888',
+                          marginBottom: '10px'
+                        }}>
+                          <span>👤 {premiere.organizer.slice(0, 6)}...{premiere.organizer.slice(-4)}</span>
+                          <span>🎪 {premiere.attendeeCount}/{premiere.capacity}</span>
+                        </div>
+                        
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          fontSize: '12px',
+                          color: '#888'
+                        }}>
+                          <span>🕒 {premiere.scheduledTime.toLocaleDateString()}</span>
+                          <span>⏰ {premiere.scheduledTime.toLocaleTimeString()}</span>
+                        </div>
+                        
+                        {premiere.isActive && (
+                          <div style={{
+                            marginTop: '10px',
+                            backgroundColor: '#4ade80',
+                            color: 'white',
+                            fontSize: '12px',
+                            padding: '4px 8px',
+                            borderRadius: '12px',
+                            display: 'inline-block'
+                          }}>
+                            🟢 Active
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+              
+              <div style={{
+                marginTop: '20px',
+                padding: '15px',
+                backgroundColor: '#2a2a2a',
+                borderRadius: '10px',
+                border: '2px solid #4ade80'
+              }}>
+                <h4 style={{
+                  color: '#4ade80',
+                  fontSize: '16px',
+                  marginBottom: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px'
+                }}>
+                  🎭 Cinema Features
+                </h4>
+                <p style={{
+                  color: '#ccc',
+                  fontSize: '12px',
+                  margin: 0
+                }}>
+                  • Click any premiere to view details<br />
+                  • Join scheduled screenings<br />
+                  • Interact with other viewers<br />
+                  • Earn rewards for attendance
+                </p>
+              </div>
             </div>
           </div>
         )}

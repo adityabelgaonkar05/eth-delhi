@@ -279,6 +279,45 @@ export const getPremiereAttendees = async (premiereId) => {
   }
 };
 
+// Get all premieres from the blockchain
+export const getAllPremieres = async () => {
+  try {
+    const contract = await getContract("VideoPremiereManager");
+    const nextPremiereId = await contract.nextPremiereId();
+    const premieres = [];
+    
+    // Get premieres from ID 1 to nextPremiereId-1
+    for (let i = 1; i < nextPremiereId; i++) {
+      try {
+        const premiere = await contract.premieres(i);
+        const registration = await contract.registrations(i);
+        
+        if (premiere.isActive) {
+          premieres.push({
+            id: i,
+            title: premiere.title,
+            description: premiere.description,
+            organizer: premiere.organizer,
+            scheduledTime: new Date(Number(premiere.scheduledTime) * 1000),
+            capacity: premiere.capacity.toString(),
+            attendeeCount: registration.attendeeCount.toString(),
+            isActive: premiere.isActive,
+            walrusVideoId: premiere.walrusVideoId,
+            walrusThumbnailId: premiere.walrusThumbnailId
+          });
+        }
+      } catch (error) {
+        console.error(`Error loading premiere ${i}:`, error);
+      }
+    }
+    
+    return premieres;
+  } catch (error) {
+    console.error("Error fetching all premieres:", error);
+    return [];
+  }
+};
+
 // Blog Management Functions
 export const publishBlog = async (blogData) => {
   try {

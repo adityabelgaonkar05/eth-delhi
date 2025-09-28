@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+                                                                                                                                                                                import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/SelfAuthContext';
 
@@ -156,91 +156,536 @@ const SelfAuthentication = () => {
 
     if (isLoading) {
         return (
-            <div className="flex flex-col items-center justify-center p-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-                <p className="text-lg">Loading Self Authentication...</p>
-                {!SelfComponents && (
-                    <p className="text-sm text-gray-600 mt-2">Loading Self Protocol components...</p>
-                )}
+            <div 
+                className="flex flex-col items-center justify-center min-h-screen py-8 px-6"
+                style={{
+                    fontFamily: "monospace",
+                    backgroundImage: "url(/src/assets/bg-sections.png)",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    backgroundRepeat: "no-repeat",
+                }}
+            >
+                <div
+                    className="animate-spin rounded-full h-12 w-12 border-b-2 mb-4"
+                    style={{ borderColor: "#44ff44" }}
+                ></div>
+                <div
+                    style={{
+                        backgroundColor: "#2a1810",
+                        border: "3px solid #8b4513",
+                        borderRadius: "0",
+                        boxShadow: "6px 6px 0px #1a0f08, inset 2px 2px 0px #d2b48c, inset -2px -2px 0px #654321",
+                        padding: "25px",
+                        imageRendering: "pixelated",
+                        textShadow: "2px 2px 0px #1a0f08",
+                        textAlign: "center",
+                        position: "relative",
+                    }}
+                >
+                    {/* Medieval decorative border pattern */}
+                    <div
+                        style={{
+                            position: "absolute",
+                            top: "2px",
+                            left: "2px",
+                            right: "2px",
+                            height: "2px",
+                            background: "linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)",
+                            imageRendering: "pixelated",
+                        }}
+                    />
+                    <div
+                        style={{
+                            position: "absolute",
+                            bottom: "2px",
+                            left: "2px",
+                            right: "2px",
+                            height: "2px",
+                            background: "linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)",
+                            imageRendering: "pixelated",
+                        }}
+                    />
+                    <p 
+                        className="text-xl font-bold uppercase tracking-wider"
+                        style={{
+                            fontFamily: "monospace",
+                            color: "#d2b48c",
+                            fontWeight: "bold",
+                        }}
+                    >
+                        ⚙️ LOADING SELF AUTHENTICATION...
+                    </p>
+                    {!SelfComponents && (
+                        <p 
+                            className="mt-2 uppercase tracking-wider"
+                            style={{
+                                fontFamily: "monospace",
+                                color: "#ffd700",
+                                fontWeight: "bold",
+                            }}
+                        >
+                            LOADING SELF PROTOCOL COMPONENTS...
+                        </p>
+                    )}
+                </div>
             </div>
         );
     }
 
     if (error) {
         return (
-            <div className="flex flex-col items-center justify-center p-8">
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 max-w-md">
-                    {error}
-                </div>
-                <button
-                    onClick={() => window.location.reload()}
-                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            <div 
+                className="flex flex-col items-center justify-center min-h-screen py-8 px-6"
+                style={{
+                    fontFamily: "monospace",
+                    backgroundImage: "url(/src/assets/bg-sections.png)",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    backgroundRepeat: "no-repeat",
+                }}
+            >
+                <div
+                    style={{
+                        backgroundColor: "#2a1810",
+                        border: "3px solid #ff6b6b",
+                        borderRadius: "0",
+                        boxShadow: "6px 6px 0px #1a0f08, inset 2px 2px 0px #ff6b6b, inset -2px -2px 0px #8b4513",
+                        padding: "30px",
+                        imageRendering: "pixelated",
+                        textShadow: "2px 2px 0px #1a0f08",
+                        textAlign: "center",
+                        position: "relative",
+                        maxWidth: "600px",
+                    }}
                 >
-                    Retry
-                </button>
+                    {/* Medieval decorative border pattern */}
+                    <div
+                        style={{
+                            position: "absolute",
+                            top: "2px",
+                            left: "2px",
+                            right: "2px",
+                            height: "2px",
+                            background: "linear-gradient(90deg, #ff6b6b 0%, #ffd700 50%, #ff6b6b 100%)",
+                            imageRendering: "pixelated",
+                        }}
+                    />
+                    <div
+                        style={{
+                            position: "absolute",
+                            bottom: "2px",
+                            left: "2px",
+                            right: "2px",
+                            height: "2px",
+                            background: "linear-gradient(90deg, #ff6b6b 0%, #ffd700 50%, #ff6b6b 100%)",
+                            imageRendering: "pixelated",
+                        }}
+                    />
+                    <h2
+                        className="text-2xl font-bold mb-4 uppercase tracking-wider"
+                        style={{
+                            fontFamily: "monospace",
+                            color: "#ff6b6b",
+                            fontWeight: "bold",
+                        }}
+                    >
+                        🚨 ERROR
+                    </h2>
+                    <p 
+                        className="mb-6 uppercase tracking-wider"
+                        style={{
+                            fontFamily: "monospace",
+                            color: "#d2b48c",
+                            fontWeight: "bold",
+                        }}
+                    >
+                        {error}
+                    </p>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="font-bold py-3 px-6 uppercase tracking-wider transition-all"
+                        style={{
+                            fontFamily: "monospace",
+                            border: "2px solid #8b4513",
+                            borderRadius: "0",
+                            textShadow: "2px 2px 0px #1a0f08",
+                            backgroundColor: "#44ff44",
+                            color: "#1a0f08",
+                            cursor: "pointer",
+                            boxShadow: "3px 3px 0px #1a0f08",
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.boxShadow = "6px 6px 0px #1a0f08";
+                            e.currentTarget.style.transform = "translateY(-2px)";
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.boxShadow = "3px 3px 0px #1a0f08";
+                            e.currentTarget.style.transform = "translateY(0px)";
+                        }}
+                    >
+                        🔄 RETRY
+                    </button>
+                </div>
             </div>
         );
     }
 
     if (!SelfComponents) {
         return (
-            <div className="flex flex-col items-center justify-center p-8">
-                <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
-                    Failed to load Self Protocol components. Please refresh the page.
+            <div 
+                className="flex flex-col items-center justify-center min-h-screen py-8 px-6"
+                style={{
+                    fontFamily: "monospace",
+                    backgroundImage: "url(/src/assets/bg-sections.png)",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    backgroundRepeat: "no-repeat",
+                }}
+            >
+                <div
+                    style={{
+                        backgroundColor: "#2a1810",
+                        border: "3px solid #ffd700",
+                        borderRadius: "0",
+                        boxShadow: "6px 6px 0px #1a0f08, inset 2px 2px 0px #ffd700, inset -2px -2px 0px #8b4513",
+                        padding: "30px",
+                        imageRendering: "pixelated",
+                        textShadow: "2px 2px 0px #1a0f08",
+                        textAlign: "center",
+                        position: "relative",
+                        maxWidth: "600px",
+                    }}
+                >
+                    {/* Medieval decorative border pattern */}
+                    <div
+                        style={{
+                            position: "absolute",
+                            top: "2px",
+                            left: "2px",
+                            right: "2px",
+                            height: "2px",
+                            background: "linear-gradient(90deg, #ffd700 0%, #d2b48c 50%, #ffd700 100%)",
+                            imageRendering: "pixelated",
+                        }}
+                    />
+                    <div
+                        style={{
+                            position: "absolute",
+                            bottom: "2px",
+                            left: "2px",
+                            right: "2px",
+                            height: "2px",
+                            background: "linear-gradient(90deg, #ffd700 0%, #d2b48c 50%, #ffd700 100%)",
+                            imageRendering: "pixelated",
+                        }}
+                    />
+                    <h2
+                        className="text-2xl font-bold mb-4 uppercase tracking-wider"
+                        style={{
+                            fontFamily: "monospace",
+                            color: "#ffd700",
+                            fontWeight: "bold",
+                        }}
+                    >
+                        ⚠️ COMPONENT LOADING FAILED
+                    </h2>
+                    <p 
+                        className="uppercase tracking-wider"
+                        style={{
+                            fontFamily: "monospace",
+                            color: "#d2b48c",
+                            fontWeight: "bold",
+                        }}
+                    >
+                        FAILED TO LOAD SELF PROTOCOL COMPONENTS. PLEASE REFRESH THE PAGE.
+                    </p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col items-center justify-center p-8">
-            <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
-                <h2 className="text-2xl font-bold text-center mb-6">Verify Your Identity</h2>
-                <p className="text-gray-600 text-center mb-6">
-                    Scan the QR code with the Self app to verify your identity and access CryptoVerse Game.
-                </p>
+        <div 
+            className="flex flex-col items-center justify-center min-h-screen py-8 px-6"
+            style={{
+                fontFamily: "monospace",
+                backgroundImage: "url(/src/assets/bg-sections.png)",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+            }}
+        >
+            <div 
+                className="max-w-2xl w-full"
+                style={{
+                    backgroundColor: "#2a1810",
+                    border: "3px solid #8b4513",
+                    borderRadius: "0",
+                    boxShadow: "6px 6px 0px #1a0f08, inset 2px 2px 0px #d2b48c, inset -2px -2px 0px #654321",
+                    padding: "30px",
+                    imageRendering: "pixelated",
+                    textShadow: "2px 2px 0px #1a0f08",
+                    position: "relative",
+                }}
+            >
+                {/* Medieval decorative border pattern */}
+                <div
+                    style={{
+                        position: "absolute",
+                        top: "2px",
+                        left: "2px",
+                        right: "2px",
+                        height: "2px",
+                        background: "linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)",
+                        imageRendering: "pixelated",
+                    }}
+                />
+                <div
+                    style={{
+                        position: "absolute",
+                        bottom: "2px",
+                        left: "2px",
+                        right: "2px",
+                        height: "2px",
+                        background: "linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)",
+                        imageRendering: "pixelated",
+                    }}
+                />
 
-                {isVerificationPending ? (
-                    <div className="flex flex-col items-center justify-center">
-                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mb-4"></div>
-                        <p className="text-lg font-semibold text-blue-600">Processing verification...</p>
-                        <p className="text-sm text-gray-500 mt-2">Please wait while we verify your identity</p>
+                {/* Header */}
+                <div className="text-center mb-8">
+                    <div className="flex items-center justify-center gap-4 mb-4">
+                        
+                        <h2 
+                            className="text-3xl font-bold uppercase tracking-wider"
+                            style={{
+                                fontFamily: "monospace",
+                                color: "#d2b48c",
+                                fontWeight: "bold",
+                            }}
+                        >
+                            VERIFY YOUR IDENTITY
+                        </h2>
+                    
                     </div>
-                ) : selfApp && SelfComponents.SelfQRcodeWrapper ? (
-                    <div className="flex justify-center">
-                        <SelfComponents.SelfQRcodeWrapper
-                            selfApp={selfApp}
-                            onSuccess={handleSuccessfulVerification}
-                            onError={handleVerificationError}
-                            size={280}
-                            darkMode={false}
-                        />
-                    </div>
-                ) : (
-                    <div className="flex justify-center">
-                        <div className="animate-pulse bg-gray-200 h-70 w-70 rounded"></div>
-                    </div>
-                )}
+                    <p 
+                        className="text-lg uppercase tracking-wider"
+                        style={{
+                            fontFamily: "monospace",
+                            color: "#ffd700",
+                            fontWeight: "bold",
+                        }}
+                    >
+                        SCAN THE QR CODE WITH THE SELF APP TO VERIFY YOUR IDENTITY AND ACCESS CRYPTOVERSE GAME
+                    </p>
+                </div>
 
-                <div className="mt-6 text-sm text-gray-500 text-center">
-                    <p>Requirements:</p>
-                    <ul className="mt-2 space-y-1">
-                        <li>• Must be 16 years or older</li>
-                        <li>• Valid government-issued ID</li>
-                        <li>• Good lighting for document scanning</li>
+                {/* QR Code or Loading State */}
+                <div className="text-center mb-8">
+                    {isVerificationPending ? (
+                        <div className="flex flex-col items-center justify-center">
+                            <div 
+                                className="animate-spin rounded-full h-16 w-16 border-b-2 mb-4"
+                                style={{ borderColor: "#44ff44" }}
+                            ></div>
+                            <div
+                                style={{
+                                    backgroundColor: "#1a0f08",
+                                    border: "2px solid #44ff44",
+                                    borderRadius: "0",
+                                    boxShadow: "3px 3px 0px #1a0f08",
+                                    padding: "20px",
+                                }}
+                            >
+                                <p 
+                                    className="text-xl font-bold uppercase tracking-wider"
+                                    style={{
+                                        fontFamily: "monospace",
+                                        color: "#44ff44",
+                                        fontWeight: "bold",
+                                    }}
+                                >
+                                    ⚙️ PROCESSING VERIFICATION...
+                                </p>
+                                <p 
+                                    className="mt-2 uppercase tracking-wider"
+                                    style={{
+                                        fontFamily: "monospace",
+                                        color: "#d2b48c",
+                                        fontWeight: "bold",
+                                    }}
+                                >
+                                    PLEASE WAIT WHILE WE VERIFY YOUR IDENTITY
+                                </p>
+                            </div>
+                        </div>
+                    ) : selfApp && SelfComponents.SelfQRcodeWrapper ? (
+                        <div className="flex justify-center">
+                            <div
+                                style={{
+                                    backgroundColor: "white",
+                                    border: "2px solid #8b4513",
+                                    borderRadius: "0",
+                                    boxShadow: "3px 3px 0px #1a0f08",
+                                    padding: "20px",
+                                    display: "inline-block",
+                                }}
+                            >
+                                <SelfComponents.SelfQRcodeWrapper
+                                    selfApp={selfApp}
+                                    onSuccess={handleSuccessfulVerification}
+                                    onError={handleVerificationError}
+                                    size={280}
+                                    darkMode={false}
+                                />
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex justify-center">
+                            <div 
+                                className="animate-pulse"
+                                style={{
+                                    backgroundColor: "#654321",
+                                    border: "2px solid #8b4513",
+                                    borderRadius: "0",
+                                    height: "280px",
+                                    width: "280px",
+                                }}
+                            ></div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Requirements Section */}
+                <div 
+                    className="mb-6"
+                    style={{
+                        backgroundColor: "#1a0f08",
+                        border: "2px solid #8b4513",
+                        borderRadius: "0",
+                        boxShadow: "3px 3px 0px #1a0f08",
+                        padding: "20px",
+                    }}
+                >
+                    <h3 
+                        className="text-lg font-bold mb-4 uppercase tracking-wider text-center"
+                        style={{
+                            fontFamily: "monospace",
+                            color: "#d2b48c",
+                            fontWeight: "bold",
+                        }}
+                    >
+                        ⚔️ REQUIREMENTS
+                    </h3>
+                    <ul className="space-y-2">
+                        <li 
+                            className="uppercase tracking-wider"
+                            style={{
+                                fontFamily: "monospace",
+                                color: "#ffd700",
+                                fontWeight: "bold",
+                            }}
+                        >
+                            • MUST BE 16 YEARS OR OLDER
+                        </li>
+                        <li 
+                            className="uppercase tracking-wider"
+                            style={{
+                                fontFamily: "monospace",
+                                color: "#ffd700",
+                                fontWeight: "bold",
+                            }}
+                        >
+                            • VALID GOVERNMENT-ISSUED ID
+                        </li>
+                        <li 
+                            className="uppercase tracking-wider"
+                            style={{
+                                fontFamily: "monospace",
+                                color: "#ffd700",
+                                fontWeight: "bold",
+                            }}
+                        >
+                            • GOOD LIGHTING FOR DOCUMENT SCANNING
+                        </li>
                     </ul>
                 </div>
 
-                <div className="mt-4 text-xs text-gray-400 text-center">
-                    Don't have the Self app? Download it from your app store.
+                {/* Help Section */}
+                <div 
+                    className="mb-4"
+                    style={{
+                        backgroundColor: "#1a0f08",
+                        border: "2px solid #6b6bff",
+                        borderRadius: "0",
+                        boxShadow: "3px 3px 0px #1a0f08",
+                        padding: "15px",
+                    }}
+                >
+                    <p 
+                        className="text-sm uppercase tracking-wider text-center mb-2"
+                        style={{
+                            fontFamily: "monospace",
+                            color: "#6b6bff",
+                            fontWeight: "bold",
+                        }}
+                    >
+                          DON'T HAVE THE SELF APP? DOWNLOAD IT FROM YOUR APP STORE.
+                    </p>
                 </div>
 
-                <div className="mt-4 text-xs text-blue-600 text-center">
-                    <p>Having issues? Common solutions:</p>
-                    <ul className="mt-1 space-y-1">
-                        <li>• Ensure good lighting when scanning</li>
-                        <li>• Try a different document type</li>
-                        <li>• Make sure document is not expired</li>
+                {/* Troubleshooting Section */}
+                <div
+                    style={{
+                        backgroundColor: "#1a0f08",
+                        border: "2px solid #44ff44",
+                        borderRadius: "0",
+                        boxShadow: "3px 3px 0px #1a0f08",
+                        padding: "15px",
+                    }}
+                >
+                    <p 
+                        className="text-sm font-bold uppercase tracking-wider text-center mb-3"
+                        style={{
+                            fontFamily: "monospace",
+                            color: "#44ff44",
+                            fontWeight: "bold",
+                        }}
+                    >
+                        🔧 HAVING ISSUES? COMMON SOLUTIONS:
+                    </p>
+                    <ul className="space-y-1">
+                        <li 
+                            className="text-xs uppercase tracking-wider"
+                            style={{
+                                fontFamily: "monospace",
+                                color: "#d2b48c",
+                                fontWeight: "bold",
+                            }}
+                        >
+                            • ENSURE GOOD LIGHTING WHEN SCANNING
+                        </li>
+                        <li 
+                            className="text-xs uppercase tracking-wider"
+                            style={{
+                                fontFamily: "monospace",
+                                color: "#d2b48c",
+                                fontWeight: "bold",
+                            }}
+                        >
+                            • TRY A DIFFERENT DOCUMENT TYPE
+                        </li>
+                        <li 
+                            className="text-xs uppercase tracking-wider"
+                            style={{
+                                fontFamily: "monospace",
+                                color: "#d2b48c",
+                                fontWeight: "bold",
+                            }}
+                        >
+                            • MAKE SURE DOCUMENT IS NOT EXPIRED
+                        </li>
                     </ul>
                 </div>
             </div>

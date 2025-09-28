@@ -167,74 +167,294 @@ const OnboardingPage = () => {
     // Show loading state while fetching user data
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-gradient-to-b from-blue-900 to-purple-900 flex items-center justify-center p-4">
-                <div className="text-center text-white">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
-                    <h2 className="text-2xl font-bold mb-2">Loading Your Profile...</h2>
-                    <p className="text-blue-200">Please wait while we prepare your onboarding</p>
+            <div 
+                className="flex flex-col items-center justify-center min-h-screen"
+                style={{
+                    fontFamily: "monospace",
+                    backgroundImage: "url(/src/assets/bg-sections.png)",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    backgroundRepeat: "no-repeat",
+                }}
+            >
+                <div
+                    className="animate-spin rounded-full h-12 w-12 border-b-2 mb-4"
+                    style={{ borderColor: "#44ff44" }}
+                ></div>
+                <div
+                    style={{
+                        backgroundColor: "#2a1810",
+                        border: "3px solid #8b4513",
+                        borderRadius: "0",
+                        boxShadow: "6px 6px 0px #1a0f08, inset 2px 2px 0px #d2b48c, inset -2px -2px 0px #654321",
+                        padding: "25px",
+                        imageRendering: "pixelated",
+                        textShadow: "2px 2px 0px #1a0f08",
+                        textAlign: "center",
+                    }}
+                >
+                    <p 
+                        className="text-xl font-bold uppercase tracking-wider"
+                        style={{
+                            fontFamily: "monospace",
+                            color: "#d2b48c",
+                            fontWeight: "bold",
+                        }}
+                    >
+                        ⚙️ LOADING YOUR PROFILE...
+                    </p>
+                    <p 
+                        className="mt-2 uppercase tracking-wider"
+                        style={{
+                            fontFamily: "monospace",
+                            color: "#ffd700",
+                            fontWeight: "bold",
+                        }}
+                    >
+                        PLEASE WAIT WHILE WE PREPARE YOUR ONBOARDING
+                    </p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-blue-900 to-purple-900 flex items-center justify-center p-4">
-            <div className="w-full max-w-2xl bg-white rounded-xl shadow-2xl overflow-hidden">
+        <div 
+            className="min-h-screen py-8 px-6"
+            style={{
+                fontFamily: "monospace",
+                backgroundImage: "url(/src/assets/bg-sections.png)",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+            }}
+        >
+            <div className="max-w-4xl mx-auto">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-8 text-white text-center">
-                    <h1 className="text-3xl font-bold pixel-text mb-2">Welcome to CryptoVerse!</h1>
-                    <p className="text-blue-100 normal-text">Let's set up your profile to get started</p>
-                    {user && (
-                        <p className="text-sm text-blue-200 mt-2">
-                            Verified as: {user.name} ({user.nationality})
+                <div className="text-center mb-8">
+                    <div
+                        style={{
+                            backgroundColor: "#2a1810",
+                            border: "3px solid #8b4513",
+                            borderRadius: "0",
+                            boxShadow: "6px 6px 0px #1a0f08, inset 2px 2px 0px #d2b48c, inset -2px -2px 0px #654321",
+                            padding: "25px",
+                            imageRendering: "pixelated",
+                            textShadow: "2px 2px 0px #1a0f08",
+                            textAlign: "center",
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            position: "relative",
+                        }}
+                    >
+                        {/* Medieval decorative border pattern */}
+                        <div
+                            style={{
+                                position: "absolute",
+                                top: "2px",
+                                left: "2px",
+                                right: "2px",
+                                height: "2px",
+                                background: "linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)",
+                                imageRendering: "pixelated",
+                            }}
+                        />
+                        <div
+                            style={{
+                                position: "absolute",
+                                bottom: "2px",
+                                left: "2px",
+                                right: "2px",
+                                height: "2px",
+                                background: "linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)",
+                                imageRendering: "pixelated",
+                            }}
+                        />
+
+                        <div className="flex items-center justify-center gap-4 mb-3">
+                            <span style={{ color: "#d2b48c", fontSize: "2rem" }}>🚀</span>
+                            <h1
+                                className="text-4xl font-bold uppercase tracking-wider"
+                                style={{
+                                    fontFamily: "monospace",
+                                    textShadow: "3px 3px 0px #1a0f08",
+                                    color: "#d2b48c",
+                                    fontWeight: "bold",
+                                }}
+                            >
+                                WELCOME TO CRYPTOVERSE
+                            </h1>
+                            <span style={{ color: "#d2b48c", fontSize: "2rem" }}>🚀</span>
+                        </div>
+                        <p
+                            className="uppercase tracking-wider text-lg"
+                            style={{
+                                fontFamily: "monospace",
+                                color: "#ffd700",
+                                fontWeight: "bold",
+                            }}
+                        >
+                            SET UP YOUR PROFILE TO BEGIN YOUR WEB3 JOURNEY
                         </p>
-                    )}
+                        {user && (
+                            <p 
+                                className="text-sm mt-2 uppercase tracking-wider"
+                                style={{
+                                    fontFamily: "monospace",
+                                    color: "#d2b48c",
+                                    fontWeight: "bold",
+                                }}
+                            >
+                                VERIFIED AS: {user.name} ({user.nationality})
+                            </p>
+                        )}
+                    </div>
                 </div>
 
                 {/* Form */}
-                <div className="p-8">
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                <div
+                    style={{
+                        backgroundColor: "#2a1810",
+                        border: "3px solid #8b4513",
+                        borderRadius: "0",
+                        boxShadow: "6px 6px 0px #1a0f08, inset 2px 2px 0px #d2b48c, inset -2px -2px 0px #654321",
+                        padding: "25px",
+                        imageRendering: "pixelated",
+                        textShadow: "2px 2px 0px #1a0f08",
+                        position: "relative",
+                    }}
+                >
+                    {/* Medieval decorative border pattern */}
+                    <div
+                        style={{
+                            position: "absolute",
+                            top: "2px",
+                            left: "2px",
+                            right: "2px",
+                            height: "2px",
+                            background: "linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)",
+                            imageRendering: "pixelated",
+                        }}
+                    />
+                    <div
+                        style={{
+                            position: "absolute",
+                            bottom: "2px",
+                            left: "2px",
+                            right: "2px",
+                            height: "2px",
+                            background: "linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)",
+                            imageRendering: "pixelated",
+                        }}
+                    />
+
+                    <form onSubmit={handleSubmit} className="space-y-8">
                         {/* Username Section */}
                         <div>
-                            <label htmlFor="username" className="block text-lg font-semibold text-gray-700 mb-3 pixel-text">
-                                Choose Your Username
+                            <label 
+                                htmlFor="username" 
+                                className="block text-lg font-bold mb-4 uppercase tracking-wider"
+                                style={{
+                                    fontFamily: "monospace",
+                                    color: "#d2b48c",
+                                    fontWeight: "bold",
+                                }}
+                            >
+                                ⚔️ CHOOSE YOUR USERNAME
                             </label>
                             <input
                                 type="text"
                                 id="username"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
-                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-lg normal-text"
-                                placeholder="Enter your unique username"
+                                className="w-full px-4 py-3 font-bold uppercase tracking-wider"
+                                style={{
+                                    fontFamily: "monospace",
+                                    backgroundColor: "#1a0f08",
+                                    border: "2px solid #8b4513",
+                                    borderRadius: "0",
+                                    boxShadow: "3px 3px 0px #1a0f08",
+                                    color: "#d2b48c",
+                                    textShadow: "1px 1px 0px #1a0f08",
+                                }}
+                                placeholder="ENTER YOUR UNIQUE USERNAME"
                                 disabled={isSubmitting}
                                 maxLength={20}
                             />
-                            <p className="text-sm text-gray-500 mt-1 normal-text">
-                                This will be your display name in the game (3-20 characters)
+                            <p 
+                                className="text-sm mt-2 uppercase tracking-wider"
+                                style={{
+                                    fontFamily: "monospace",
+                                    color: "#ffd700",
+                                    fontWeight: "bold",
+                                }}
+                            >
+                                THIS WILL BE YOUR DISPLAY NAME IN THE GAME (3-20 CHARACTERS)
                             </p>
                         </div>
 
                         {/* Tracks Selection */}
                         <div>
-                            <label className="block text-lg font-semibold text-gray-700 mb-3 pixel-text">
-                                Select Your Web3 Interests
+                            <label 
+                                className="block text-lg font-bold mb-4 uppercase tracking-wider"
+                                style={{
+                                    fontFamily: "monospace",
+                                    color: "#d2b48c",
+                                    fontWeight: "bold",
+                                }}
+                            >
+                                🛡️ SELECT YOUR WEB3 INTERESTS
                             </label>
-                            <p className="text-sm text-gray-600 mb-4 normal-text">
-                                Choose the blockchain ecosystems, protocols, and Web3 areas you're interested in (select as many as you like):
+                            <p 
+                                className="text-sm mb-6 uppercase tracking-wider"
+                                style={{
+                                    fontFamily: "monospace",
+                                    color: "#ffd700",
+                                    fontWeight: "bold",
+                                }}
+                            >
+                                CHOOSE THE BLOCKCHAIN ECOSYSTEMS, PROTOCOLS, AND WEB3 AREAS YOU'RE INTERESTED IN (SELECT AS MANY AS YOU LIKE):
                             </p>
 
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-64 overflow-y-auto p-2 border rounded-lg bg-gray-50">
+                            <div 
+                                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-64 overflow-y-auto p-4"
+                                style={{
+                                    backgroundColor: "#1a0f08",
+                                    border: "2px solid #8b4513",
+                                    borderRadius: "0",
+                                    boxShadow: "3px 3px 0px #1a0f08",
+                                }}
+                            >
                                 {availableTracks.map((track) => (
                                     <label
                                         key={track}
                                         className={`
-                      flex items-center justify-center p-3 rounded-lg border-2 cursor-pointer transition-all
-                      ${selectedTracks.includes(track)
-                                                ? 'border-blue-500 bg-blue-50 text-blue-700'
-                                                : 'border-gray-300 bg-white hover:border-gray-400'
-                                            }
+                      flex items-center justify-center p-3 cursor-pointer transition-all font-bold uppercase tracking-wider
                       ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}
                     `}
+                                        style={{
+                                            fontFamily: "monospace",
+                                            backgroundColor: selectedTracks.includes(track) ? "#44ff44" : "#2a1810",
+                                            border: "2px solid #8b4513",
+                                            borderRadius: "0",
+                                            boxShadow: selectedTracks.includes(track) ? "3px 3px 0px #1a0f08" : "1px 1px 0px #1a0f08",
+                                            color: selectedTracks.includes(track) ? "#1a0f08" : "#d2b48c",
+                                            textShadow: selectedTracks.includes(track) ? "1px 1px 0px #ffffff" : "1px 1px 0px #1a0f08",
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            if (!isSubmitting && !selectedTracks.includes(track)) {
+                                                e.currentTarget.style.backgroundColor = "#654321";
+                                                e.currentTarget.style.boxShadow = "2px 2px 0px #1a0f08";
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            if (!isSubmitting && !selectedTracks.includes(track)) {
+                                                e.currentTarget.style.backgroundColor = "#2a1810";
+                                                e.currentTarget.style.boxShadow = "1px 1px 0px #1a0f08";
+                                            }
+                                        }}
                                     >
                                         <input
                                             type="checkbox"
@@ -243,25 +463,58 @@ const OnboardingPage = () => {
                                             className="sr-only"
                                             disabled={isSubmitting}
                                         />
-                                        <span className="font-medium normal-text">{track}</span>
+                                        <span className="font-bold">{track}</span>
                                         {selectedTracks.includes(track) && (
-                                            <span className="ml-2 text-blue-500">✓</span>
+                                            <span className="ml-2" style={{ color: "#1a0f08" }}>✓</span>
                                         )}
                                     </label>
                                 ))}
                             </div>
 
                             {selectedTracks.length > 0 && (
-                                <p className="text-sm text-green-600 mt-2 normal-text">
-                                    Selected: {selectedTracks.join(', ')}
-                                </p>
+                                <div className="mt-4 p-3"
+                                    style={{
+                                        backgroundColor: "#1a0f08",
+                                        border: "2px solid #44ff44",
+                                        borderRadius: "0",
+                                        boxShadow: "3px 3px 0px #1a0f08",
+                                    }}
+                                >
+                                    <p 
+                                        className="text-sm uppercase tracking-wider text-center font-bold"
+                                        style={{
+                                            fontFamily: "monospace",
+                                            color: "#44ff44",
+                                            fontWeight: "bold",
+                                        }}
+                                    >
+                                        SELECTED: {selectedTracks.join(', ')}
+                                    </p>
+                                </div>
                             )}
                         </div>
 
                         {/* Error Display */}
                         {error && (
-                            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg normal-text">
-                                {error}
+                            <div 
+                                className="px-4 py-3"
+                                style={{
+                                    backgroundColor: "#1a0f08",
+                                    border: "2px solid #ff6b6b",
+                                    borderRadius: "0",
+                                    boxShadow: "3px 3px 0px #1a0f08",
+                                }}
+                            >
+                                <p 
+                                    className="text-center font-bold uppercase tracking-wider"
+                                    style={{
+                                        fontFamily: "monospace",
+                                        color: "#ff6b6b",
+                                        fontWeight: "bold",
+                                    }}
+                                >
+                                    ⚠️ {error}
+                                </p>
                             </div>
                         )}
 
@@ -269,23 +522,85 @@ const OnboardingPage = () => {
                         <button
                             type="submit"
                             disabled={isSubmitting || !username.trim() || selectedTracks.length === 0}
-                            className={`
-                w-full py-4 px-6 rounded-lg font-bold text-lg pixel-text transition-all
-                ${isSubmitting || !username.trim() || selectedTracks.length === 0
-                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                    : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 transform hover:scale-105'
+                            className="w-full py-4 px-6 font-bold text-lg uppercase tracking-wider transition-all"
+                            style={{
+                                fontFamily: "monospace",
+                                border: "2px solid #8b4513",
+                                borderRadius: "0",
+                                textShadow: "2px 2px 0px #1a0f08",
+                                backgroundColor: isSubmitting || !username.trim() || selectedTracks.length === 0
+                                    ? "#654321"
+                                    : "#44ff44",
+                                color: "#ffffff",
+                                cursor: isSubmitting || !username.trim() || selectedTracks.length === 0
+                                    ? "not-allowed"
+                                    : "pointer",
+                                boxShadow: "3px 3px 0px #1a0f08",
+                            }}
+                            onMouseEnter={(e) => {
+                                if (!isSubmitting && username.trim() && selectedTracks.length > 0) {
+                                    e.currentTarget.style.boxShadow = "6px 6px 0px #1a0f08";
+                                    e.currentTarget.style.transform = "translateY(-2px)";
                                 }
-              `}
+                            }}
+                            onMouseLeave={(e) => {
+                                if (!isSubmitting && username.trim() && selectedTracks.length > 0) {
+                                    e.currentTarget.style.boxShadow = "3px 3px 0px #1a0f08";
+                                    e.currentTarget.style.transform = "translateY(0px)";
+                                }
+                            }}
                         >
-                            {isSubmitting ? 'Setting Up Your Profile...' : 'Complete Setup & Enter Game'}
+                            {isSubmitting ? '⚙️ SETTING UP YOUR PROFILE...' : 'COMPLETE SETUP & ENTER GAME'}
                         </button>
                     </form>
                 </div>
 
                 {/* Footer */}
-                <div className="bg-gray-50 px-8 py-4 text-center">
-                    <p className="text-sm text-gray-500 normal-text">
-                        You can update your preferences later in your profile settings
+                <div 
+                    className="mt-8 text-center"
+                    style={{
+                        backgroundColor: "#2a1810",
+                        border: "3px solid #8b4513",
+                        borderRadius: "0",
+                        boxShadow: "6px 6px 0px #1a0f08, inset 2px 2px 0px #d2b48c, inset -2px -2px 0px #654321",
+                        padding: "20px",
+                        imageRendering: "pixelated",
+                        textShadow: "2px 2px 0px #1a0f08",
+                        position: "relative",
+                    }}
+                >
+                    {/* Medieval decorative border pattern */}
+                    <div
+                        style={{
+                            position: "absolute",
+                            top: "2px",
+                            left: "2px",
+                            right: "2px",
+                            height: "2px",
+                            background: "linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)",
+                            imageRendering: "pixelated",
+                        }}
+                    />
+                    <div
+                        style={{
+                            position: "absolute",
+                            bottom: "2px",
+                            left: "2px",
+                            right: "2px",
+                            height: "2px",
+                            background: "linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)",
+                            imageRendering: "pixelated",
+                        }}
+                    />
+                    <p 
+                        className="text-sm uppercase tracking-wider"
+                        style={{
+                            fontFamily: "monospace",
+                            color: "#ffd700",
+                            fontWeight: "bold",
+                        }}
+                    >
+                        YOU CAN UPDATE YOUR PREFERENCES LATER IN YOUR PROFILE SETTINGS
                     </p>
                 </div>
             </div>

@@ -739,7 +739,7 @@ const Townhall = () => {
     }}>
       <div>
         {/* Player Status */}
-        <PlayerStatus />
+        {/* <PlayerStatus /> */}
 
         {/* Token Balance */}
         <TokenBalance />

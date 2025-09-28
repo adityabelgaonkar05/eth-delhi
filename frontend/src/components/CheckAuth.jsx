@@ -19,7 +19,7 @@ const CheckAuth = () => {
 
                 if (!tokenResponse.ok) {
                     console.error('Failed to get token:', tokenResponse.statusText);
-                    navigate('/auth');
+                    // navigate('/auth');
                     return;
                 }
 

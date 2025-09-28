@@ -63,10 +63,10 @@ const PlayerStatus = () => {
           imageRendering: 'pixelated'
         }} />
         
-        <div style={{ color: '#d2b48c', marginBottom: '4px', fontWeight: 'bold' }}>⚔️ PLAYER STATUS ⚔️</div>
+        {/* <div style={{ color: '#d2b48c', marginBottom: '4px', fontWeight: 'bold' }}>⚔️ PLAYER STATUS ⚔️</div>
         <div style={{ color: '#ff4444', fontWeight: 'bold', fontSize: '12px' }}>
           NOT CONNECTED
-        </div>
+        </div> */}
       </div>
     );
   }

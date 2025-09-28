@@ -597,7 +597,7 @@ const Library = () => {
     }}>
       <div>
         {/* Player Status */}
-        <PlayerStatus />
+        {/* <PlayerStatus /> */}
 
         {/* Token Balance */}
         <TokenBalance />

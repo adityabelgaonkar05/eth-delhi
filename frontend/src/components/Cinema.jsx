@@ -707,7 +707,7 @@ const Cinema = () => {
     }}>
       <div>
         {/* Player Status */}
-        <PlayerStatus />
+        {/* <PlayerStatus /> */}
 
         {/* Token Balance */}
         <TokenBalance />

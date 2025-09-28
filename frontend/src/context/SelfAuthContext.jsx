@@ -41,7 +41,7 @@ export const SelfAuthProvider = ({ children }) => {
       if (!token) {
         setLoading(false);
         if (!isBusinessPage) {
-          navigate('/auth');
+          // navigate('/auth');
         }
         return;
       }

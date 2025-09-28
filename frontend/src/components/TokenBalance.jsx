@@ -54,8 +54,8 @@ const TokenBalance = () => {
           imageRendering: 'pixelated'
         }} />
         
-        <div style={{ color: '#d2b48c', marginBottom: '6px', fontWeight: 'bold' }}>⚔️ TREASURE ⚔️</div>
-        <div style={{ color: '#ff6b6b', fontWeight: 'bold', fontSize: '13px' }}>NO WALLET</div>
+        {/* <div style={{ color: '#d2b48c', marginBottom: '6px', fontWeight: 'bold' }}>⚔️ TREASURE ⚔️</div> */}
+        {/* <div style={{ color: '#ff6b6b', fontWeight: 'bold', fontSize: '13px' }}>NO WALLET</div> */}
       </div>
     );
   }

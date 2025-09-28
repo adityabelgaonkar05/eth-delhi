@@ -58,9 +58,7 @@ function App() {
                     <Route
                       path="/game"
                       element={
-                        // <AuthGuard>
                         <MultiplayerGame />
-                        // </AuthGuard>
                       }
                     />
                     <Route

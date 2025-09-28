@@ -53,7 +53,90 @@ const Townhall = () => {
   const exitCooldownIntervalRef = useRef(null)
   const holdIntervalRef = useRef(null)
 
+  // Project popup states
+  const [showUploadPopup, setShowUploadPopup] = useState(false)
+  const [showShowcasePopup, setShowShowcasePopup] = useState(false)
+  const [showVotingPopup, setShowVotingPopup] = useState(false)
+  const [currentProjectIndex, setCurrentProjectIndex] = useState(0)
+  const [uploadForm, setUploadForm] = useState({
+    title: '',
+    description: '',
+    technologies: '',
+    githubUrl: '',
+    imageUrl: ''
+  })
+
   console.log('Townhall state:', { isLoading, error, connected, playerCount })
+
+  // Mock project data for showcase and voting
+  const mockProjects = [
+    {
+      id: 1,
+      title: "DeFi Yield Farming Dashboard",
+      description: "A comprehensive dashboard for tracking yield farming opportunities across multiple DeFi protocols with real-time APY calculations and risk assessment.",
+      technologies: ["React", "Web3", "Ethereum", "DeFi", "Chart.js"],
+      githubUrl: "https://github.com/user/defi-dashboard",
+      imageUrl: "/images/project1.jpg",
+      author: "CryptoDev",
+      votes: 127,
+      category: "DeFi"
+    },
+    {
+      id: 2,
+      title: "NFT Marketplace with Royalties",
+      description: "A decentralized NFT marketplace featuring automatic royalty distribution, lazy minting, and cross-chain compatibility.",
+      technologies: ["Next.js", "Solidity", "IPFS", "Polygon", "OpenSea API"],
+      githubUrl: "https://github.com/user/nft-marketplace",
+      imageUrl: "/images/project2.jpg",
+      author: "NFTBuilder",
+      votes: 89,
+      category: "NFT"
+    },
+    {
+      id: 3,
+      title: "DAO Governance Platform",
+      description: "A complete DAO governance solution with proposal creation, voting mechanisms, and treasury management for decentralized organizations.",
+      technologies: ["Vue.js", "Web3", "Gnosis Safe", "Snapshot", "Aragon"],
+      githubUrl: "https://github.com/user/dao-governance",
+      imageUrl: "/images/project3.jpg",
+      author: "DAOMaster",
+      votes: 156,
+      category: "Governance"
+    },
+    {
+      id: 4,
+      title: "Cross-Chain Bridge Interface",
+      description: "A user-friendly interface for bridging assets between different blockchain networks with real-time transaction tracking.",
+      technologies: ["React", "Web3", "LayerZero", "Wormhole", "Axelar"],
+      githubUrl: "https://github.com/user/cross-chain-bridge",
+      imageUrl: "/images/project4.jpg",
+      author: "BridgeBuilder",
+      votes: 203,
+      category: "Infrastructure"
+    },
+    {
+      id: 5,
+      title: "Web3 Social Media Platform",
+      description: "A decentralized social media platform where users own their content and data, with token-based rewards for engagement.",
+      technologies: ["React", "Solidity", "IPFS", "Lens Protocol", "Arweave"],
+      githubUrl: "https://github.com/user/web3-social",
+      imageUrl: "/images/project5.jpg",
+      author: "SocialCrypto",
+      votes: 78,
+      category: "Social"
+    },
+    {
+      id: 6,
+      title: "GameFi Battle Arena",
+      description: "A play-to-earn battle arena game where players can earn tokens through strategic gameplay and NFT ownership.",
+      technologies: ["Unity", "Web3", "Polygon", "Chainlink VRF", "OpenSea"],
+      githubUrl: "https://github.com/user/gamefi-arena",
+      imageUrl: "/images/project6.jpg",
+      author: "GameDev",
+      votes: 234,
+      category: "GameFi"
+    }
+  ]
 
   // Initialize Socket.IO connection
   const initializeSocket = useCallback(() => {
@@ -434,9 +517,26 @@ const Townhall = () => {
     const playerY = playerRef.current.y
     const isInExitZone = playerX >= 303 && playerX <= 310 && playerY >= 284 && playerY <= 294
     
+    // Check for project interaction zones
+    const isInUploadZone = playerX >= 87 && playerX <= 111 && playerY >= 123 && playerY <= 133
+    const isInShowcaseZone = playerX >= 287 && playerX <= 299 && playerY >= 123 && playerY <= 133
+    const isInVotingZone = playerX >= 510 && playerX <= 520 && playerY >= 123 && playerY <= 133
+    
     // Debug logging (remove in production)
     if (playerX >= 300 && playerX <= 315 && playerY >= 280 && playerY <= 300) {
       console.log(`Player at (${Math.round(playerX)}, ${Math.round(playerY)}), in exit zone: ${isInExitZone}, prompt shown: ${hasShownExitPrompt}, cooldown: ${exitPromptCooldown}`)
+    }
+    
+    if (playerX >= 80 && playerX <= 120 && playerY >= 120 && playerY <= 140) {
+      console.log(`Player at (${Math.round(playerX)}, ${Math.round(playerY)}), in upload zone: ${isInUploadZone}`)
+    }
+    
+    if (playerX >= 280 && playerX <= 310 && playerY >= 120 && playerY <= 140) {
+      console.log(`Player at (${Math.round(playerX)}, ${Math.round(playerY)}), in showcase zone: ${isInShowcaseZone}`)
+    }
+    
+    if (playerX >= 500 && playerX <= 530 && playerY >= 120 && playerY <= 140) {
+      console.log(`Player at (${Math.round(playerX)}, ${Math.round(playerY)}), in voting zone: ${isInVotingZone}`)
     }
     
     // Only trigger exit prompt if in zone, not already shown, and not in cooldown
@@ -444,6 +544,23 @@ const Townhall = () => {
       console.log('Triggering exit prompt!')
       setShowExitPrompt(true)
       setHasShownExitPrompt(true)
+    }
+
+    // Trigger project popups when in respective zones
+    if (isInUploadZone && !showUploadPopup) {
+      console.log('Triggering upload popup!')
+      setShowUploadPopup(true)
+    }
+
+    if (isInShowcaseZone && !showShowcasePopup) {
+      console.log('Triggering showcase popup!')
+      setShowShowcasePopup(true)
+      setCurrentProjectIndex(0)
+    }
+
+    if (isInVotingZone && !showVotingPopup) {
+      console.log('Triggering voting popup!')
+      setShowVotingPopup(true)
     }
 
     // Render scene
@@ -455,6 +572,16 @@ const Townhall = () => {
     // Draw exit to main island indicator
     ctx.fillStyle = 'rgba(255, 0, 0, 0.3)'
     ctx.fillRect(303, 300, 17, 19) // Highlight the exit area (X: 303-310, Y: 284-294)
+    
+    // Draw project interaction zones
+    ctx.fillStyle = 'rgba(0, 255, 0, 0.3)'
+    ctx.fillRect(87, 123, 24, 10) // Upload zone (X: 87-111, Y: 123-133)
+    
+    ctx.fillStyle = 'rgba(0, 100, 255, 0.3)'
+    ctx.fillRect(287, 123, 12, 10) // Showcase zone (X: 287-299, Y: 123-133)
+    
+    ctx.fillStyle = 'rgba(255, 0, 255, 0.3)'
+    ctx.fillRect(511, 127, 12, 10) // Voting zone (X: 513-525, Y: 123-133)
     
     // Draw local player
     playerRef.current.draw(ctx)
@@ -472,10 +599,22 @@ const Townhall = () => {
   // Handle keyboard input
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Handle ESC key to close exit prompt
+      // Handle ESC key to close exit prompt or project popups
       if (e.key === 'Escape') {
         if (showExitPrompt) {
           handleStayInTownhall()
+          return
+        }
+        if (showUploadPopup) {
+          setShowUploadPopup(false)
+          return
+        }
+        if (showShowcasePopup) {
+          setShowShowcasePopup(false)
+          return
+        }
+        if (showVotingPopup) {
+          setShowVotingPopup(false)
           return
         }
       }
@@ -540,7 +679,7 @@ const Townhall = () => {
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
     }
-  }, [sendPlayerInput, showExitPrompt, handleStayInTownhall])
+  }, [sendPlayerInput, showExitPrompt, showUploadPopup, showShowcasePopup, showVotingPopup, handleStayInTownhall])
 
   // Initialize game on component mount
   useEffect(() => {
@@ -819,6 +958,806 @@ const Townhall = () => {
                 fontSize: '12px',
                 marginTop: '20px',
                 fontStyle: 'italic'
+              }}>
+                Press ESC to close this dialog
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Project Upload Popup */}
+        {showUploadPopup && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+          }}>
+            <div style={{
+              backgroundColor: '#2a1810',
+              border: '3px solid #8b4513',
+              borderRadius: '0',
+              boxShadow: '6px 6px 0px #1a0f08, inset 2px 2px 0px #d2b48c, inset -2px -2px 0px #654321',
+              padding: '30px',
+              textAlign: 'left',
+              maxWidth: '600px',
+              maxHeight: '80vh',
+              overflowY: 'auto',
+              fontFamily: 'monospace',
+              imageRendering: 'pixelated',
+              textShadow: '2px 2px 0px #1a0f08',
+              position: 'relative'
+            }}>
+              {/* Medieval decorative border pattern */}
+              <div style={{
+                position: 'absolute',
+                top: '2px',
+                left: '2px',
+                right: '2px',
+                height: '2px',
+                background: 'linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)',
+                imageRendering: 'pixelated'
+              }} />
+              <div style={{
+                position: 'absolute',
+                bottom: '2px',
+                left: '2px',
+                right: '2px',
+                height: '2px',
+                background: 'linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)',
+                imageRendering: 'pixelated'
+              }} />
+
+              {/* Header */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '25px',
+                borderBottom: '3px solid #8b4513',
+                paddingBottom: '20px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ color: '#d2b48c', fontSize: '2rem' }}>📤</span>
+                  <h2 style={{
+                    color: '#d2b48c',
+                    fontSize: '24px',
+                    margin: 0,
+                    fontFamily: 'monospace',
+                    fontWeight: 'bold',
+                    textShadow: '2px 2px 0px #1a0f08'
+                  }}>
+                    Upload Your Project
+                  </h2>
+                </div>
+                <button
+                  onClick={() => setShowUploadPopup(false)}
+                  style={{
+                    backgroundColor: '#ff6b6b',
+                    color: '#ffffff',
+                    border: '2px solid #8b4513',
+                    borderRadius: '0',
+                    width: '35px',
+                    height: '35px',
+                    cursor: 'pointer',
+                    fontSize: '18px',
+                    fontWeight: 'bold',
+                    fontFamily: 'monospace',
+                    textShadow: '1px 1px 0px #1a0f08',
+                    boxShadow: '3px 3px 0px #1a0f08'
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* Form */}
+              <div style={{ marginBottom: '25px' }}>
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{
+                    color: '#d2b48c',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    display: 'block',
+                    marginBottom: '8px',
+                    textShadow: '1px 1px 0px #1a0f08'
+                  }}>
+                    🏷️ Project Title
+                  </label>
+                  <input
+                    type="text"
+                    value={uploadForm.title}
+                    onChange={(e) => setUploadForm({...uploadForm, title: e.target.value})}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      backgroundColor: '#1a0f08',
+                      border: '2px solid #8b4513',
+                      borderRadius: '0',
+                      color: '#d2b48c',
+                      fontFamily: 'monospace',
+                      fontSize: '14px',
+                      boxShadow: '3px 3px 0px #1a0f08'
+                    }}
+                    placeholder="Enter your project title..."
+                  />
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{
+                    color: '#d2b48c',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    display: 'block',
+                    marginBottom: '8px',
+                    textShadow: '1px 1px 0px #1a0f08'
+                  }}>
+                    📝 Description
+                  </label>
+                  <textarea
+                    value={uploadForm.description}
+                    onChange={(e) => setUploadForm({...uploadForm, description: e.target.value})}
+                    rows="4"
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      backgroundColor: '#1a0f08',
+                      border: '2px solid #8b4513',
+                      borderRadius: '0',
+                      color: '#d2b48c',
+                      fontFamily: 'monospace',
+                      fontSize: '14px',
+                      boxShadow: '3px 3px 0px #1a0f08',
+                      resize: 'vertical'
+                    }}
+                    placeholder="Describe your project..."
+                  />
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{
+                    color: '#d2b48c',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    display: 'block',
+                    marginBottom: '8px',
+                    textShadow: '1px 1px 0px #1a0f08'
+                  }}>
+                    ⚔️ Technologies Used
+                  </label>
+                  <input
+                    type="text"
+                    value={uploadForm.technologies}
+                    onChange={(e) => setUploadForm({...uploadForm, technologies: e.target.value})}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      backgroundColor: '#1a0f08',
+                      border: '2px solid #8b4513',
+                      borderRadius: '0',
+                      color: '#d2b48c',
+                      fontFamily: 'monospace',
+                      fontSize: '14px',
+                      boxShadow: '3px 3px 0px #1a0f08'
+                    }}
+                    placeholder="React, Web3, Solidity, etc..."
+                  />
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{
+                    color: '#d2b48c',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    display: 'block',
+                    marginBottom: '8px',
+                    textShadow: '1px 1px 0px #1a0f08'
+                  }}>
+                    🔗 GitHub Repository
+                  </label>
+                  <input
+                    type="url"
+                    value={uploadForm.githubUrl}
+                    onChange={(e) => setUploadForm({...uploadForm, githubUrl: e.target.value})}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      backgroundColor: '#1a0f08',
+                      border: '2px solid #8b4513',
+                      borderRadius: '0',
+                      color: '#d2b48c',
+                      fontFamily: 'monospace',
+                      fontSize: '14px',
+                      boxShadow: '3px 3px 0px #1a0f08'
+                    }}
+                    placeholder="https://github.com/username/project"
+                  />
+                </div>
+
+                <div style={{ marginBottom: '25px' }}>
+                  <label style={{
+                    color: '#d2b48c',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    display: 'block',
+                    marginBottom: '8px',
+                    textShadow: '1px 1px 0px #1a0f08'
+                  }}>
+                    🖼️ Project Image URL
+                  </label>
+                  <input
+                    type="url"
+                    value={uploadForm.imageUrl}
+                    onChange={(e) => setUploadForm({...uploadForm, imageUrl: e.target.value})}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      backgroundColor: '#1a0f08',
+                      border: '2px solid #8b4513',
+                      borderRadius: '0',
+                      color: '#d2b48c',
+                      fontFamily: 'monospace',
+                      fontSize: '14px',
+                      boxShadow: '3px 3px 0px #1a0f08'
+                    }}
+                    placeholder="https://example.com/project-image.jpg"
+                  />
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                borderTop: '3px solid #8b4513',
+                paddingTop: '20px'
+              }}>
+                <button
+                  onClick={() => {
+                    alert('Project uploaded successfully')
+                    setShowUploadPopup(false)
+                    setUploadForm({ title: '', description: '', technologies: '', githubUrl: '', imageUrl: '' })
+                  }}
+                  style={{
+                    backgroundColor: '#44ff44',
+                    color: '#1a0f08',
+                    border: '2px solid #8b4513',
+                    borderRadius: '0',
+                    padding: '12px 30px',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    fontFamily: 'monospace',
+                    fontWeight: 'bold',
+                    textShadow: '1px 1px 0px #ffffff',
+                    boxShadow: '3px 3px 0px #1a0f08'
+                  }}
+                >
+                  🚀 SUBMIT PROJECT
+                </button>
+              </div>
+
+              <p style={{
+                color: '#d2b48c',
+                fontSize: '12px',
+                marginTop: '20px',
+                fontStyle: 'italic',
+                textAlign: 'center',
+                fontFamily: 'monospace',
+                fontWeight: 'bold',
+                textShadow: '1px 1px 0px #1a0f08'
+              }}>
+                Press ESC to close this dialog
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Project Showcase Popup */}
+        {showShowcasePopup && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+          }}>
+            <div style={{
+              backgroundColor: '#2a1810',
+              border: '3px solid #8b4513',
+              borderRadius: '0',
+              boxShadow: '6px 6px 0px #1a0f08, inset 2px 2px 0px #d2b48c, inset -2px -2px 0px #654321',
+              padding: '30px',
+              textAlign: 'left',
+              maxWidth: '800px',
+              maxHeight: '80vh',
+              overflowY: 'auto',
+              fontFamily: 'monospace',
+              imageRendering: 'pixelated',
+              textShadow: '2px 2px 0px #1a0f08',
+              position: 'relative'
+            }}>
+              {/* Medieval decorative border pattern */}
+              <div style={{
+                position: 'absolute',
+                top: '2px',
+                left: '2px',
+                right: '2px',
+                height: '2px',
+                background: 'linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)',
+                imageRendering: 'pixelated'
+              }} />
+              <div style={{
+                position: 'absolute',
+                bottom: '2px',
+                left: '2px',
+                right: '2px',
+                height: '2px',
+                background: 'linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)',
+                imageRendering: 'pixelated'
+              }} />
+
+              {/* Header */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '25px',
+                borderBottom: '3px solid #8b4513',
+                paddingBottom: '20px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ color: '#d2b48c', fontSize: '2rem' }}>🏆</span>
+                  <h2 style={{
+                    color: '#d2b48c',
+                    fontSize: '24px',
+                    margin: 0,
+                    fontFamily: 'monospace',
+                    fontWeight: 'bold',
+                    textShadow: '2px 2px 0px #1a0f08'
+                  }}>
+                    Project Showcase
+                  </h2>
+                </div>
+                <button
+                  onClick={() => setShowShowcasePopup(false)}
+                  style={{
+                    backgroundColor: '#ff6b6b',
+                    color: '#ffffff',
+                    border: '2px solid #8b4513',
+                    borderRadius: '0',
+                    width: '35px',
+                    height: '35px',
+                    cursor: 'pointer',
+                    fontSize: '18px',
+                    fontWeight: 'bold',
+                    fontFamily: 'monospace',
+                    textShadow: '1px 1px 0px #1a0f08',
+                    boxShadow: '3px 3px 0px #1a0f08'
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* Project Content */}
+              <div style={{ marginBottom: '25px' }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '20px'
+                }}>
+                  <span style={{
+                    color: '#ffffff',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    backgroundColor: '#1a0f08',
+                    border: '2px solid #8b4513',
+                    borderRadius: '0',
+                    padding: '8px 12px',
+                    fontFamily: 'monospace',
+                    textShadow: '1px 1px 0px #1a0f08',
+                    boxShadow: '3px 3px 0px #1a0f08'
+                  }}>
+                    👤 {mockProjects[currentProjectIndex].author}
+                  </span>
+                  <span style={{
+                    color: '#ffd700',
+                    fontSize: '12px',
+                    fontFamily: 'monospace',
+                    fontWeight: 'bold'
+                  }}>
+                    🏷️ {mockProjects[currentProjectIndex].category}
+                  </span>
+                </div>
+
+                <h3 style={{
+                  color: '#d2b48c',
+                  fontSize: '20px',
+                  marginBottom: '15px',
+                  fontFamily: 'monospace',
+                  fontWeight: 'bold',
+                  textShadow: '2px 2px 0px #1a0f08'
+                }}>
+                  {mockProjects[currentProjectIndex].title}
+                </h3>
+
+                <p style={{
+                  color: '#d2b48c',
+                  fontSize: '16px',
+                  lineHeight: '1.6',
+                  marginBottom: '20px',
+                  fontFamily: 'monospace',
+                  textShadow: '1px 1px 0px #1a0f08'
+                }}>
+                  {mockProjects[currentProjectIndex].description}
+                </p>
+
+                {/* Technologies */}
+                <div style={{ marginBottom: '20px' }}>
+                  <h4 style={{
+                    color: '#d2b48c',
+                    fontSize: '16px',
+                    marginBottom: '10px',
+                    fontFamily: 'monospace',
+                    fontWeight: 'bold',
+                    textShadow: '2px 2px 0px #1a0f08'
+                  }}>
+                    ⚔️ Technologies Used:
+                  </h4>
+                  <div style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '8px'
+                  }}>
+                    {mockProjects[currentProjectIndex].technologies.map((tech, index) => (
+                      <span
+                        key={index}
+                        style={{
+                          backgroundColor: '#1a0f08',
+                          color: '#ffffff',
+                          border: '2px solid #8b4513',
+                          borderRadius: '0',
+                          padding: '4px 8px',
+                          fontSize: '12px',
+                          fontFamily: 'monospace',
+                          fontWeight: 'bold',
+                          textShadow: '1px 1px 0px #1a0f08',
+                          boxShadow: '3px 3px 0px #1a0f08'
+                        }}
+                      >
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* GitHub Link */}
+                <div style={{ marginBottom: '20px' }}>
+                  <a
+                    href={mockProjects[currentProjectIndex].githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      color: '#44ff44',
+                      textDecoration: 'none',
+                      fontFamily: 'monospace',
+                      fontWeight: 'bold',
+                      fontSize: '14px',
+                      textShadow: '1px 1px 0px #1a0f08'
+                    }}
+                  >
+                    🔗 View on GitHub
+                  </a>
+                </div>
+              </div>
+
+              {/* Navigation */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                borderTop: '3px solid #8b4513',
+                paddingTop: '20px'
+              }}>
+                <button
+                  onClick={() => {
+                    const newIndex = currentProjectIndex > 0 ? currentProjectIndex - 1 : mockProjects.length - 1
+                    setCurrentProjectIndex(newIndex)
+                  }}
+                  style={{
+                    backgroundColor: '#44ff44',
+                    color: '#1a0f08',
+                    border: '2px solid #8b4513',
+                    borderRadius: '0',
+                    padding: '10px 20px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontFamily: 'monospace',
+                    fontWeight: 'bold',
+                    textShadow: '1px 1px 0px #ffffff',
+                    boxShadow: '3px 3px 0px #1a0f08'
+                  }}
+                >
+                  ← PREVIOUS
+                </button>
+
+                <span style={{
+                  color: '#ffd700',
+                  fontSize: '14px',
+                  fontFamily: 'monospace',
+                  fontWeight: 'bold',
+                  textShadow: '1px 1px 0px #1a0f08'
+                }}>
+                  {currentProjectIndex + 1} of {mockProjects.length}
+                </span>
+
+                <button
+                  onClick={() => {
+                    const newIndex = currentProjectIndex < mockProjects.length - 1 ? currentProjectIndex + 1 : 0
+                    setCurrentProjectIndex(newIndex)
+                  }}
+                  style={{
+                    backgroundColor: '#44ff44',
+                    color: '#1a0f08',
+                    border: '2px solid #8b4513',
+                    borderRadius: '0',
+                    padding: '10px 20px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontFamily: 'monospace',
+                    fontWeight: 'bold',
+                    textShadow: '1px 1px 0px #ffffff',
+                    boxShadow: '3px 3px 0px #1a0f08'
+                  }}
+                >
+                  NEXT →
+                </button>
+              </div>
+
+              <p style={{
+                color: '#d2b48c',
+                fontSize: '12px',
+                marginTop: '20px',
+                fontStyle: 'italic',
+                textAlign: 'center',
+                fontFamily: 'monospace',
+                fontWeight: 'bold',
+                textShadow: '1px 1px 0px #1a0f08'
+              }}>
+                Press ESC to close this dialog
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Project Voting Popup */}
+        {showVotingPopup && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+          }}>
+            <div style={{
+              backgroundColor: '#2a1810',
+              border: '3px solid #8b4513',
+              borderRadius: '0',
+              boxShadow: '6px 6px 0px #1a0f08, inset 2px 2px 0px #d2b48c, inset -2px -2px 0px #654321',
+              padding: '30px',
+              textAlign: 'left',
+              maxWidth: '700px',
+              maxHeight: '80vh',
+              overflowY: 'auto',
+              fontFamily: 'monospace',
+              imageRendering: 'pixelated',
+              textShadow: '2px 2px 0px #1a0f08',
+              position: 'relative'
+            }}>
+              {/* Medieval decorative border pattern */}
+              <div style={{
+                position: 'absolute',
+                top: '2px',
+                left: '2px',
+                right: '2px',
+                height: '2px',
+                background: 'linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)',
+                imageRendering: 'pixelated'
+              }} />
+              <div style={{
+                position: 'absolute',
+                bottom: '2px',
+                left: '2px',
+                right: '2px',
+                height: '2px',
+                background: 'linear-gradient(90deg, #8b4513 0%, #d2b48c 50%, #8b4513 100%)',
+                imageRendering: 'pixelated'
+              }} />
+
+              {/* Header */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '25px',
+                borderBottom: '3px solid #8b4513',
+                paddingBottom: '20px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ color: '#d2b48c', fontSize: '2rem' }}>🗳️</span>
+                  <h2 style={{
+                    color: '#d2b48c',
+                    fontSize: '24px',
+                    margin: 0,
+                    fontFamily: 'monospace',
+                    fontWeight: 'bold',
+                    textShadow: '2px 2px 0px #1a0f08'
+                  }}>
+                    Project Voting System
+                  </h2>
+                </div>
+                <button
+                  onClick={() => setShowVotingPopup(false)}
+                  style={{
+                    backgroundColor: '#ff6b6b',
+                    color: '#ffffff',
+                    border: '2px solid #8b4513',
+                    borderRadius: '0',
+                    width: '35px',
+                    height: '35px',
+                    cursor: 'pointer',
+                    fontSize: '18px',
+                    fontWeight: 'bold',
+                    fontFamily: 'monospace',
+                    textShadow: '1px 1px 0px #1a0f08',
+                    boxShadow: '3px 3px 0px #1a0f08'
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* Voting Instructions */}
+              <div style={{
+                backgroundColor: '#1a0f08',
+                border: '2px solid #8b4513',
+                borderRadius: '0',
+                padding: '15px',
+                marginBottom: '25px',
+                boxShadow: '3px 3px 0px #1a0f08'
+              }}>
+                <p style={{
+                  color: '#ffd700',
+                  fontSize: '16px',
+                  fontFamily: 'monospace',
+                  fontWeight: 'bold',
+                  textShadow: '1px 1px 0px #1a0f08',
+                  margin: 0
+                }}>
+                  🏆 Vote for the best Web3 project! Each vote helps determine the community's favorite.
+                </p>
+              </div>
+
+              {/* Projects List */}
+              <div style={{ marginBottom: '25px' }}>
+                {mockProjects
+                  .sort((a, b) => b.votes - a.votes)
+                  .map((project, index) => (
+                    <div
+                      key={project.id}
+                      style={{
+                        backgroundColor: '#1a0f08',
+                        border: '2px solid #8b4513',
+                        borderRadius: '0',
+                        padding: '15px',
+                        marginBottom: '15px',
+                        boxShadow: '3px 3px 0px #1a0f08'
+                      }}
+                    >
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '10px'
+                      }}>
+                        <h4 style={{
+                          color: '#d2b48c',
+                          fontSize: '16px',
+                          fontFamily: 'monospace',
+                          fontWeight: 'bold',
+                          textShadow: '1px 1px 0px #1a0f08',
+                          margin: 0
+                        }}>
+                          #{index + 1} {project.title}
+                        </h4>
+                        <span style={{
+                          color: '#ffd700',
+                          fontSize: '14px',
+                          fontFamily: 'monospace',
+                          fontWeight: 'bold',
+                          textShadow: '1px 1px 0px #1a0f08'
+                        }}>
+                          👤 {project.author}
+                        </span>
+                      </div>
+                      
+                      <p style={{
+                        color: '#d2b48c',
+                        fontSize: '14px',
+                        fontFamily: 'monospace',
+                        textShadow: '1px 1px 0px #1a0f08',
+                        margin: '0 0 10px 0',
+                        lineHeight: '1.4'
+                      }}>
+                        {project.description.substring(0, 100)}...
+                      </p>
+
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}>
+                        <span style={{
+                          color: '#44ff44',
+                          fontSize: '14px',
+                          fontFamily: 'monospace',
+                          fontWeight: 'bold',
+                          textShadow: '1px 1px 0px #1a0f08'
+                        }}>
+                          🗳️ {project.votes} votes
+                        </span>
+                        
+                        <button
+                          onClick={() => {
+                            alert(`Voted for "${project.title}"!`)
+                          }}
+                          style={{
+                            backgroundColor: '#44ff44',
+                            color: '#1a0f08',
+                            border: '2px solid #8b4513',
+                            borderRadius: '0',
+                            padding: '6px 12px',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            fontFamily: 'monospace',
+                            fontWeight: 'bold',
+                            textShadow: '1px 1px 0px #ffffff',
+                            boxShadow: '3px 3px 0px #1a0f08'
+                          }}
+                        >
+                          🗳️ VOTE
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+
+              <p style={{
+                color: '#d2b48c',
+                fontSize: '12px',
+                marginTop: '20px',
+                fontStyle: 'italic',
+                textAlign: 'center',
+                fontFamily: 'monospace',
+                fontWeight: 'bold',
+                textShadow: '1px 1px 0px #1a0f08'
               }}>
                 Press ESC to close this dialog
               </p>

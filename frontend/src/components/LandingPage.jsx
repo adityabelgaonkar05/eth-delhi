@@ -84,8 +84,8 @@ const LandingPage = () => {
             className="mx-auto mb-8 max-w-full h-auto w-auto max-h-32 md:max-h-40"
           />
           <p className="text-xl md:text-2xl mb-12 normal-text font-light leading-relaxed">
-            Enter a world where gaming meets blockchain technology. Build,
-            explore, and create in the ultimate virtual universe.
+            Enter a world where gaming meets blockchain technology. Experience multiplayer adventures, 
+            collect digital pets, host business events, and build communities in the ultimate Web3 universe.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
             <button
@@ -113,37 +113,183 @@ const LandingPage = () => {
       >
         <div className="text-center text-white max-w-6xl px-4 sm:px-8 py-16 w-full">
           <h2 className="text-4xl font-bold mb-8 pixel-text">
-            Explore the World
+            Explore the CryptoVerse
           </h2>
           <p className="text-xl mb-12 normal-text font-light leading-relaxed">
-            Discover amazing features and embark on incredible journeys through
-            our immersive experience.
+            Discover a comprehensive Web3 platform featuring multiplayer gaming, 
+            business tools, and digital collectibles in one unified ecosystem.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-black/60 p-8 rounded-xl border-2 border-white/40 backdrop-blur-sm">
               <h3 className="text-lg font-semibold mb-4 pixel-text">
-                Feature 1
+              Multiplayer Gaming
               </h3>
               <p className="normal-text text-base leading-relaxed">
-                Amazing gameplay experience
+                Experience real-time multiplayer adventures with verified players using Self Protocol authentication. 
+                Explore different areas like Cinema, Library, and Townhall.
               </p>
             </div>
             <div className="bg-black/60 p-8 rounded-xl border-2 border-white/40 backdrop-blur-sm">
               <h3 className="text-lg font-semibold mb-4 pixel-text">
-                Feature 2
+              Business Tools
               </h3>
               <p className="normal-text text-base leading-relaxed">
-                Stunning visuals and graphics
+                Host video premieres, manage reputation systems, and create engaging business events 
+                with blockchain-based community building tools.
               </p>
             </div>
             <div className="bg-black/60 p-8 rounded-xl border-2 border-white/40 backdrop-blur-sm">
               <h3 className="text-lg font-semibold mb-4 pixel-text">
-                Feature 3
+                Pet NFT Collection
               </h3>
               <p className="normal-text text-base leading-relaxed">
-                Engaging storyline
+                Collect and trade digital companion pets with different rarity tiers. 
+                Store metadata on Walrus Network and purchase with CVRS tokens.
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Business Features Section */}
+      <section className="min-h-screen w-full max-w-full bg-black flex items-center justify-center overflow-hidden py-20">
+        <div className="text-center text-white max-w-6xl px-4 sm:px-8 py-16 w-full">
+          <h2 className="text-4xl font-bold mb-8 pixel-text">
+            Built for Modern Businesses
+          </h2>
+          <p className="text-xl mb-12 normal-text font-light leading-relaxed">
+            Transform your business events into immersive Web3 experiences with our comprehensive suite of tools.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 p-8 rounded-xl border-2 border-blue-400/40 backdrop-blur-sm">
+              <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-4 pixel-text">
+                Video Premieres
+              </h3>
+              <p className="normal-text text-base leading-relaxed">
+                Host exclusive video premieres with interactive features. Engage your audience in real-time 
+                during product launches and announcements with Walrus Network storage.
+              </p>
+            </div>
+            <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 p-8 rounded-xl border-2 border-green-400/40 backdrop-blur-sm">
+              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-4 pixel-text">
+                Reputation System
+              </h3>
+              <p className="normal-text text-base leading-relaxed">
+                Build trust and credibility with blockchain-based reputation management. 
+                Reward engagement and foster community growth with transparent scoring.
+              </p>
+            </div>
+            <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 p-8 rounded-xl border-2 border-purple-400/40 backdrop-blur-sm">
+              <div className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-4 pixel-text">
+                Community Building
+              </h3>
+              <p className="normal-text text-base leading-relaxed">
+                Create virtual spaces where your customers and stakeholders can connect, 
+                collaborate, and build lasting relationships in the metaverse.
+              </p>
+            </div>
+          </div>
+          <div className="mt-12">
+            <button
+              className="arcade-button-secondary pixel-text text-lg px-8 py-4"
+              onClick={() => navigate("/business")}
+            >
+              EXPLORE BUSINESS TOOLS
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Pet NFT Collection Section */}
+      <section className="min-h-screen w-full max-w-full bg-gradient-to-br from-purple-900/50 to-blue-900/50 flex items-center justify-center overflow-hidden py-20">
+        <div className="text-center text-white max-w-6xl px-4 sm:px-8 py-16 w-full">
+          <h2 className="text-4xl font-bold mb-8 pixel-text">
+            Collect Digital Companions
+          </h2>
+          <p className="text-xl mb-12 normal-text font-light leading-relaxed">
+            Discover and collect unique digital pets with different rarity tiers. 
+            Each pet is stored on Walrus Network and can be purchased with CVRS tokens.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="bg-gradient-to-br from-gray-600/20 to-gray-700/20 p-6 rounded-xl border-2 border-gray-400/40 backdrop-blur-sm">
+              <div className="w-12 h-12 bg-gray-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl">🐾</span>
+              </div>
+              <h3 className="text-lg font-semibold mb-3 pixel-text text-gray-300">
+                COMMON
+              </h3>
+              <p className="normal-text text-sm leading-relaxed text-gray-300">
+                Basic digital companions perfect for beginners. Affordable and widely available.
+              </p>
+              <div className="mt-4 text-yellow-400 font-bold">
+                100 CVRS
+              </div>
+            </div>
+            <div className="bg-gradient-to-br from-blue-600/20 to-blue-700/20 p-6 rounded-xl border-2 border-blue-400/40 backdrop-blur-sm">
+              <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl">🌟</span>
+              </div>
+              <h3 className="text-lg font-semibold mb-3 pixel-text text-blue-300">
+                RARE
+              </h3>
+              <p className="normal-text text-sm leading-relaxed text-blue-200">
+                Special pets with unique characteristics. More valuable and harder to find.
+              </p>
+              <div className="mt-4 text-yellow-400 font-bold">
+                250 CVRS
+              </div>
+            </div>
+            <div className="bg-gradient-to-br from-purple-600/20 to-purple-700/20 p-6 rounded-xl border-2 border-purple-400/40 backdrop-blur-sm">
+              <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl">💎</span>
+              </div>
+              <h3 className="text-lg font-semibold mb-3 pixel-text text-purple-300">
+                EPIC
+              </h3>
+              <p className="normal-text text-sm leading-relaxed text-purple-200">
+                Exceptional pets with extraordinary features. Highly sought after by collectors.
+              </p>
+              <div className="mt-4 text-yellow-400 font-bold">
+                500 CVRS
+              </div>
+            </div>
+            <div className="bg-gradient-to-br from-yellow-600/20 to-yellow-700/20 p-6 rounded-xl border-2 border-yellow-400/40 backdrop-blur-sm">
+              <div className="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl">👑</span>
+              </div>
+              <h3 className="text-lg font-semibold mb-3 pixel-text text-yellow-300">
+                LEGENDARY
+              </h3>
+              <p className="normal-text text-sm leading-relaxed text-yellow-200">
+                The ultimate digital companions. Extremely rare and incredibly powerful.
+              </p>
+              <div className="mt-4 text-yellow-400 font-bold">
+                1000 CVRS
+              </div>
+            </div>
+          </div>
+          <div className="mt-12">
+            <button
+              className="arcade-button pixel-text text-lg px-8 py-4"
+              onClick={() => navigate("/pets")}
+            >
+              EXPLORE PET SHOP
+            </button>
           </div>
         </div>
       </section>
@@ -157,18 +303,26 @@ const LandingPage = () => {
       >
         <div className="text-center text-white max-w-4xl px-4 sm:px-8 py-16 w-full">
           <h2 className="text-5xl md:text-6xl font-bold mb-8 pixel-text">
-            Ready to Begin?
+            Ready to Enter CryptoVerse?
           </h2>
           <p className="text-xl md:text-2xl mb-12 normal-text font-light leading-relaxed">
-            Join thousands of players in this epic adventure. Your journey
-            awaits!
+            Join the future of Web3 gaming and business. Experience verified multiplayer adventures, 
+            collect digital pets, and build communities in the ultimate blockchain universe.
           </p>
-          <button
-            className="arcade-button pixel-text"
-            onClick={() => navigate("/game")}
-          >
-            START PLAYING
-          </button>
+          <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+            <button
+              className="arcade-button pixel-text text-lg px-8 py-4"
+              onClick={() => handleNavigateGame()}
+            >
+              START GAMING
+            </button>
+            <button
+              className="arcade-button-secondary pixel-text text-lg px-8 py-4"
+              onClick={() => navigate("/pets")}
+            >
+              EXPLORE PETS
+            </button>
+          </div>
         </div>
       </section>
 
@@ -302,11 +456,7 @@ const LandingPage = () => {
               </ul>
             </div>
           </div>
-          <div className="border-t border-white/20 mt-12 pt-8 text-center">
-            <p className="normal-text">
-              &copy; 2025 Your Game. All rights reserved.
-            </p>
-          </div>
+
         </div>
       </footer>
     </div>
